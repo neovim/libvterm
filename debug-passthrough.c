@@ -7,7 +7,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <glib.h>
+
 #include "ecma48.h"
+
+int master;
+ecma48_state_t *state;
 
 void chars(ecma48_state_t *state, char *s, size_t len)
 {
@@ -36,12 +41,52 @@ static ecma48_callbacks_t cb = {
   .csi     = csi,
 };
 
+gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
+{
+  char buffer[8192];
+
+  size_t bytes = read(0, buffer, sizeof buffer);
+
+  if(bytes == 0) {
+    fprintf(stderr, "STDIN closed\n");
+    exit(0);
+  }
+  if(bytes < 0) {
+    fprintf(stderr, "read(STDIN) failed - %s\n", strerror(errno));
+    exit(1);
+  }
+
+  write(master, buffer, bytes);
+
+  return TRUE;
+}
+
+gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
+{
+  char buffer[8192];
+
+  size_t bytes = read(master, buffer, sizeof buffer);
+
+  if(bytes == 0) {
+    fprintf(stderr, "master closed\n");
+    exit(0);
+  }
+  if(bytes < 0) {
+    fprintf(stderr, "read(master) failed - %s\n", strerror(errno));
+    exit(1);
+  }
+
+  ecma48_state_push_bytes(state, buffer, bytes);
+
+  write(1, buffer, bytes);
+
+  return TRUE;
+}
+
 int main(int argc, char *argv[])
 {
-  ecma48_state_t *state = ecma48_state_new();
+  state = ecma48_state_new();
   ecma48_state_set_callbacks(state, &cb);
-
-  int master;
 
   pid_t kid = forkpty(&master, NULL, NULL, NULL);
   if(kid == 0) {
@@ -50,46 +95,15 @@ int main(int argc, char *argv[])
     _exit(1);
   }
 
-  struct pollfd fds[2] = {
-    { .fd = 0,      .events = POLLIN },
-    { .fd = master, .events = POLLIN }
-  };
+  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 
-  while(1) {
-    int ret = poll(fds, 2, -1);
-    if(ret == -1) {
-      fprintf(stderr, "poll() failed - %s\n", strerror(errno));
-      exit(1);
-    }
+  GIOChannel *gio_stdin = g_io_channel_unix_new(0);
+  g_io_add_watch(gio_stdin, G_IO_IN, stdin_readable, NULL);
 
-    if(fds[0].revents & POLLIN) {
-      char buffer[8192];
-      size_t bytes = read(0, buffer, sizeof buffer);
-      if(bytes == 0) {
-        fprintf(stderr, "STDIN closed\n");
-        exit(0);
-      }
-      if(bytes < 0) {
-        fprintf(stderr, "read(STDIN) failed - %s\n", strerror(errno));
-        exit(1);
-      }
-      write(master, buffer, bytes);
-    }
+  GIOChannel *gio_master = g_io_channel_unix_new(master);
+  g_io_add_watch(gio_master, G_IO_IN, master_readable, NULL);
 
-    if(fds[1].revents & POLLIN) {
-      char buffer[8192];
-      size_t bytes = read(master, buffer, sizeof buffer);
-      if(bytes == 0) {
-        fprintf(stderr, "master closed\n");
-        exit(0);
-      }
-      if(bytes < 0) {
-        fprintf(stderr, "read(master) failed - %s\n", strerror(errno));
-        exit(1);
-      }
-      ecma48_state_push_bytes(state, buffer, bytes);
-      write(1, buffer, bytes);
-    }
+  g_main_loop_run(loop);
 
-  }
+  return 0;
 }
