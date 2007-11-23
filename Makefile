@@ -12,12 +12,15 @@ CFILES=$(wildcard *.c)
 OFILES=$(CFILES:.c=.o)
 HFILES=$(wildcard *.h)
 
-DEBUGS=debug-passthrough
+DEBUGS=debug-passthrough debug-gtkterm
 
 all: $(DEBUGS)
 
 debug-%: debug-%.c ecma48.o
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS)
+
+debug-gtkterm: debug-gtkterm.c ecma48.o
+	gcc -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
 %.o: %.c $(HFILES)
 	gcc -o $@ -c $< $(CCFLAGS)
