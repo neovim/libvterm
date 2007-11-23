@@ -7,7 +7,7 @@
 
 struct ecma48_state
 {
-  ecma48_callbacks_t *callbacks;
+  ecma48_parser_callbacks_t *parser_callbacks;
 
   GString *buffer;
 };
@@ -32,7 +32,7 @@ size_t interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
         csi_start = pos;
         break;
       default:
-        (*state->callbacks->escape)(state, c);
+        (*state->parser_callbacks->escape)(state, c);
         in_esc = FALSE;
         eaten = pos;
       }
@@ -40,7 +40,7 @@ size_t interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
     else if(in_csi) {
       if(c >= 0x40 && c <= 0x7f) {
         char *csi_args = g_strndup(bytes + csi_start, pos - csi_start + 1);
-        (*state->callbacks->csi)(state, csi_args);
+        (*state->parser_callbacks->csi)(state, csi_args);
         in_csi = FALSE;
         eaten = pos;
       }
@@ -55,7 +55,7 @@ size_t interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
           csi_start = pos;
           break;
         default:
-          (*state->callbacks->control)(state, c);
+          (*state->parser_callbacks->control)(state, c);
           eaten = pos;
           break;
         }
@@ -66,7 +66,7 @@ size_t interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
         while(pos < len && bytes[pos+1] >= 0x20)
           pos++;
 
-        (*state->callbacks->text)(state, bytes + start, pos - start + 1);
+        (*state->parser_callbacks->text)(state, bytes + start, pos - start + 1);
         eaten = pos;
       }
     }
@@ -88,9 +88,9 @@ ecma48_state_t *ecma48_state_new(void)
   return state;
 }
 
-void ecma48_state_set_callbacks(ecma48_state_t *state, ecma48_callbacks_t *callbacks)
+void ecma48_state_set_parser_callbacks(ecma48_state_t *state, ecma48_parser_callbacks_t *callbacks)
 {
-  state->callbacks = callbacks;
+  state->parser_callbacks = callbacks;
 }
 
 void ecma48_state_push_bytes(ecma48_state_t *state, char *bytes, size_t len)
