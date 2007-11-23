@@ -7,7 +7,7 @@
 typedef struct ecma48_state ecma48_state_t;
 
 typedef struct {
-  void (*chars)(ecma48_state_t *state, char *s, size_t len);
+  void (*text)(ecma48_state_t *state, char *s, size_t len);
   void (*control)(ecma48_state_t *state, char control);
   void (*escape)(ecma48_state_t *state, char escape);
   void (*csi)(ecma48_state_t *state, char *args);
