@@ -17,7 +17,7 @@ DEBUGS=debug-passthrough
 all: $(DEBUGS)
 
 debug-%: debug-%.c ecma48.o
-	gcc -o $@ $^ $(LDFLAGS)
+	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS)
 
 %.o: %.c $(HFILES)
 	gcc -o $@ -c $< $(CCFLAGS)
