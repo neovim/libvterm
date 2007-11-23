@@ -11,10 +11,10 @@ typedef struct {
   void (*control)(ecma48_state_t *state, char control);
   void (*escape)(ecma48_state_t *state, char escape);
   void (*csi)(ecma48_state_t *state, char *args);
-} ecma48_callbacks_t;
+} ecma48_parser_callbacks_t;
 
 ecma48_state_t *ecma48_state_new(void);
-void ecma48_state_set_callbacks(ecma48_state_t *state, ecma48_callbacks_t *callbacks);
+void ecma48_state_set_parser_callbacks(ecma48_state_t *state, ecma48_parser_callbacks_t *callbacks);
 
 void ecma48_state_push_bytes(ecma48_state_t *state, char *bytes, size_t len);
 

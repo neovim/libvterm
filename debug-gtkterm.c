@@ -62,7 +62,7 @@ void csi(ecma48_state_t *state, char *args)
   printf("CSI %s\n", args);
 }
 
-static ecma48_callbacks_t cb = {
+static ecma48_parser_callbacks_t cb = {
   .text    = text,
   .control = control,
   .escape  = escape,
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   gtk_init(&argc, &argv);
 
   state = ecma48_state_new();
-  ecma48_state_set_callbacks(state, &cb);
+  ecma48_state_set_parser_callbacks(state, &cb);
 
   struct winsize size = { 25, 80, 0, 0 };
 
