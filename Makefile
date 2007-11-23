@@ -1,5 +1,3 @@
-PRIMARY=ecma48
-
 CCFLAGS=-Wall -I. -std=c99
 LDFLAGS=-lutil
 
@@ -14,9 +12,11 @@ CFILES=$(wildcard *.c)
 OFILES=$(CFILES:.c=.o)
 HFILES=$(wildcard *.h)
 
-all: $(PRIMARY)
+DEBUGS=debug-passthrough
 
-$(PRIMARY): $(OFILES)
+all: $(DEBUGS)
+
+debug-%: debug-%.c ecma48.o
 	gcc -o $@ $^ $(LDFLAGS)
 
 %.o: %.c $(HFILES)
@@ -24,4 +24,4 @@ $(PRIMARY): $(OFILES)
 
 .PHONY: clean
 clean:
-	rm -f $(PRIMARY) $(OFILES)
+	rm -f $(DEBUGS) $(OFILES)
