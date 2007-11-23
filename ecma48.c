@@ -66,7 +66,7 @@ size_t interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
         while(pos < len && bytes[pos+1] >= 0x20)
           pos++;
 
-        (*state->callbacks->chars)(state, bytes + start, pos - start + 1);
+        (*state->callbacks->text)(state, bytes + start, pos - start + 1);
         eaten = pos;
       }
     }

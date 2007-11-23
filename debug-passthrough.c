@@ -14,9 +14,9 @@
 int master;
 ecma48_state_t *state;
 
-void chars(ecma48_state_t *state, char *s, size_t len)
+void text(ecma48_state_t *state, char *s, size_t len)
 {
-  printf("Wrote %d chars: %.*s\n", len, len, s);
+  printf("Wrote %d text: %.*s\n", len, len, s);
 }
 
 void control(ecma48_state_t *state, char control)
@@ -35,7 +35,7 @@ void csi(ecma48_state_t *state, char *args)
 }
 
 static ecma48_callbacks_t cb = {
-  .chars   = chars,
+  .text    = text,
   .control = control,
   .escape  = escape,
   .csi     = csi,
