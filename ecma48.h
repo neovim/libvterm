@@ -7,10 +7,10 @@
 typedef struct ecma48_state ecma48_state_t;
 
 typedef struct {
-  void (*text)(ecma48_state_t *state, char *s, size_t len);
-  void (*control)(ecma48_state_t *state, char control);
-  void (*escape)(ecma48_state_t *state, char escape);
-  void (*csi)(ecma48_state_t *state, char *args);
+  int (*text)(ecma48_state_t *state, char *s, size_t len);
+  int (*control)(ecma48_state_t *state, char control);
+  int (*escape)(ecma48_state_t *state, char escape);
+  int (*csi)(ecma48_state_t *state, char *args);
 } ecma48_parser_callbacks_t;
 
 ecma48_state_t *ecma48_state_new(void);
