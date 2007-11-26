@@ -5,13 +5,13 @@
 
 #include <glib.h>
 
-struct ecma48_state
+struct ecma48_s
 {
   ecma48_parser_callbacks_t *parser_callbacks;
 
   GString *buffer;
 };
 
-size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t len);
+size_t ecma48_parser_interpret_bytes(ecma48_t *state, char *bytes, size_t len);
 
 #endif

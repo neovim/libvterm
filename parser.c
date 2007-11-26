@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-static void ecma48_on_parser_text(ecma48_state_t *state, char *bytes, size_t len)
+static void ecma48_on_parser_text(ecma48_t *state, char *bytes, size_t len)
 {
   int done = 0;
 
@@ -14,7 +14,7 @@ static void ecma48_on_parser_text(ecma48_state_t *state, char *bytes, size_t len
     fprintf(stderr, "libecma48: Unhandled text (%d bytes): %.*s\n", len, len, bytes);
 }
 
-static void ecma48_on_parser_control(ecma48_state_t *state, char control)
+static void ecma48_on_parser_control(ecma48_t *state, char control)
 {
   int done = 0;
 
@@ -26,7 +26,7 @@ static void ecma48_on_parser_control(ecma48_state_t *state, char control)
     fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", control);
 }
 
-static void ecma48_on_parser_escape(ecma48_state_t *state, char escape)
+static void ecma48_on_parser_escape(ecma48_t *state, char escape)
 {
   int done = 0;
 
@@ -38,7 +38,7 @@ static void ecma48_on_parser_escape(ecma48_state_t *state, char escape)
     fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", escape);
 }
 
-static void ecma48_on_parser_csi(ecma48_state_t *state, char *args)
+static void ecma48_on_parser_csi(ecma48_t *state, char *args)
 {
   int done = 0;
 
@@ -50,7 +50,7 @@ static void ecma48_on_parser_csi(ecma48_state_t *state, char *args)
     fprintf(stderr, "libecma48: Unhandled CSI %s\n", args);
 }
 
-size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
+size_t ecma48_parser_interpret_bytes(ecma48_t *state, char *bytes, size_t len)
 {
   size_t pos = 0;
 
