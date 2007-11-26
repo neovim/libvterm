@@ -22,7 +22,7 @@ debug-%: debug-%.c libecma48.so
 debug-gtkterm: debug-gtkterm.c libecma48.so
 	gcc -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
-libecma48.so: ecma48.o parser.o
+libecma48.so: ecma48.o parser.o commands.o
 	gcc -shared -o $@ $^ $(LDFLAGS)
 
 %.o: %.c $(HFILES)
