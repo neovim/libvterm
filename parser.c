@@ -20,7 +20,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t 
         csi_start = pos;
         break;
       default:
-        (*state->parser_callbacks->escape)(state, c);
+        ecma48_on_parser_escape(state, c);
         in_esc = FALSE;
         eaten = pos;
       }
@@ -28,7 +28,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t 
     else if(in_csi) {
       if(c >= 0x40 && c <= 0x7f) {
         char *csi_args = g_strndup(bytes + csi_start, pos - csi_start + 1);
-        (*state->parser_callbacks->csi)(state, csi_args);
+        ecma48_on_parser_csi(state, csi_args);
         in_csi = FALSE;
         eaten = pos;
       }
@@ -43,7 +43,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t 
           csi_start = pos;
           break;
         default:
-          (*state->parser_callbacks->control)(state, c);
+          ecma48_on_parser_control(state, c);
           eaten = pos;
           break;
         }
@@ -54,7 +54,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t 
         while(pos < len && bytes[pos+1] >= 0x20)
           pos++;
 
-        (*state->parser_callbacks->text)(state, bytes + start, pos - start + 1);
+        ecma48_on_parser_text(state, bytes + start, pos - start + 1);
         eaten = pos;
       }
     }
