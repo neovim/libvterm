@@ -12,14 +12,14 @@
 #include <gtk/gtk.h>
 
 int master;
-ecma48_state_t *state;
+ecma48_t *state;
 
 GtkWidget ***cells;
 
 int cur_col = 0;
 int cur_row = 0;
 
-int text(ecma48_state_t *state, char *s, size_t len)
+int text(ecma48_t *state, char *s, size_t len)
 {
   size_t pos;
   for(pos = 0; pos < len; pos++) {
@@ -39,7 +39,7 @@ int text(ecma48_state_t *state, char *s, size_t len)
   return 1;
 }
 
-int control(ecma48_state_t *state, char control)
+int control(ecma48_t *state, char control)
 {
   switch(control) {
   case 0x0a:
