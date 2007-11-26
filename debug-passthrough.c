@@ -12,27 +12,27 @@
 #include "ecma48.h"
 
 int master;
-ecma48_state_t *state;
+ecma48_t *state;
 
-int text(ecma48_state_t *state, char *s, size_t len)
+int text(ecma48_t *state, char *s, size_t len)
 {
   printf("Wrote %d text: %.*s\n", len, len, s);
   return 1;
 }
 
-int control(ecma48_state_t *state, char control)
+int control(ecma48_t *state, char control)
 {
   printf("Control function 0x%02x\n", control);
   return 1;
 }
 
-int escape(ecma48_state_t *state, char escape)
+int escape(ecma48_t *state, char escape)
 {
   printf("Escape function ESC 0x%02x\n", escape);
   return 1;
 }
 
-int csi(ecma48_state_t *state, char *args)
+int csi(ecma48_t *state, char *args)
 {
   printf("CSI %s\n", args);
   return 1;
