@@ -14,4 +14,9 @@ struct ecma48_state
 
 size_t ecma48_parser_interpret_bytes(ecma48_state_t *state, char *bytes, size_t len);
 
+void ecma48_on_parser_text   (ecma48_state_t *state, char *bytes, size_t len);
+void ecma48_on_parser_control(ecma48_state_t *state, char control);
+void ecma48_on_parser_escape (ecma48_state_t *state, char escape);
+void ecma48_on_parser_csi    (ecma48_state_t *state, char *args);
+
 #endif
