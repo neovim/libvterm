@@ -16,14 +16,17 @@ DEBUGS=debug-passthrough debug-gtkterm
 
 all: $(DEBUGS)
 
-debug-%: debug-%.c ecma48.o
+debug-%: debug-%.c libecma48.so
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS)
 
-debug-gtkterm: debug-gtkterm.c ecma48.o
+debug-gtkterm: debug-gtkterm.c libecma48.so
 	gcc -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
+libecma48.so: ecma48.o
+	gcc -shared -o $@ $^ $(LDFLAGS)
+
 %.o: %.c $(HFILES)
-	gcc -o $@ -c $< $(CCFLAGS)
+	gcc -fPIC -o $@ -c $< $(CCFLAGS)
 
 .PHONY: clean
 clean:
