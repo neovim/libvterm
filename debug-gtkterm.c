@@ -56,23 +56,9 @@ int control(ecma48_state_t *state, char control)
   return 1;
 }
 
-int escape(ecma48_state_t *state, char escape)
-{
-  printf("Escape function ESC 0x%02x\n", escape);
-  return 1;
-}
-
-int csi(ecma48_state_t *state, char *args)
-{
-  printf("CSI %s\n", args);
-  return 1;
-}
-
 static ecma48_parser_callbacks_t cb = {
   .text    = text,
   .control = control,
-  .escape  = escape,
-  .csi     = csi,
 };
 
 gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
