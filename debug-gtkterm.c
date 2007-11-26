@@ -19,7 +19,7 @@ GtkWidget ***cells;
 int cur_col = 0;
 int cur_row = 0;
 
-void text(ecma48_state_t *state, char *s, size_t len)
+int text(ecma48_state_t *state, char *s, size_t len)
 {
   size_t pos;
   for(pos = 0; pos < len; pos++) {
@@ -35,9 +35,11 @@ void text(ecma48_state_t *state, char *s, size_t len)
 
     cur_col++;
   }
+
+  return 1;
 }
 
-void control(ecma48_state_t *state, char control)
+int control(ecma48_state_t *state, char control)
 {
   switch(control) {
   case 0x0a:
@@ -50,16 +52,20 @@ void control(ecma48_state_t *state, char control)
     printf("Control function 0x%02x\n", control);
     break;
   }
+
+  return 1;
 }
 
-void escape(ecma48_state_t *state, char escape)
+int escape(ecma48_state_t *state, char escape)
 {
   printf("Escape function ESC 0x%02x\n", escape);
+  return 1;
 }
 
-void csi(ecma48_state_t *state, char *args)
+int csi(ecma48_state_t *state, char *args)
 {
   printf("CSI %s\n", args);
+  return 1;
 }
 
 static ecma48_parser_callbacks_t cb = {
