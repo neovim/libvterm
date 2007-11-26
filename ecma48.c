@@ -1,16 +1,9 @@
-#include "ecma48.h"
+#include "ecma48_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <glib.h>
-
-struct ecma48_state
-{
-  ecma48_parser_callbacks_t *parser_callbacks;
-
-  GString *buffer;
-};
 
 size_t interpret_bytes(ecma48_state_t *state, char *bytes, size_t len)
 {
