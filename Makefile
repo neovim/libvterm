@@ -30,4 +30,4 @@ libecma48.so: ecma48.o parser.o commands.o
 
 .PHONY: clean
 clean:
-	rm -f $(DEBUGS) $(OFILES)
+	rm -f $(DEBUGS) $(OFILES) libecma48.so
