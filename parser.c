@@ -10,6 +10,9 @@ static void ecma48_on_parser_text(ecma48_t *e48, char *bytes, size_t len)
      e48->parser_callbacks->text)
     done = (*e48->parser_callbacks->text)(e48, bytes, len);
 
+  if(!done && e48->state)
+    done = ecma48_state_on_text(e48, bytes, len);
+
   if(!done)
     fprintf(stderr, "libecma48: Unhandled text (%d bytes): %.*s\n", len, len, bytes);
 }
@@ -21,6 +24,9 @@ static void ecma48_on_parser_control(ecma48_t *e48, char control)
   if(e48->parser_callbacks &&
      e48->parser_callbacks->control)
     done = (*e48->parser_callbacks->control)(e48, control);
+
+  if(!done && e48->state)
+    done = ecma48_state_on_control(e48, control);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", control);
