@@ -9,30 +9,30 @@
  * API functions *
  *****************/
 
-ecma48_t *ecma48_state_new(void)
+ecma48_t *ecma48_new(void)
 {
-  ecma48_t *state = g_new0(struct ecma48_s, 1);
+  ecma48_t *e48 = g_new0(struct ecma48_s, 1);
 
-  state->buffer = g_string_new(NULL);
+  e48->buffer = g_string_new(NULL);
 
-  return state;
+  return e48;
 }
 
-void ecma48_state_set_parser_callbacks(ecma48_t *state, ecma48_parser_callbacks_t *callbacks)
+void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callbacks)
 {
-  state->parser_callbacks = callbacks;
+  e48->parser_callbacks = callbacks;
 }
 
-void ecma48_state_push_bytes(ecma48_t *state, char *bytes, size_t len)
+void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
 {
-  if((state->buffer->len)) {
-    g_string_append_len(state->buffer, bytes, len);
-    size_t eaten = ecma48_parser_interpret_bytes(state, state->buffer->str, state->buffer->len);
-    g_string_erase(state->buffer, 0, eaten);
+  if((e48->buffer->len)) {
+    g_string_append_len(e48->buffer, bytes, len);
+    size_t eaten = ecma48_parser_interpret_bytes(e48, e48->buffer->str, e48->buffer->len);
+    g_string_erase(e48->buffer, 0, eaten);
   }
   else {
-    size_t eaten = ecma48_parser_interpret_bytes(state, bytes, len);
+    size_t eaten = ecma48_parser_interpret_bytes(e48, bytes, len);
     if(eaten < len)
-      g_string_append_len(state->buffer, bytes, len);
+      g_string_append_len(e48->buffer, bytes, len);
   }
 }
