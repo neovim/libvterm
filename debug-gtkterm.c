@@ -16,10 +16,10 @@ ecma48_t *e48;
 
 GtkWidget ***cells;
 
-int term_putchar(ecma48_t *e48, uint32_t codepoint, int row, int col)
+int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos)
 {
   char str[2] = {codepoint, 0};
-  gtk_label_set_text(GTK_LABEL(cells[row][col]), str);
+  gtk_label_set_text(GTK_LABEL(cells[pos.row][pos.col]), str);
 
   return 1;
 }
