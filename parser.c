@@ -73,7 +73,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
       switch(c) {
       case '[': // CSI
         in_csi = TRUE; in_esc = FALSE;
-        csi_start = pos;
+        csi_start = pos + 1;
         break;
       default:
         ecma48_on_parser_escape(e48, c);
@@ -95,7 +95,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
           in_esc = TRUE; break;
         case 0x9b: // CSI
           in_csi = TRUE; in_esc = FALSE;
-          csi_start = pos;
+          csi_start = pos + 1;
           break;
         default:
           ecma48_on_parser_control(e48, c);
