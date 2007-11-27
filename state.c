@@ -41,6 +41,38 @@ void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbac
   }
 }
 
+static void scroll(ecma48_t *e48)
+{
+  ecma48_state_t *state = e48->state;
+
+  ecma48_rectangle_t rect = {
+    .start_row = 0,
+    .end_row   = e48->rows,
+    .start_col = 0,
+    .end_col   = e48->cols,
+  };
+
+  if(state->callbacks &&
+     state->callbacks->scroll)
+    (*state->callbacks->scroll)(e48, rect, 1, 0);
+
+  rect.start_row = e48->rows - 1;
+
+  if(state->callbacks &&
+     state->callbacks->erase)
+    (*state->callbacks->erase)(e48, rect);
+}
+
+static void linefeed(ecma48_t *e48)
+{
+  ecma48_state_t *state = e48->state;
+
+  if(state->pos.row == (e48->rows-1))
+    scroll(e48);
+  else
+    state->pos.row++;
+}
+
 int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
 {
   // TODO: Need a Unicode engine here to convert bytes into Chars
@@ -57,9 +89,8 @@ int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
     uint32_t c = chars[i];
 
     if(state->pos.col == e48->cols) {
+      linefeed(e48);
       state->pos.col = 0;
-      // TODO: bounds checking
-      state->pos.row++;
     }
 
     int done = 0;
@@ -97,11 +128,7 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
     break;
 
   case 0x0d: // LF
-    state->pos.row++;
-    // TODO: Bounds check for scroll
-    if(state->callbacks &&
-       state->callbacks->movecursor)
-      (*state->callbacks->movecursor)(e48, state->pos, oldpos);
+    linefeed(e48);
     break;
 
   default:
