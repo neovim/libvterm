@@ -12,6 +12,13 @@ typedef struct {
 } ecma48_position_t;
 
 typedef struct {
+  int start_row;
+  int end_row;
+  int start_col;
+  int end_col;
+} ecma48_rectangle_t;
+
+typedef struct {
   int (*text)(ecma48_t *state, char *s, size_t len);
   int (*control)(ecma48_t *state, char control);
   int (*escape)(ecma48_t *state, char escape);
@@ -21,6 +28,8 @@ typedef struct {
 typedef struct {
   int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos);
   int (*movecursor)(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos);
+  int (*scroll)(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward);
+  int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);
