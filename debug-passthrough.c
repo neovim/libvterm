@@ -32,9 +32,9 @@ int escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-int csi(ecma48_t *e48, char *args)
+int csi(ecma48_t *e48, char *args, size_t arglen, char command)
 {
-  printf("CSI %s\n", args);
+  printf("CSI %.*s %c\n", arglen, args, command);
   return 1;
 }
 

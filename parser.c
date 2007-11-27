@@ -44,16 +44,16 @@ static void ecma48_on_parser_escape(ecma48_t *e48, char escape)
     fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", escape);
 }
 
-static void ecma48_on_parser_csi(ecma48_t *e48, char *args)
+static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char command)
 {
   int done = 0;
 
   if(e48->parser_callbacks &&
      e48->parser_callbacks->csi)
-    done = (*e48->parser_callbacks->csi)(e48, args);
+    done = (*e48->parser_callbacks->csi)(e48, args, arglen, command);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled CSI %s\n", args);
+    fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
 size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
@@ -83,8 +83,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
     }
     else if(in_csi) {
       if(c >= 0x40 && c <= 0x7f) {
-        char *csi_args = g_strndup(bytes + csi_start, pos - csi_start + 1);
-        ecma48_on_parser_csi(e48, csi_args);
+        ecma48_on_parser_csi(e48, bytes + csi_start, pos - csi_start, c);
         in_csi = FALSE;
         eaten = pos;
       }
