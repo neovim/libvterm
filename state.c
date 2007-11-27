@@ -51,6 +51,8 @@ int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
 
   ecma48_state_t *state = e48->state;
 
+  ecma48_position_t oldpos = state->pos;
+
   for(i = 0; i < len; i++) {
     uint32_t c = chars[i];
 
@@ -73,6 +75,10 @@ int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
     state->pos.col++;
   }
 
+  if(state->callbacks &&
+     state->callbacks->movecursor)
+    (*state->callbacks->movecursor)(e48, state->pos, oldpos);
+
   return 1;
 }
 
@@ -80,14 +86,22 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
 {
   ecma48_state_t *state = e48->state;
 
+  ecma48_position_t oldpos = state->pos;
+
   switch(control) {
   case 0x0a: // CR
     state->pos.col = 0;
+    if(state->callbacks &&
+       state->callbacks->movecursor)
+      (*state->callbacks->movecursor)(e48, state->pos, oldpos);
     break;
 
   case 0x0d: // LF
     state->pos.row++;
     // TODO: Bounds check for scroll
+    if(state->callbacks &&
+       state->callbacks->movecursor)
+      (*state->callbacks->movecursor)(e48, state->pos, oldpos);
     break;
 
   default:
