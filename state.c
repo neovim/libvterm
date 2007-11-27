@@ -76,7 +76,7 @@ static void linefeed(ecma48_t *e48)
 int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
 {
   // TODO: Need a Unicode engine here to convert bytes into Chars
-  uint32_t *chars = g_malloc(len * sizeof(uint32_t));
+  uint32_t *chars = g_alloca(len * sizeof(uint32_t));
   int i;
   for(i = 0; i < len; i++)
     chars[i] = bytes[i];
