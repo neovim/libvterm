@@ -7,6 +7,9 @@
 
 struct ecma48_s
 {
+  int rows;
+  int cols;
+
   ecma48_parser_callbacks_t *parser_callbacks;
 
   GString *buffer;

@@ -14,6 +14,8 @@ typedef struct {
 } ecma48_parser_callbacks_t;
 
 ecma48_t *ecma48_new(void);
+void ecma48_set_size(ecma48_t *e48, int rows, int cols);
+
 void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callbacks);
 
 void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len);
