@@ -12,27 +12,27 @@
 #include "ecma48.h"
 
 int master;
-ecma48_t *state;
+ecma48_t *e48;
 
-int text(ecma48_t *state, char *s, size_t len)
+int text(ecma48_t *e48, char *s, size_t len)
 {
   printf("Wrote %d text: %.*s\n", len, len, s);
   return 1;
 }
 
-int control(ecma48_t *state, char control)
+int control(ecma48_t *e48, char control)
 {
   printf("Control function 0x%02x\n", control);
   return 1;
 }
 
-int escape(ecma48_t *state, char escape)
+int escape(ecma48_t *e48, char escape)
 {
   printf("Escape function ESC 0x%02x\n", escape);
   return 1;
 }
 
-int csi(ecma48_t *state, char *args)
+int csi(ecma48_t *e48, char *args)
 {
   printf("CSI %s\n", args);
   return 1;
@@ -80,7 +80,7 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
     exit(1);
   }
 
-  ecma48_state_push_bytes(state, buffer, bytes);
+  ecma48_push_bytes(e48, buffer, bytes);
 
   write(1, buffer, bytes);
 
@@ -89,8 +89,8 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 
 int main(int argc, char *argv[])
 {
-  state = ecma48_state_new();
-  ecma48_state_set_parser_callbacks(state, &cb);
+  e48 = ecma48_new();
+  ecma48_set_parser_callbacks(e48, &cb);
 
   pid_t kid = forkpty(&master, NULL, NULL, NULL);
   if(kid == 0) {

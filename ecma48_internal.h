@@ -12,6 +12,6 @@ struct ecma48_s
   GString *buffer;
 };
 
-size_t ecma48_parser_interpret_bytes(ecma48_t *state, char *bytes, size_t len);
+size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len);
 
 #endif
