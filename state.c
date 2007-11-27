@@ -7,16 +7,15 @@ struct ecma48_state_s
   ecma48_state_callbacks_t *callbacks;
 
   /* Current cursor position */
-  int row;
-  int col;
+  ecma48_position_t pos;
 };
 
 static ecma48_state_t *ecma48_state_new(void)
 {
   ecma48_state_t *state = g_new0(ecma48_state_t, 1);
 
-  state->row = 0;
-  state->col = 0;
+  state->pos.row = 0;
+  state->pos.col = 0;
 
   return state;
 }
@@ -55,23 +54,23 @@ int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
   for(i = 0; i < len; i++) {
     uint32_t c = chars[i];
 
-    if(state->col == e48->cols) {
-      state->col = 0;
+    if(state->pos.col == e48->cols) {
+      state->pos.col = 0;
       // TODO: bounds checking
-      state->row++;
+      state->pos.row++;
     }
 
     int done = 0;
 
     if(state->callbacks &&
        state->callbacks->putchar)
-      done = (*state->callbacks->putchar)(e48, c, state->row, state->col);
+      done = (*state->callbacks->putchar)(e48, c, state->pos);
 
     if(!done)
       fprintf(stderr, "libecma48: Unhandled putchar U+%04x at (%d,%d)\n",
-          c, state->col, state->row);
+          c, state->pos.col, state->pos.row);
 
-    state->col++;
+    state->pos.col++;
   }
 
   return 1;
@@ -83,11 +82,11 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
 
   switch(control) {
   case 0x0a: // CR
-    state->col = 0;
+    state->pos.col = 0;
     break;
 
   case 0x0d: // LF
-    state->row++;
+    state->pos.row++;
     // TODO: Bounds check for scroll
     break;
 
