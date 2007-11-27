@@ -16,49 +16,16 @@ ecma48_t *e48;
 
 GtkWidget ***cells;
 
-int cur_col = 0;
-int cur_row = 0;
-
-int text(ecma48_t *e48, char *s, size_t len)
+int term_putchar(ecma48_t *e48, uint32_t codepoint, int row, int col)
 {
-  size_t pos;
-  for(pos = 0; pos < len; pos++) {
-    char c = s[pos];
-
-    if(cur_col == 80) {
-      cur_col = 1;
-      cur_row++;
-    }
-
-    char str[2] = {c, 0};
-    gtk_label_set_text(GTK_LABEL(cells[cur_row][cur_col]), str);
-
-    cur_col++;
-  }
+  char str[2] = {codepoint, 0};
+  gtk_label_set_text(GTK_LABEL(cells[row][col]), str);
 
   return 1;
 }
 
-int control(ecma48_t *e48, char control)
-{
-  switch(control) {
-  case 0x0a:
-    cur_col = 0;
-    break;
-  case 0x0d:
-    cur_row++;
-    break;
-  default:
-    printf("Control function 0x%02x\n", control);
-    break;
-  }
-
-  return 1;
-}
-
-static ecma48_parser_callbacks_t cb = {
-  .text    = text,
-  .control = control,
+static ecma48_state_callbacks_t cb = {
+  .putchar = term_putchar,
 };
 
 gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
@@ -110,7 +77,7 @@ int main(int argc, char *argv[])
   e48 = ecma48_new();
   ecma48_set_size(e48, size.ws_row, size.ws_col);
 
-  ecma48_set_parser_callbacks(e48, &cb);
+  ecma48_set_state_callbacks(e48, &cb);
 
   cells = g_new0(GtkWidget**, size.ws_row);
   GtkWidget *table = gtk_table_new(size.ws_row, size.ws_col, TRUE);
