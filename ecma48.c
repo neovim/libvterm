@@ -18,6 +18,12 @@ ecma48_t *ecma48_new(void)
   return e48;
 }
 
+void ecma48_set_size(ecma48_t *e48, int rows, int cols)
+{
+  e48->rows = rows;
+  e48->cols = cols;
+}
+
 void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callbacks)
 {
   e48->parser_callbacks = callbacks;
