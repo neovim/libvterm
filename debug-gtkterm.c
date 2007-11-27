@@ -12,14 +12,14 @@
 #include <gtk/gtk.h>
 
 int master;
-ecma48_t *state;
+ecma48_t *e48;
 
 GtkWidget ***cells;
 
 int cur_col = 0;
 int cur_row = 0;
 
-int text(ecma48_t *state, char *s, size_t len)
+int text(ecma48_t *e48, char *s, size_t len)
 {
   size_t pos;
   for(pos = 0; pos < len; pos++) {
@@ -39,7 +39,7 @@ int text(ecma48_t *state, char *s, size_t len)
   return 1;
 }
 
-int control(ecma48_t *state, char control)
+int control(ecma48_t *e48, char control)
 {
   switch(control) {
   case 0x0a:
@@ -96,7 +96,7 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
     exit(1);
   }
 
-  ecma48_state_push_bytes(state, buffer, bytes);
+  ecma48_push_bytes(e48, buffer, bytes);
 
   return TRUE;
 }
@@ -105,8 +105,8 @@ int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
 
-  state = ecma48_state_new();
-  ecma48_state_set_parser_callbacks(state, &cb);
+  e48 = ecma48_new();
+  ecma48_set_parser_callbacks(e48, &cb);
 
   struct winsize size = { 25, 80, 0, 0 };
 
