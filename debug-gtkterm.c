@@ -105,10 +105,12 @@ int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
 
-  e48 = ecma48_new();
-  ecma48_set_parser_callbacks(e48, &cb);
-
   struct winsize size = { 25, 80, 0, 0 };
+
+  e48 = ecma48_new();
+  ecma48_set_size(e48, size.ws_row, size.ws_col);
+
+  ecma48_set_parser_callbacks(e48, &cb);
 
   cells = g_new0(GtkWidget**, size.ws_row);
   GtkWidget *table = gtk_table_new(size.ws_row, size.ws_col, TRUE);
