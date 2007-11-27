@@ -22,7 +22,7 @@ typedef struct {
   int (*text)(ecma48_t *state, char *s, size_t len);
   int (*control)(ecma48_t *state, char control);
   int (*escape)(ecma48_t *state, char escape);
-  int (*csi)(ecma48_t *state, char *args);
+  int (*csi)(ecma48_t *state, char *args, size_t arglen, char command);
 } ecma48_parser_callbacks_t;
 
 typedef struct {
