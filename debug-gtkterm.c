@@ -24,8 +24,80 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos)
   return 1;
 }
 
+int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos)
+{
+  // TODO: Need to find some way to display this information
+  printf("Cursor is now at (%d,%d)\n", pos.col, pos.row);
+
+  return 1;
+}
+
+int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
+{
+  int init_row, test_row, init_col, test_col;
+  int inc_row, inc_col;
+
+  if(downward < 0) {
+    init_row = rect.end_row - 1;
+    test_row = rect.start_row - downward;
+    inc_row = -1;
+  }
+  else if (downward == 0) {
+    init_row = rect.start_row;
+    test_row = rect.end_row;
+    inc_row = +1;
+  }
+  else {
+    init_row = rect.start_row + downward;
+    test_row = rect.end_row - 1;
+    inc_row = +1;
+  }
+
+  if(rightward < 0) {
+    init_col = rect.end_col - 1;
+    test_col = rect.start_col - rightward;
+    inc_col = -1;
+  }
+  else if (rightward == 0) {
+    init_col = rect.start_col;
+    test_col = rect.end_col;
+    inc_col = +1;
+  }
+  else {
+    init_col = rect.start_col + rightward;
+    test_col = rect.end_col - 1;
+    inc_col = +1;
+  }
+
+  int row, col;
+  for(row = init_row; row != test_row; row += inc_row)
+    for(col = init_col; col != test_col; col += inc_col) {
+      GtkWidget *dest = cells[row][col];
+      GtkWidget *src  = cells[row+downward][col+rightward];
+
+      const char *text = gtk_label_get_text(GTK_LABEL(src));
+      gtk_label_set_text(GTK_LABEL(dest), text);
+    }
+
+  return 1;
+}
+
+int term_erase(ecma48_t *e48, ecma48_rectangle_t rect)
+{
+  int row, col;
+  for(row = rect.start_row; row < rect.end_row; row++)
+    for(col = rect.start_col; col < rect.end_col; col++) {
+      GtkWidget *dest = cells[row][col];
+
+      gtk_label_set_text(GTK_LABEL(dest), "");
+    }
+}
+
 static ecma48_state_callbacks_t cb = {
-  .putchar = term_putchar,
+  .putchar    = term_putchar,
+  .movecursor = term_movecursor,
+  .scroll     = term_scroll,
+  .erase      = term_erase,
 };
 
 gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
