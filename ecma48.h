@@ -20,6 +20,7 @@ typedef struct {
 
 typedef struct {
   int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos);
+  int (*movecursor)(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);
