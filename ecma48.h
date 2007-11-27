@@ -7,6 +7,11 @@
 typedef struct ecma48_s ecma48_t;
 
 typedef struct {
+  int row;
+  int col;
+} ecma48_position_t;
+
+typedef struct {
   int (*text)(ecma48_t *state, char *s, size_t len);
   int (*control)(ecma48_t *state, char control);
   int (*escape)(ecma48_t *state, char escape);
@@ -14,7 +19,7 @@ typedef struct {
 } ecma48_parser_callbacks_t;
 
 typedef struct {
-  int (*putchar)(ecma48_t *e48, uint32_t codepoint, int row, int col);
+  int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);
