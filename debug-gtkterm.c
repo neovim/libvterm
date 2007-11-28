@@ -95,6 +95,8 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen)
 
       gtk_label_set_text(GTK_LABEL(dest), "");
     }
+
+  return 1;
 }
 
 static ecma48_state_callbacks_t cb = {
