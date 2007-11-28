@@ -32,7 +32,7 @@ int escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-int csi(ecma48_t *e48, char *args, size_t arglen, char command)
+int csi_raw(ecma48_t *e48, char *args, size_t arglen, char command)
 {
   printf("CSI %.*s %c\n", arglen, args, command);
   return 1;
@@ -42,7 +42,7 @@ static ecma48_parser_callbacks_t cb = {
   .text    = text,
   .control = control,
   .escape  = escape,
-  .csi     = csi,
+  .csi_raw = csi_raw,
 };
 
 gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
