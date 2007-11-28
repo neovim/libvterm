@@ -14,12 +14,16 @@
 int master;
 ecma48_t *e48;
 
-GtkWidget ***cells;
+typedef struct {
+  GtkWidget *label;
+} term_cell;
+
+term_cell **cells;
 
 int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos)
 {
   char str[2] = {codepoint, 0};
-  gtk_label_set_text(GTK_LABEL(cells[pos.row][pos.col]), str);
+  gtk_label_set_text(GTK_LABEL(cells[pos.row][pos.col].label), str);
 
   return 1;
 }
@@ -72,8 +76,8 @@ int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightw
   int row, col;
   for(row = init_row; row != test_row; row += inc_row)
     for(col = init_col; col != test_col; col += inc_col) {
-      GtkWidget *dest = cells[row][col];
-      GtkWidget *src  = cells[row+downward][col+rightward];
+      GtkWidget *dest = cells[row][col].label;
+      GtkWidget *src  = cells[row+downward][col+rightward].label;
 
       const char *text = gtk_label_get_text(GTK_LABEL(src));
       gtk_label_set_text(GTK_LABEL(dest), text);
@@ -87,7 +91,7 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect)
   int row, col;
   for(row = rect.start_row; row < rect.end_row; row++)
     for(col = rect.start_col; col < rect.end_col; col++) {
-      GtkWidget *dest = cells[row][col];
+      GtkWidget *dest = cells[row][col].label;
 
       gtk_label_set_text(GTK_LABEL(dest), "");
     }
@@ -151,17 +155,17 @@ int main(int argc, char *argv[])
 
   ecma48_set_state_callbacks(e48, &cb);
 
-  cells = g_new0(GtkWidget**, size.ws_row);
+  cells = g_new0(term_cell*, size.ws_row);
   GtkWidget *table = gtk_table_new(size.ws_row, size.ws_col, TRUE);
 
   int row;
   for(row = 0; row < size.ws_row; row++) {
-    cells[row] = g_new0(GtkWidget*, size.ws_col);
+    cells[row] = g_new0(term_cell, size.ws_col);
 
     int col;
     for(col = 0; col < size.ws_col; col++) {
       GtkWidget *label = gtk_label_new("");
-      cells[row][col] = label;
+      cells[row][col].label = label;
 
       gtk_table_attach_defaults(GTK_TABLE(table), label,
           col, col + 1, row, row + 1);
