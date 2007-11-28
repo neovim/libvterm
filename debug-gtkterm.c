@@ -20,7 +20,7 @@ typedef struct {
 
 term_cell **cells;
 
-int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos)
+int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void *pen)
 {
   char str[2] = {codepoint, 0};
   gtk_label_set_text(GTK_LABEL(cells[pos.row][pos.col].label), str);
@@ -86,7 +86,7 @@ int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightw
   return 1;
 }
 
-int term_erase(ecma48_t *e48, ecma48_rectangle_t rect)
+int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen)
 {
   int row, col;
   for(row = rect.start_row; row < rect.end_row; row++)
@@ -176,6 +176,8 @@ int main(int argc, char *argv[])
   gtk_container_add(GTK_CONTAINER(window), table);
 
   gtk_widget_show_all(window);
+
+  ecma48_state_initialise(e48);
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {

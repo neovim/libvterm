@@ -26,10 +26,11 @@ typedef struct {
 } ecma48_parser_callbacks_t;
 
 typedef struct {
-  int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos);
+  int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void *pen);
   int (*movecursor)(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos);
   int (*scroll)(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward);
-  int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect);
+  int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect, void *pen);
+  int (*setpen)(ecma48_t *e48, const char *pencmd, void **penstore);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);
@@ -37,6 +38,8 @@ void ecma48_set_size(ecma48_t *e48, int rows, int cols);
 
 void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callbacks);
 void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbacks);
+
+void ecma48_state_initialise(ecma48_t *e48);
 
 void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len);
 
