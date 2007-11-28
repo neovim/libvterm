@@ -49,8 +49,8 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
   int done = 0;
 
   if(e48->parser_callbacks &&
-     e48->parser_callbacks->csi)
-    done = (*e48->parser_callbacks->csi)(e48, args, arglen, command);
+     e48->parser_callbacks->csi_raw)
+    done = (*e48->parser_callbacks->csi_raw)(e48, args, arglen, command);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
