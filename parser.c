@@ -71,7 +71,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 
     if(in_esc) {
       switch(c) {
-      case '[': // CSI
+      case 0x5b: // CSI
         in_csi = TRUE; in_esc = FALSE;
         csi_start = pos + 1;
         break;
