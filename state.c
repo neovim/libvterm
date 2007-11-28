@@ -8,6 +8,9 @@ struct ecma48_state_s
 
   /* Current cursor position */
   ecma48_position_t pos;
+
+  /* Current pen - entirely managed by user code */
+  void *pen;
 };
 
 static ecma48_state_t *ecma48_state_new(void)
@@ -41,6 +44,29 @@ void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbac
   }
 }
 
+void ecma48_state_initialise(ecma48_t *e48)
+{
+  ecma48_state_t *state = e48->state;
+
+  if(!state)
+    return;
+
+  state->pos.row = 0;
+  state->pos.col = 0;
+
+  state->pen = NULL;
+
+  if(state->callbacks &&
+     state->callbacks->setpen)
+    (*state->callbacks->setpen)(e48, NULL, &state->pen);
+
+  if(state->callbacks &&
+     state->callbacks->erase) {
+    ecma48_rectangle_t rect = { 0, e48->rows, 0, e48->cols };
+    (*state->callbacks->erase)(e48, rect, state->pen);
+  }
+}
+
 static void scroll(ecma48_t *e48)
 {
   ecma48_state_t *state = e48->state;
@@ -60,7 +86,7 @@ static void scroll(ecma48_t *e48)
 
   if(state->callbacks &&
      state->callbacks->erase)
-    (*state->callbacks->erase)(e48, rect);
+    (*state->callbacks->erase)(e48, rect, state->pen);
 }
 
 static void linefeed(ecma48_t *e48)
@@ -97,7 +123,7 @@ int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
 
     if(state->callbacks &&
        state->callbacks->putchar)
-      done = (*state->callbacks->putchar)(e48, c, state->pos);
+      done = (*state->callbacks->putchar)(e48, c, state->pos, state->pen);
 
     if(!done)
       fprintf(stderr, "libecma48: Unhandled putchar U+%04x at (%d,%d)\n",
