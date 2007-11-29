@@ -210,3 +210,27 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
 
   return 1;
 }
+
+int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
+{
+  ecma48_state_t *state = e48->state;
+
+  int argi;
+
+  switch(command) {
+  case 0x6d: // SGR - ECMA-48 8.3.117
+    if(state->callbacks &&
+       state->callbacks->setpen)
+      for(argi = 0; argi < argcount; argi++) {
+        if(!(*state->callbacks->setpen)(e48, args[argi], &state->pen))
+          fprintf(stderr, "libecma48: Unhandled CSI SGR %d\n", args[argi]);
+      }
+
+    break;
+
+  default:
+    return 0;
+  }
+
+  return 1;
+}
