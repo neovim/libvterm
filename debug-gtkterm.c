@@ -36,6 +36,7 @@ int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldp
   return 1;
 }
 
+// This function is currently unused but retained for historic interest
 int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
 {
   int init_row, test_row, init_col, test_col;
@@ -86,6 +87,17 @@ int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightw
   return 1;
 }
 
+int term_copycell(ecma48_t *e48, ecma48_position_t destpos, ecma48_position_t srcpos)
+{
+  GtkWidget *dest = cells[destpos.row][destpos.col].label;
+  GtkWidget *src  = cells[srcpos.row][srcpos.col].label;
+
+  const char *text = gtk_label_get_text(GTK_LABEL(src));
+  gtk_label_set_text(GTK_LABEL(dest), text);
+
+  return 1;
+}
+
 int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen)
 {
   int row, col;
@@ -102,7 +114,8 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen)
 static ecma48_state_callbacks_t cb = {
   .putchar    = term_putchar,
   .movecursor = term_movecursor,
-  .scroll     = term_scroll,
+  // .scroll     = term_scroll,
+  .copycell   = term_copycell,
   .erase      = term_erase,
 };
 
