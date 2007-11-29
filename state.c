@@ -91,9 +91,37 @@ static void scroll(ecma48_t *e48)
     .end_col   = e48->cols,
   };
 
+  int done_scroll = 0;
+
   if(state->callbacks &&
      state->callbacks->scroll)
-    (*state->callbacks->scroll)(e48, rect, 1, 0);
+    done_scroll = (*state->callbacks->scroll)(e48, rect, 1, 0);
+
+  if(!done_scroll &&
+     state->callbacks &&
+     state->callbacks->copycell) {
+    // User code doesn't implement a real scroll; so instead we'll synthesize
+    // one out of copycell
+    int init_row, test_row, init_col, test_col;
+    int inc_row, inc_col;
+
+    init_row = rect.start_row + 1;
+    test_row = rect.end_row - 1;
+    inc_row = +1;
+
+    init_col = rect.start_col;
+    test_col = rect.end_col;
+    inc_col = +1;
+
+    ecma48_position_t pos;
+    for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
+      for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
+        ecma48_position_t srcpos = { pos.row + 1, pos.col };
+        (*state->callbacks->copycell)(e48, pos, srcpos);
+      }
+
+    done_scroll = 1;
+  }
 
   rect.start_row = e48->rows - 1;
 
