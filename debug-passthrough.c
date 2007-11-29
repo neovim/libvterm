@@ -32,9 +32,19 @@ int escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-int csi_raw(ecma48_t *e48, char *args, size_t arglen, char command)
+int csi(ecma48_t *e48, int *args, int argcount, char command)
 {
-  printf("CSI %.*s %c\n", arglen, args, command);
+  printf("CSI ");
+
+  int argi;
+  for(argi = 0; argi < argcount; argi++)
+    if(args[argi] == -1)
+      printf("[def] ");
+    else 
+      printf("%d ", args[argi]);
+
+  printf("%c\n", command);
+
   return 1;
 }
 
@@ -42,7 +52,7 @@ static ecma48_parser_callbacks_t cb = {
   .text    = text,
   .control = control,
   .escape  = escape,
-  .csi_raw = csi_raw,
+  .csi     = csi,
 };
 
 gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
