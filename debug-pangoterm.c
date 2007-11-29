@@ -28,8 +28,23 @@ typedef struct {
 
 term_cell **cells;
 
+const char *default_fg = "gray90";
+const char *default_bg = "black";
+
+const char *col_spec[] = {
+  "black",
+  "red",
+  "green",
+  "yellow",
+  "blue",
+  "magenta",
+  "cyan",
+  "white"
+};
+
 typedef struct {
   GdkColor bg_col;
+  PangoAttrList *attrs;
 } term_pen;
 
 void paint_cell(int row, int col, GdkRectangle *clip, gboolean with_cursor)
@@ -105,6 +120,8 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
   PangoLayout *layout = cells[pos.row][pos.col].layout;
 
   pango_layout_set_text(layout, s, -1);
+  if(pen->attrs)
+    pango_layout_set_attributes(layout, pen->attrs);
 
   cells[pos.row][pos.col].bg_col = pen->bg_col;
 
@@ -167,16 +184,67 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
 
 int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
 {
+#define CLONEATTRS \
+  do { \
+    PangoAttrList *newattrs = pango_attr_list_copy(pen->attrs); \
+    pango_attr_list_unref(pen->attrs); \
+    pen->attrs = newattrs; \
+  } while(0)
+
+#define ADDATTR(a) \
+  do { \
+    PangoAttribute *newattr = (a); \
+    newattr->start_index = 0; \
+    newattr->end_index = 100; /* can't really know for sure */ \
+    pango_attr_list_change(pen->attrs, newattr); \
+  } while(0)
+
   term_pen *pen = *penstore;
 
   if(!*penstore) {
     pen = g_new0(term_pen, 1);
     *penstore = pen;
+    pen->attrs = NULL;
   }
 
   switch(sgrcmd) {
+  case -1:
   case 0: // Reset all
-    gdk_color_parse("white", &pen->bg_col);
+    gdk_color_parse(default_bg, &pen->bg_col);
+
+    if(pen->attrs)
+      pango_attr_list_unref(pen->attrs);
+    pen->attrs = pango_attr_list_new();
+
+    GdkColor fg_col;
+    gdk_color_parse(default_fg, &fg_col);
+    ADDATTR(pango_attr_foreground_new(
+        fg_col.red * 256, fg_col.green * 256, fg_col.blue * 256)
+      );
+    break;
+
+  case 1: // Bold
+    CLONEATTRS;
+    ADDATTR(pango_attr_weight_new(PANGO_WEIGHT_BOLD));
+    break;
+
+  case 30: case 31: case 32: case 33:
+  case 34: case 35: case 36: case 37: // Foreground colour
+  case 39: // Default foreground
+    {
+      CLONEATTRS;
+      GdkColor fg_col;
+      gdk_color_parse(sgrcmd == 39 ? default_fg : col_spec[sgrcmd - 30], &fg_col);
+      ADDATTR(pango_attr_foreground_new(
+          fg_col.red * 256, fg_col.green * 256, fg_col.blue * 256)
+        );
+    }
+    break;
+
+  case 40: case 41: case 42: case 43:
+  case 44: case 45: case 46: case 47: // Background colour
+  case 49: // Default background
+    gdk_color_parse(sgrcmd == 49 ? default_bg : col_spec[sgrcmd - 40], &pen->bg_col);
     break;
 
   default:
