@@ -102,6 +102,15 @@ static void scroll(ecma48_t *e48)
     (*state->callbacks->erase)(e48, rect, state->pen);
 }
 
+static void updatecursor(ecma48_t *e48, ecma48_state_t *state, ecma48_position_t *oldpos)
+{
+  if(state->pos.col != oldpos->col || state->pos.row != oldpos->row) {
+    if(state->callbacks &&
+      state->callbacks->movecursor)
+      (*state->callbacks->movecursor)(e48, state->pos, *oldpos);
+  }
+}
+
 static void linefeed(ecma48_t *e48)
 {
   ecma48_state_t *state = e48->state;
@@ -145,9 +154,7 @@ int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
     state->pos.col++;
   }
 
-  if(state->callbacks &&
-     state->callbacks->movecursor)
-    (*state->callbacks->movecursor)(e48, state->pos, oldpos);
+  updatecursor(e48, state, &oldpos);
 
   return 1;
 }
@@ -161,9 +168,6 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
   switch(control) {
   case 0x0a: // CR - ECMA-48 8.3.15
     state->pos.col = 0;
-    if(state->callbacks &&
-       state->callbacks->movecursor)
-      (*state->callbacks->movecursor)(e48, state->pos, oldpos);
     break;
 
   case 0x0d: // LF - ECMA-48 8.3.74
@@ -173,6 +177,8 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
   default:
     return 0;
   }
+
+  updatecursor(e48, state, &oldpos);
 
   return 1;
 }
