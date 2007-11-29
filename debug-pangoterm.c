@@ -31,6 +31,11 @@ term_cell **cells;
 const char *default_fg = "gray90";
 const char *default_bg = "black";
 
+const char *cursor_col = "white";
+
+const char *default_font = "Leonine Sans Mono";
+const int default_size = 9;
+
 const char *col_spec[] = {
   "black",
   "red",
@@ -320,6 +325,10 @@ int main(int argc, char *argv[])
 
   PangoContext *pctx = gtk_widget_get_pango_context(window);
 
+  PangoFontDescription *fontdesc = pango_font_description_new();
+  pango_font_description_set_family(fontdesc, default_font);
+  pango_font_description_set_size(fontdesc, default_size * PANGO_SCALE);
+
   cells = g_new0(term_cell*, size.ws_row);
 
   int row;
@@ -329,6 +338,7 @@ int main(int argc, char *argv[])
     int col;
     for(col = 0; col < size.ws_col; col++) {
       cells[row][col].layout = pango_layout_new(pctx);
+      pango_layout_set_font_description(cells[row][col].layout, fontdesc);
     }
   }
 
@@ -358,7 +368,7 @@ int main(int argc, char *argv[])
   cursor_gc = gdk_gc_new(window->window);
 
   GdkColor col;
-  gdk_color_parse("black", &col);
+  gdk_color_parse(cursor_col, &col);
   gdk_gc_set_rgb_fg_color(cursor_gc, &col);
 
   ecma48_state_initialise(e48);
