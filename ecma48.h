@@ -23,6 +23,7 @@ typedef struct {
   int (*control)(ecma48_t *e48, char control);
   int (*escape)(ecma48_t *e48, char escape);
   int (*csi_raw)(ecma48_t *e48, char *args, size_t arglen, char command);
+  int (*csi)(ecma48_t *e48, int *args, int argcount, char command);
 } ecma48_parser_callbacks_t;
 
 typedef struct {
