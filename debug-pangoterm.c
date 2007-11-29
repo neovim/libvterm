@@ -233,6 +233,21 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
     ADDATTR(pango_attr_weight_new(PANGO_WEIGHT_BOLD));
     break;
 
+  case 4: // Single underline
+    CLONEATTRS;
+    ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
+    break;
+
+  case 21: // Double underline
+    CLONEATTRS;
+    ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_DOUBLE));
+    break;
+
+  case 24: // Not underlined
+    CLONEATTRS;
+    ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_NONE));
+    break;
+
   case 30: case 31: case 32: case 33:
   case 34: case 35: case 36: case 37: // Foreground colour
   case 39: // Default foreground
