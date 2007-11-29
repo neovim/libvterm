@@ -22,5 +22,6 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len);
 
 int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len);
 int ecma48_state_on_control(ecma48_t *e48, char control);
+int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command);
 
 #endif
