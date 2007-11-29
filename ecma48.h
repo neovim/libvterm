@@ -19,10 +19,10 @@ typedef struct {
 } ecma48_rectangle_t;
 
 typedef struct {
-  int (*text)(ecma48_t *state, char *s, size_t len);
-  int (*control)(ecma48_t *state, char control);
-  int (*escape)(ecma48_t *state, char escape);
-  int (*csi_raw)(ecma48_t *state, char *args, size_t arglen, char command);
+  int (*text)(ecma48_t *e48, char *s, size_t len);
+  int (*control)(ecma48_t *e48, char control);
+  int (*escape)(ecma48_t *e48, char escape);
+  int (*csi_raw)(ecma48_t *e48, char *args, size_t arglen, char command);
 } ecma48_parser_callbacks_t;
 
 typedef struct {
