@@ -72,52 +72,6 @@ void repaint_area(GdkRectangle *area)
   g_object_unref(G_OBJECT(gc));
 }
 
-void paint_cell(int row, int col, gboolean with_cursor)
-{
-  GdkGC *gc = gdk_gc_new(termbuffer);
-
-  gdk_gc_set_rgb_fg_color(gc, &cells[row][col].bg_col);
-
-  GdkRectangle destarea = {
-    .x      = col * cell_width,
-    .y      = row * cell_height,
-    .width  = cell_width,
-    .height = cell_height
-  };
-
-  gdk_draw_rectangle(termbuffer,
-      gc,
-      TRUE,
-      destarea.x,
-      destarea.y,
-      destarea.width,
-      destarea.height);
-
-  PangoLayout *layout = cells[row][col].layout;
-
-  if(layout) {
-    gdk_draw_layout(termbuffer,
-        gc,
-        destarea.x,
-        destarea.y,
-        layout);
-  }
-
-  g_object_unref(G_OBJECT(gc));
-
-  if(with_cursor) {
-    gdk_draw_rectangle(termbuffer,
-        cursor_gc,
-        FALSE,
-        destarea.x,
-        destarea.y,
-        destarea.width - 1,
-        destarea.height - 1);
-  }
-
-  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
-}
-
 gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_data)
 {
   repaint_area(&event->area);
@@ -148,7 +102,36 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
 
   cells[pos.row][pos.col].bg_col = pen->bg_col;
 
-  paint_cell(pos.row, pos.col, FALSE);
+  GdkGC *gc = gdk_gc_new(termbuffer);
+
+  gdk_gc_set_rgb_fg_color(gc, &pen->bg_col);
+
+  GdkRectangle destarea = {
+    .x      = pos.col * cell_width,
+    .y      = pos.row * cell_height,
+    .width  = cell_width,
+    .height = cell_height
+  };
+
+  gdk_draw_rectangle(termbuffer,
+      gc,
+      TRUE,
+      destarea.x,
+      destarea.y,
+      destarea.width,
+      destarea.height);
+
+  if(layout) {
+    gdk_draw_layout(termbuffer,
+        gc,
+        destarea.x,
+        destarea.y,
+        layout);
+  }
+
+  g_object_unref(G_OBJECT(gc));
+
+  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
 
   return 1;
 }
