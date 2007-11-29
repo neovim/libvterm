@@ -17,7 +17,11 @@ ecma48_t *e48;
 int cell_width;
 int cell_height;
 
+GdkRectangle invalid_area;
+GdkRectangle cursor_area;
+
 GtkWidget *termwin;
+GdkPixmap *termbuffer;
 
 GdkGC *cursor_gc;
 
@@ -52,66 +56,80 @@ typedef struct {
   PangoAttrList *attrs;
 } term_pen;
 
-void paint_cell(int row, int col, GdkRectangle *clip, gboolean with_cursor)
+void repaint_area(GdkRectangle *area)
 {
   GdkWindow *win = termwin->window;
 
   GdkGC *gc = gdk_gc_new(win);
 
-  if(clip)
-    gdk_gc_set_clip_rectangle(gc, clip);
+  gdk_gc_set_clip_rectangle(gc, area);
+
+  gdk_draw_drawable(win,
+      gc,
+      termbuffer,
+      0, 0, 0, 0, -1, -1);
+
+  g_object_unref(G_OBJECT(gc));
+}
+
+void paint_cell(int row, int col, gboolean with_cursor)
+{
+  GdkGC *gc = gdk_gc_new(termbuffer);
 
   gdk_gc_set_rgb_fg_color(gc, &cells[row][col].bg_col);
 
-  gdk_draw_rectangle(win,
+  GdkRectangle destarea = {
+    .x      = col * cell_width,
+    .y      = row * cell_height,
+    .width  = cell_width,
+    .height = cell_height
+  };
+
+  gdk_draw_rectangle(termbuffer,
       gc,
       TRUE,
-      col * cell_width, row * cell_height,
-      cell_width,         cell_height);
-
-  g_object_unref(G_OBJECT(gc));
+      destarea.x,
+      destarea.y,
+      destarea.width,
+      destarea.height);
 
   PangoLayout *layout = cells[row][col].layout;
 
   if(layout) {
-    gtk_paint_layout(gtk_widget_get_style(termwin),
-        win,
-        GTK_WIDGET_STATE(termwin),
-        FALSE,
-        clip,
-        termwin,
-        NULL,
-        col * cell_width,
-        row * cell_height,
+    gdk_draw_layout(termbuffer,
+        gc,
+        destarea.x,
+        destarea.y,
         layout);
   }
 
+  g_object_unref(G_OBJECT(gc));
+
   if(with_cursor) {
-    gdk_draw_rectangle(win,
+    gdk_draw_rectangle(termbuffer,
         cursor_gc,
         FALSE,
-        col * cell_width, row * cell_height,
-        cell_width - 1,   cell_height - 1);
+        destarea.x,
+        destarea.y,
+        destarea.width - 1,
+        destarea.height - 1);
   }
+
+  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
 }
 
 gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_data)
 {
-  // Work out the rows/columns that need updating
-  int first_row = event->area.y / cell_height;
-  int first_col = event->area.x / cell_width;
+  repaint_area(&event->area);
 
-  int last_row = (event->area.y + event->area.height - 1) / cell_height;
-  int last_col = (event->area.x + event->area.width  - 1) / cell_width;
-
-  ecma48_position_t cursorpos;
-
-  ecma48_state_get_cursorpos(e48, &cursorpos);
-
-  int row, col;
-  for(row = first_row; row <= last_row; row++)
-    for(col = first_col; col <= last_col; col++)
-      paint_cell(row, col, &event->area, row == cursorpos.row && col == cursorpos.col);
+  if(gdk_rectangle_intersect(&cursor_area, &event->area, NULL))
+    gdk_draw_rectangle(termwin->window,
+        cursor_gc,
+        FALSE,
+        cursor_area.x,
+        cursor_area.y,
+        cursor_area.width - 1,
+        cursor_area.height - 1);
 
   return TRUE;
 }
@@ -130,19 +148,57 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
 
   cells[pos.row][pos.col].bg_col = pen->bg_col;
 
-  paint_cell(pos.row, pos.col, NULL, FALSE);
+  paint_cell(pos.row, pos.col, FALSE);
 
   return 1;
 }
 
 int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos)
 {
-  // Clear the old one
-  paint_cell(oldpos.row, oldpos.col, NULL, FALSE);
+  GdkRectangle destarea = {
+    .x      = oldpos.row,
+    .y      = oldpos.col,
+    .width  = cell_width,
+    .height = cell_height
+  };
 
-  paint_cell(pos.row, pos.col, NULL, TRUE);
+  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
+
+  cursor_area.x      = pos.col * cell_width;
+  cursor_area.y      = pos.row * cell_height;
+  cursor_area.width  = cell_width;
+  cursor_area.height = cell_height;
 
   return 1;
+}
+
+int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
+{
+  GdkGC *gc = gdk_gc_new(termbuffer);
+
+  int rows = rect.end_row - rect.start_row - downward;
+  int cols = rect.end_col - rect.start_col - rightward;
+
+  GdkRectangle destarea = {
+    .x      = rect.start_col * cell_width,
+    .y      = rect.start_row * cell_height,
+    .width  = cols * cell_width,
+    .height = rows * cell_height
+  };
+
+  gdk_draw_drawable(termbuffer,
+      gc,
+      termbuffer,
+      (rect.start_col + rightward) * cell_width,
+      (rect.start_row + downward ) * cell_height,
+      destarea.x,
+      destarea.y,
+      destarea.width,
+      destarea.height);
+
+  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
+
+  return 0; // Because we still need to get copycell to move the metadata
 }
 
 int term_copycell(ecma48_t *e48, ecma48_position_t destpos, ecma48_position_t srcpos)
@@ -153,8 +209,6 @@ int term_copycell(ecma48_t *e48, ecma48_position_t destpos, ecma48_position_t sr
   cells[destpos.row][destpos.col].layout = 
     pango_layout_copy(cells[srcpos.row][srcpos.col].layout);
 
-  paint_cell(destpos.row, destpos.col, NULL, FALSE);
-
   return 1;
 }
 
@@ -162,9 +216,7 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
 {
   term_pen *pen = pen_p;
 
-  GdkWindow *win = termwin->window;
-
-  GdkGC *gc = gdk_gc_new(win);
+  GdkGC *gc = gdk_gc_new(termbuffer);
 
   gdk_gc_set_rgb_fg_color(gc, &pen->bg_col);
 
@@ -175,14 +227,24 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
       pango_layout_set_text(cells[row][col].layout, "", 0);
     }
 
-  gdk_draw_rectangle(win,
+  GdkRectangle destarea = {
+    .x      = rect.start_col * cell_width,
+    .y      = rect.start_row * cell_height,
+    .width  = (rect.end_col - rect.start_col) * cell_width,
+    .height = (rect.end_row - rect.start_row) * cell_height,
+  };
+
+  gdk_draw_rectangle(termbuffer,
       gc,
       TRUE,
-      rect.start_col * cell_width, rect.start_row * cell_height,
-      (rect.end_col - rect.start_col) * cell_width,
-      (rect.end_row - rect.start_row) * cell_height);
+      destarea.x,
+      destarea.y,
+      destarea.width,
+      destarea.height);
 
   g_object_unref(G_OBJECT(gc));
+
+  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
 
   return 1;
 }
@@ -277,6 +339,7 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
 static ecma48_state_callbacks_t cb = {
   .putchar    = term_putchar,
   .movecursor = term_movecursor,
+  .scroll     = term_scroll,
   .copycell   = term_copycell,
   .erase      = term_erase,
   .setpen     = term_setpen,
@@ -317,7 +380,23 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
     exit(1);
   }
 
+  invalid_area.x = 0;
+  invalid_area.y = 0;
+  invalid_area.width = 0;
+  invalid_area.height = 0;
+
   ecma48_push_bytes(e48, buffer, bytes);
+
+  if(invalid_area.width && invalid_area.height)
+    repaint_area(&invalid_area);
+
+  gdk_draw_rectangle(termwin->window,
+      cursor_gc,
+      FALSE,
+      cursor_area.x,
+      cursor_area.y,
+      cursor_area.width - 1,
+      cursor_area.height - 1);
 
   return TRUE;
 }
@@ -374,6 +453,9 @@ int main(int argc, char *argv[])
   cell_height = PANGO_PIXELS_CEIL(height);
 
   gtk_widget_show_all(window);
+
+  termbuffer = gdk_pixmap_new(window->window,
+      size.ws_col * cell_width, size.ws_row * cell_height, -1);
 
   gtk_window_resize(GTK_WINDOW(window), 
       size.ws_col * cell_width, size.ws_row * cell_height);
