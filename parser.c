@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include <glib.h>
+
 static void ecma48_on_parser_text(ecma48_t *e48, char *bytes, size_t len)
 {
   int done = 0;
@@ -51,6 +53,55 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
   if(e48->parser_callbacks &&
      e48->parser_callbacks->csi_raw)
     done = (*e48->parser_callbacks->csi_raw)(e48, args, arglen, command);
+
+  if(done)
+    return;
+
+  if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3f) {
+    int argcount = 1; // Always at least 1 arg
+
+    int i;
+    for(i = 0; i < arglen; i++)
+      if(args[i] == 0x3b)
+        argcount++;
+
+    // TODO: ECMA-48 allows 123:456 as an argument, but we'll ignore .
+    // and trailing digits
+    int *csi_args = g_alloca(argcount * sizeof(int));
+
+    int argi;
+    for(argi = 0; argi < argcount; argi++)
+      csi_args[argi] = -1;
+
+    argi = 0;
+    int pos;
+    for(pos = 0; pos < arglen; pos++) {
+      switch(args[pos]) {
+      case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
+      case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
+        if(csi_args[argi] == -1)
+          csi_args[argi] = 0;
+        csi_args[argi] *= 10;
+        csi_args[argi] += args[pos] - '0';
+        break;
+      case 0x3b:
+        argi++;
+        break;
+      default:
+        fprintf(stderr, "TODO: Parse %c in CSI\n", args[pos]);
+        break;
+      }
+    }
+
+    //printf("Parsed CSI args %.*s as:", arglen, args);
+    //for(argi = 0; argi < argcount; argi++)
+    //  printf(" %d", csi_args[argi]);
+    //printf("\n");
+
+    if(e48->parser_callbacks &&
+       e48->parser_callbacks->csi)
+      done = (*e48->parser_callbacks->csi)(e48, csi_args, argcount, command);
+  }
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
