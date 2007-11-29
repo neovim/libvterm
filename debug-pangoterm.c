@@ -165,15 +165,22 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
   return 1;
 }
 
-int term_setpen(ecma48_t *e48, const char *pencmd, void **penstore)
+int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
 {
   term_pen *pen = *penstore;
 
-  if(!pencmd && !*penstore) {
+  if(!*penstore) {
     pen = g_new0(term_pen, 1);
     *penstore = pen;
+  }
 
+  switch(sgrcmd) {
+  case 0: // Reset all
     gdk_color_parse("white", &pen->bg_col);
+    break;
+
+  default:
+    return 0;
   }
 
   return 1;
