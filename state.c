@@ -58,7 +58,7 @@ void ecma48_state_initialise(ecma48_t *e48)
 
   if(state->callbacks &&
      state->callbacks->setpen)
-    (*state->callbacks->setpen)(e48, NULL, &state->pen);
+    (*state->callbacks->setpen)(e48, 0, &state->pen);
 
   if(state->callbacks &&
      state->callbacks->erase) {

@@ -32,7 +32,7 @@ typedef struct {
   int (*scroll)(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward);
   int (*copycell)(ecma48_t *e48, ecma48_position_t dest, ecma48_position_t src);
   int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect, void *pen);
-  int (*setpen)(ecma48_t *e48, const char *pencmd, void **penstore);
+  int (*setpen)(ecma48_t *e48, int sgrcmd, void **penstore);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);
