@@ -101,6 +101,9 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
     if(e48->parser_callbacks &&
        e48->parser_callbacks->csi)
       done = (*e48->parser_callbacks->csi)(e48, csi_args, argcount, command);
+
+    if(!done && e48->state)
+      done = ecma48_state_on_csi(e48, csi_args, argcount, command);
   }
 
   if(!done)
