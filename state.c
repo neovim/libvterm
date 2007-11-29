@@ -67,6 +67,19 @@ void ecma48_state_initialise(ecma48_t *e48)
   }
 }
 
+void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos)
+{
+  ecma48_state_t *state = e48->state;
+
+  if(!state) {
+    cursorpos->col = -1;
+    cursorpos->row = -1;
+  }
+  else {
+    *cursorpos = state->pos;
+  }
+}
+
 static void scroll(ecma48_t *e48)
 {
   ecma48_state_t *state = e48->state;
