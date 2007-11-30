@@ -56,6 +56,7 @@ const char *col_spec[] = {
 typedef struct {
   GdkColor fg_col;
   GdkColor bg_col;
+  gboolean reverse;
   PangoAttrList *attrs;
   PangoLayout *layout;
 } term_pen;
@@ -104,12 +105,12 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
   if(pen->attrs)
     pango_layout_set_attributes(layout, pen->attrs);
 
-  cells[pos.row][pos.col].fg_col = pen->fg_col;
-  cells[pos.row][pos.col].bg_col = pen->bg_col;
+  GdkColor fg = cells[pos.row][pos.col].fg_col = pen->reverse ? pen->bg_col : pen->fg_col;
+  GdkColor bg = cells[pos.row][pos.col].bg_col = pen->reverse ? pen->fg_col : pen->bg_col;
 
   GdkGC *gc = gdk_gc_new(termbuffer);
 
-  gdk_gc_set_rgb_fg_color(gc, &pen->bg_col);
+  gdk_gc_set_rgb_fg_color(gc, &bg);
 
   GdkRectangle destarea = {
     .x      = pos.col * cell_width,
@@ -132,8 +133,8 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
         destarea.x,
         destarea.y,
         layout,
-        &pen->fg_col,
-        &pen->bg_col);
+        &fg,
+        NULL);
   }
 
   g_object_unref(G_OBJECT(gc));
@@ -205,12 +206,13 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
 
   GdkGC *gc = gdk_gc_new(termbuffer);
 
-  gdk_gc_set_rgb_fg_color(gc, &pen->bg_col);
+  GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
+  gdk_gc_set_rgb_fg_color(gc, &bg);
 
   int row, col;
   for(row = rect.start_row; row < rect.end_row; row++)
     for(col = rect.start_col; col < rect.end_col; col++) {
-      cells[row][col].bg_col = pen->bg_col;
+      cells[row][col].bg_col = bg;
     }
 
   GdkRectangle destarea = {
@@ -267,6 +269,7 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
   case 0: // Reset all
     gdk_color_parse(default_fg, &pen->fg_col);
     gdk_color_parse(default_bg, &pen->bg_col);
+    pen->reverse = FALSE;
 
     if(pen->attrs)
       pango_attr_list_unref(pen->attrs);
@@ -283,6 +286,10 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
     ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
     break;
 
+  case 7: // Reverse video
+    pen->reverse = TRUE;
+    break;
+
   case 21: // Double underline
     CLONEATTRS;
     ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_DOUBLE));
@@ -291,6 +298,10 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
   case 24: // Not underlined
     CLONEATTRS;
     ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_NONE));
+    break;
+
+  case 27: // Not reverse
+    pen->reverse = FALSE;
     break;
 
   case 30: case 31: case 32: case 33:
