@@ -224,9 +224,32 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
 {
   ecma48_state_t *state = e48->state;
 
+  // Some temporaries for later code
+  ecma48_rectangle_t rect;
   int argi;
 
   switch(command) {
+  case 0x4b: // EL - ECMA-48 8.3.41
+    rect.start_row = state->pos.row;
+    rect.end_row   = state->pos.row + 1;
+
+    switch(args[0]) {
+    case -1:
+    case 0:
+      rect.start_col = state->pos.col; rect.end_col = e48->cols; break;
+    case 1:
+      rect.start_col = 0; rect.end_col = state->pos.col + 1; break;
+    case 2:
+      rect.start_col = 0; rect.end_col = e48->cols; break;
+    default:
+      return 0;
+    }
+
+    if(state->callbacks && state->callbacks->erase)
+      (*state->callbacks->erase)(e48, rect, state->pen);
+
+    break;
+
   case 0x6d: // SGR - ECMA-48 8.3.117
     if(state->callbacks &&
        state->callbacks->setpen)
