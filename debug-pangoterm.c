@@ -77,6 +77,29 @@ ecma48_key_e convert_keyval(guint gdk_keyval)
     return ECMA48_KEY_ENTER;
   case GDK_Escape:
     return ECMA48_KEY_ESCAPE;
+
+  case GDK_Up:
+    return ECMA48_KEY_UP;
+  case GDK_Down:
+    return ECMA48_KEY_DOWN;
+  case GDK_Left:
+    return ECMA48_KEY_LEFT;
+  case GDK_Right:
+    return ECMA48_KEY_RIGHT;
+
+  case GDK_Insert:
+    return ECMA48_KEY_INS;
+  case GDK_Delete:
+    return ECMA48_KEY_DEL;
+  case GDK_Home:
+    return ECMA48_KEY_HOME;
+  case GDK_End:
+    return ECMA48_KEY_END;
+  case GDK_Page_Up:
+    return ECMA48_KEY_PAGEUP;
+  case GDK_Page_Down:
+    return ECMA48_KEY_PAGEDOWN;
+
   default:
     return ECMA48_KEY_NONE;
   }
