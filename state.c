@@ -9,6 +9,9 @@ struct ecma48_state_s
   /* Current cursor position */
   ecma48_position_t pos;
 
+  int scrollregion_start;
+  int scrollregion_end;
+
   /* Current pen - entirely managed by user code */
   void *pen;
 };
@@ -54,6 +57,9 @@ void ecma48_state_initialise(ecma48_t *e48)
   state->pos.row = 0;
   state->pos.col = 0;
 
+  state->scrollregion_start = 0;
+  state->scrollregion_end = e48->rows;
+
   state->pen = NULL;
 
   if(state->callbacks &&
@@ -85,8 +91,8 @@ static void scroll(ecma48_t *e48)
   ecma48_state_t *state = e48->state;
 
   ecma48_rectangle_t rect = {
-    .start_row = 0,
-    .end_row   = e48->rows,
+    .start_row = state->scrollregion_start,
+    .end_row   = state->scrollregion_end,
     .start_col = 0,
     .end_col   = e48->cols,
   };
@@ -123,7 +129,7 @@ static void scroll(ecma48_t *e48)
     done_scroll = 1;
   }
 
-  rect.start_row = e48->rows - 1;
+  rect.start_row = rect.end_row - 1;
 
   if(state->callbacks &&
      state->callbacks->erase)
@@ -143,7 +149,7 @@ static void linefeed(ecma48_t *e48)
 {
   ecma48_state_t *state = e48->state;
 
-  if(state->pos.row == (e48->rows-1))
+  if(state->pos.row == (state->scrollregion_end-1))
     scroll(e48);
   else
     state->pos.row++;
@@ -335,6 +341,11 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
           fprintf(stderr, "libecma48: Unhandled CSI SGR %d\n", args[argi]);
       }
 
+    break;
+
+  case 0x72: // DECSTBM - DEC custom
+    state->scrollregion_start = args[0] == -1 ? 0 : args[0]-1;
+    state->scrollregion_end = argcount < 2 || args[1] == -1 ? e48->rows : args[1];
     break;
 
   default:
