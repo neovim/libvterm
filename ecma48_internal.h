@@ -14,7 +14,7 @@ struct ecma48_s
 
   ecma48_parser_callbacks_t *parser_callbacks;
 
-  GString *buffer;
+  GString *inbuffer;
   ecma48_state_t *state;
 };
 
