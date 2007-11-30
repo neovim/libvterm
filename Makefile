@@ -2,7 +2,7 @@ CCFLAGS=-Wall -I. -std=c99
 LDFLAGS=-lutil
 
 ifeq ($(DEBUG),1)
-  CCFLAGS+=-ggdb
+  CCFLAGS+=-ggdb -DDEBUG
 endif
 
 CCFLAGS+=$(shell pkg-config --cflags glib-2.0)
