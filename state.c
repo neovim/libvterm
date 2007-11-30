@@ -194,6 +194,11 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
   ecma48_position_t oldpos = state->pos;
 
   switch(control) {
+  case 0x08: // BS - ECMA-48 8.3.5
+    if(state->pos.col > 0)
+      state->pos.col--;
+    break;
+
   case 0x09: // HT - ECMA-48 8.3.60
     // TODO: Implement variable tabstops
     if(state->pos.col == e48->cols - 1)
