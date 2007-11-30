@@ -50,6 +50,19 @@ void ecma48_push_output_bytes(ecma48_t *e48, char *bytes, size_t len)
   g_string_append_len(e48->outbuffer, bytes, len);
 }
 
+void ecma48_push_output_vsprintf(ecma48_t *e48, char *format, va_list args)
+{
+  g_string_append_vprintf(e48->outbuffer, format, args);
+}
+
+void ecma48_push_output_sprintf(ecma48_t *e48, char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  ecma48_push_output_vsprintf(e48, format, args);
+  va_end(args);
+}
+
 size_t ecma48_output_bufferlen(ecma48_t *e48)
 {
   return e48->outbuffer->len;
