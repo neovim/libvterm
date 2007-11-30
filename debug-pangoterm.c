@@ -11,6 +11,10 @@
 
 #include <gtk/gtk.h>
 
+#ifdef DEBUG
+# define DEBUG_PRINT_INPUT
+#endif
+
 int master;
 ecma48_t *e48;
 
