@@ -10,6 +10,7 @@
 #include "ecma48.h"
 
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 
 #ifdef DEBUG
 # define DEBUG_PRINT_INPUT
@@ -65,6 +66,22 @@ typedef struct {
   PangoLayout *layout;
 } term_pen;
 
+ecma48_key_e convert_keyval(guint gdk_keyval)
+{
+  switch(gdk_keyval) {
+  case GDK_BackSpace:
+    return ECMA48_KEY_BACKSPACE;
+  case GDK_Tab:
+    return ECMA48_KEY_TAB;
+  case GDK_Return:
+    return ECMA48_KEY_ENTER;
+  case GDK_Escape:
+    return ECMA48_KEY_ESCAPE;
+  default:
+    return ECMA48_KEY_NONE;
+  }
+}
+
 void repaint_area(GdkRectangle *area)
 {
   GdkWindow *win = termwin->window;
@@ -95,6 +112,42 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
         cursor_area.height - 1);
 
   return TRUE;
+}
+
+gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+  // We don't need to track the state of modifier bits
+  if(event->is_modifier)
+    return FALSE;
+
+  ecma48_mod_e state = ECMA48_MOD_NONE;
+  if(event->state & GDK_SHIFT_MASK)
+    state |= ECMA48_MOD_SHIFT;
+  if(event->state & GDK_CONTROL_MASK)
+    state |= ECMA48_MOD_CTRL;
+  if(event->state & GDK_MOD1_MASK)
+    state |= ECMA48_MOD_ALT;
+
+  ecma48_key_e keyval = convert_keyval(event->keyval);
+
+  if(keyval)
+    ecma48_input_push_key(e48, state, keyval);
+  else {
+    size_t len = strlen(event->string);
+    if(len)
+      ecma48_input_push_str(e48, state, event->string, len);
+    else
+      printf("Unsure how to handle key %d with no string\n", event->keyval);
+  }
+
+  size_t bufflen = ecma48_output_bufferlen(e48);
+  if(bufflen) {
+    char buffer[bufflen];
+    bufflen = ecma48_output_bufferread(e48, buffer, bufflen);
+    write(master, buffer, bufflen);
+  }
+
+  return FALSE;
 }
 
 int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void *pen_p)
@@ -419,6 +472,7 @@ int main(int argc, char *argv[])
   termwin = window;
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
+  g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
 
   PangoContext *pctx = gtk_widget_get_pango_context(window);
 
