@@ -208,12 +208,12 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
     } while(state->pos.col % 8 && state->pos.col < (e48->cols-1));
     break;
 
-  case 0x0a: // CR - ECMA-48 8.3.15
-    state->pos.col = 0;
+  case 0x0a: // LF - ECMA-48 8.3.74
+    linefeed(e48);
     break;
 
-  case 0x0d: // LF - ECMA-48 8.3.74
-    linefeed(e48);
+  case 0x0d: // CR - ECMA-48 8.3.15
+    state->pos.col = 0;
     break;
 
   default:
