@@ -19,18 +19,61 @@ void ecma48_input_push_str(ecma48_t *e48, ecma48_mod_e state, char *str, size_t 
   }
 }
 
+typedef struct {
+  enum {
+    KEYCODE_LITERAL,
+    KEYCODE_CSI,
+    KEYCODE_CSINUM,
+  } type;
+  char literal;
+  int csinum;
+} keycodes_s;
+
+keycodes_s keycodes[] = {
+  { 0 }, // NONE
+
+  { KEYCODE_LITERAL, '\n' },
+  { KEYCODE_LITERAL, '\t' },
+  { KEYCODE_LITERAL, '\b' },
+  { KEYCODE_LITERAL, '\e' },
+
+  { KEYCODE_CSI, 'A' }, // UP
+  { KEYCODE_CSI, 'B' }, // DOWN
+  { KEYCODE_CSI, 'D' }, // LEFT
+  { KEYCODE_CSI, 'C' }, // RIGHT
+
+  { KEYCODE_CSINUM, '~', 2 }, // INS
+  { KEYCODE_CSINUM, '~', 3 }, // DEL
+  { KEYCODE_CSI, 'H' }, // HOME
+  { KEYCODE_CSI, 'F' }, // END
+  { KEYCODE_CSINUM, '~', 5 }, // PAGEUP
+  { KEYCODE_CSINUM, '~', 6 }, // PAGEDOWN
+};
+
 void ecma48_input_push_key(ecma48_t *e48, ecma48_mod_e state, ecma48_key_e key)
 {
-  switch(key) {
-  case ECMA48_KEY_ENTER:
-    ecma48_push_output_bytes(e48, "\n", 1); break;
-  case ECMA48_KEY_TAB:
-    ecma48_push_output_bytes(e48, "\t", 1); break;
-  case ECMA48_KEY_BACKSPACE:
-    ecma48_push_output_bytes(e48, "\b", 1); break;
-  case ECMA48_KEY_ESCAPE:
-    ecma48_push_output_bytes(e48, "\e", 1); break;
-  default:
-    printf("Can't cope with pushkey %d\n", key);
+  if(key == ECMA48_KEY_NONE || key >= ECMA48_KEY_MAX)
+    return;
+
+  keycodes_s k = keycodes[key];
+
+  switch(k.type) {
+  case KEYCODE_LITERAL:
+    ecma48_push_output_bytes(e48, &k.literal, 1);
+    break;
+
+  case KEYCODE_CSI:
+    if(state == 0)
+      ecma48_push_output_sprintf(e48, "\e[%c", k.literal);
+    else
+      ecma48_push_output_sprintf(e48, "\e[1;%d%c", state + 1, k.literal);
+    break;
+
+  case KEYCODE_CSINUM:
+    if(state == 0)
+      ecma48_push_output_sprintf(e48, "\e[%d%c", k.csinum, k.literal);
+    else
+      ecma48_push_output_sprintf(e48, "\e[%d;%d%c", k.csinum, state + 1, k.literal);
+    break;
   }
 }
