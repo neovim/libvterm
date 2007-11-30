@@ -229,11 +229,52 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
 {
   ecma48_state_t *state = e48->state;
 
+  ecma48_position_t oldpos = state->pos;
+
+#define LBOUND(v,min) if((v) < (min)) (v) = (min)
+#define UBOUND(v,max) if((v) > (max)) (v) = (max)
+
   // Some temporaries for later code
+  int count;
+  int row, col;
   ecma48_rectangle_t rect;
   int argi;
 
   switch(command) {
+  case 0x41: // CUU - ECMA-48 8.3.22
+    count = args[0] == -1 ? 1 : args[0];
+    state->pos.row -= count;
+    LBOUND(state->pos.row, 0);
+    break;
+
+  case 0x42: // CUD - ECMA-48 8.3.19
+    count = args[0] == -1 ? 1 : args[0];
+    state->pos.row += count;
+    UBOUND(state->pos.row, e48->rows-1);
+    break;
+
+  case 0x43: // CUF - ECMA-48 8.3.20
+    count = args[0] == -1 ? 1 : args[0];
+    state->pos.col += count;
+    UBOUND(state->pos.col, e48->cols-1);
+    break;
+
+  case 0x44: // CUB - ECMA-48 8.3.18
+    count = args[0] == -1 ? 1 : args[0];
+    state->pos.col -= count;
+    LBOUND(state->pos.col, 0);
+    break;
+
+  case 0x48: // CUP - ECMA-48 8.3.21
+    row = args[0] == -1                 ? 1 : args[0];
+    col = argcount < 2 || args[1] == -1 ? 1 : args[1];
+    // zero-based
+    state->pos.row = row-1;
+    UBOUND(state->pos.row, e48->rows-1);
+    state->pos.col = col-1;
+    UBOUND(state->pos.col, e48->cols-1);
+    break;
+
   case 0x4b: // EL - ECMA-48 8.3.41
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -268,6 +309,8 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
   default:
     return 0;
   }
+
+  updatecursor(e48, state, &oldpos);
 
   return 1;
 }
