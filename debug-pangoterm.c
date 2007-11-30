@@ -26,7 +26,6 @@ GdkPixmap *termbuffer;
 GdkGC *cursor_gc;
 
 typedef struct {
-  PangoLayout *layout;
   GdkColor fg_col;
   GdkColor bg_col;
 } term_cell;
@@ -40,6 +39,8 @@ const char *cursor_col = "white";
 
 const char *default_font = "Leonine Sans Mono";
 const int default_size = 9;
+
+PangoFontDescription *fontdesc;
 
 const char *col_spec[] = {
   "black",
@@ -56,6 +57,7 @@ typedef struct {
   GdkColor fg_col;
   GdkColor bg_col;
   PangoAttrList *attrs;
+  PangoLayout *layout;
 } term_pen;
 
 void repaint_area(GdkRectangle *area)
@@ -96,7 +98,7 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
 
   char s[] = { codepoint, 0 };
 
-  PangoLayout *layout = cells[pos.row][pos.col].layout;
+  PangoLayout *layout = pen->layout;
 
   pango_layout_set_text(layout, s, -1);
   if(pen->attrs)
@@ -194,10 +196,6 @@ int term_copycell(ecma48_t *e48, ecma48_position_t destpos, ecma48_position_t sr
   cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
   cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
 
-  g_object_unref(G_OBJECT(cells[destpos.row][destpos.col].layout));
-  cells[destpos.row][destpos.col].layout = 
-    pango_layout_copy(cells[srcpos.row][srcpos.col].layout);
-
   return 1;
 }
 
@@ -213,7 +211,6 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
   for(row = rect.start_row; row < rect.end_row; row++)
     for(col = rect.start_col; col < rect.end_col; col++) {
       cells[row][col].bg_col = pen->bg_col;
-      pango_layout_set_text(cells[row][col].layout, "", 0);
     }
 
   GdkRectangle destarea = {
@@ -261,6 +258,8 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
     pen = g_new0(term_pen, 1);
     *penstore = pen;
     pen->attrs = NULL;
+    pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
+    pango_layout_set_font_description(pen->layout, fontdesc);
   }
 
   switch(sgrcmd) {
@@ -396,7 +395,7 @@ int main(int argc, char *argv[])
 
   PangoContext *pctx = gtk_widget_get_pango_context(window);
 
-  PangoFontDescription *fontdesc = pango_font_description_new();
+  fontdesc = pango_font_description_new();
   pango_font_description_set_family(fontdesc, default_font);
   pango_font_description_set_size(fontdesc, default_size * PANGO_SCALE);
 
@@ -405,12 +404,6 @@ int main(int argc, char *argv[])
   int row;
   for(row = 0; row < size.ws_row; row++) {
     cells[row] = g_new0(term_cell, size.ws_col);
-
-    int col;
-    for(col = 0; col < size.ws_col; col++) {
-      cells[row][col].layout = pango_layout_new(pctx);
-      pango_layout_set_font_description(cells[row][col].layout, fontdesc);
-    }
   }
 
   PangoFontMetrics *metrics = pango_context_get_metrics(pctx,
