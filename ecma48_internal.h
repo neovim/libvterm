@@ -21,7 +21,7 @@ struct ecma48_s
 
 size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len);
 
-void ecma48_push_bytes_output(ecma48_t *e48, char *bytes, size_t len);
+void ecma48_push_output_bytes(ecma48_t *e48, char *bytes, size_t len);
 
 int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len);
 int ecma48_state_on_control(ecma48_t *e48, char control);
