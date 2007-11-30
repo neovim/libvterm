@@ -45,7 +45,7 @@ void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
   }
 }
 
-void ecma48_push_bytes_output(ecma48_t *e48, char *bytes, size_t len)
+void ecma48_push_output_bytes(ecma48_t *e48, char *bytes, size_t len)
 {
   g_string_append_len(e48->outbuffer, bytes, len);
 }
