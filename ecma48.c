@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <glib.h>
 
@@ -14,6 +15,7 @@ ecma48_t *ecma48_new(void)
   ecma48_t *e48 = g_new0(struct ecma48_s, 1);
 
   e48->inbuffer = g_string_new(NULL);
+  e48->outbuffer = g_string_new(NULL);
 
   return e48;
 }
@@ -41,4 +43,26 @@ void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
     if(eaten < len)
       g_string_append_len(e48->inbuffer, bytes, len);
   }
+}
+
+void ecma48_push_bytes_output(ecma48_t *e48, char *bytes, size_t len)
+{
+  g_string_append_len(e48->outbuffer, bytes, len);
+}
+
+size_t ecma48_output_bufferlen(ecma48_t *e48)
+{
+  return e48->outbuffer->len;
+}
+
+size_t ecma48_output_bufferread(ecma48_t *e48, char *buffer, size_t len)
+{
+  if(len > e48->outbuffer->len)
+    len = e48->outbuffer->len;
+
+  strncpy(buffer, e48->outbuffer->str, len);
+
+  g_string_erase(e48->outbuffer, 0, len);
+
+  return len;
 }

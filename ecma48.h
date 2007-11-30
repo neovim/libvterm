@@ -46,4 +46,7 @@ void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos);
 
 void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len);
 
+size_t ecma48_output_bufferlen(ecma48_t *e48);
+size_t ecma48_output_bufferread(ecma48_t *e48, char *buffer, size_t len);
+
 #endif
