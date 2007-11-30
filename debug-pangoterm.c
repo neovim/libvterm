@@ -147,8 +147,8 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
 int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos)
 {
   GdkRectangle destarea = {
-    .x      = oldpos.row,
-    .y      = oldpos.col,
+    .x      = oldpos.col * cell_width,
+    .y      = oldpos.row * cell_height,
     .width  = cell_width,
     .height = cell_height
   };
