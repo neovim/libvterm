@@ -275,6 +275,37 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
     UBOUND(state->pos.col, e48->cols-1);
     break;
 
+  case 0x4a: // ED - ECMA-48 8.3.39
+    if(!state->callbacks || !state->callbacks->erase)
+      return 1;
+
+    switch(args[0]) {
+    case -1:
+    case 0:
+      rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
+      rect.start_col = state->pos.col; rect.end_col = e48->cols;
+      (*state->callbacks->erase)(e48, rect, state->pen);
+      rect.start_row = state->pos.row + 1; rect.end_row = e48->rows;
+      rect.start_col = 0;
+      (*state->callbacks->erase)(e48, rect, state->pen);
+      break;
+
+    case 1:
+      rect.start_row = 0; rect.end_row = state->pos.row;
+      rect.start_col = 0; rect.end_col = e48->cols;
+      (*state->callbacks->erase)(e48, rect, state->pen);
+      rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
+                          rect.end_col = state->pos.col + 1;
+      (*state->callbacks->erase)(e48, rect, state->pen);
+      break;
+
+    case 2:
+      rect.start_row = 0; rect.end_row = e48->rows;
+      rect.start_col = 0; rect.end_col = e48->cols;
+      (*state->callbacks->erase)(e48, rect, state->pen);
+      break;
+    }
+
   case 0x4b: // EL - ECMA-48 8.3.41
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
