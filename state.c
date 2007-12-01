@@ -1,6 +1,7 @@
 #include "ecma48_internal.h"
 
 #include <stdio.h>
+#include <string.h>
 
 struct ecma48_state_s
 {
@@ -280,10 +281,47 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
   return 1;
 }
 
+static void change_dec_mode(ecma48_t *e48, int mode, int set)
+{
+  switch(mode) {
+  case 1:
+    e48->mode.cursor = set;
+    break;
+
+  default:
+    printf("libecma48: Unknown DEC mode %d\n", mode);
+    break;
+  }
+}
+
+static int ecma48_state_on_csi_qmark(ecma48_t *e48, int *args, int argcount, char command)
+{
+  switch(command) {
+  case 0x68: // DEC private mode set
+    if(args[0] != -1)
+      change_dec_mode(e48, args[0], 1);
+    break;
+
+  case 0x6c: // DEC private mode reset
+    if(args[0] != -1)
+      change_dec_mode(e48, args[0], 0);
+    break;
+
+  default:
+    return 0;
+  }
+
+  return 1;
+}
+
 int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
 {
-  if(intermed)
+  if(intermed) {
+    if(strcmp(intermed, "?") == 0)
+      return ecma48_state_on_csi_qmark(e48, args, argcount, command);
+
     return 0;
+  }
 
   ecma48_state_t *state = e48->state;
 
