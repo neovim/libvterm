@@ -262,6 +262,24 @@ int ecma48_state_on_control(ecma48_t *e48, char control)
   return 1;
 }
 
+int ecma48_state_on_escape(ecma48_t *e48, char escape)
+{
+  switch(escape) {
+  case 0x3d:
+    e48->mode.keypad = 1;
+    break;
+
+  case 0x3e:
+    e48->mode.keypad = 0;
+    break;
+
+  default:
+    return 0;
+  }
+
+  return 1;
+}
+
 int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
 {
   ecma48_state_t *state = e48->state;

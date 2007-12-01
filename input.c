@@ -23,6 +23,7 @@ typedef struct {
   enum {
     KEYCODE_LITERAL,
     KEYCODE_CSI,
+    KEYCODE_CSI_OR_SS3,
     KEYCODE_CSINUM,
   } type;
   char literal;
@@ -37,15 +38,15 @@ keycodes_s keycodes[] = {
   { KEYCODE_LITERAL, '\b' },
   { KEYCODE_LITERAL, '\e' },
 
-  { KEYCODE_CSI, 'A' }, // UP
-  { KEYCODE_CSI, 'B' }, // DOWN
-  { KEYCODE_CSI, 'D' }, // LEFT
-  { KEYCODE_CSI, 'C' }, // RIGHT
+  { KEYCODE_CSI_OR_SS3, 'A' }, // UP
+  { KEYCODE_CSI_OR_SS3, 'B' }, // DOWN
+  { KEYCODE_CSI_OR_SS3, 'D' }, // LEFT
+  { KEYCODE_CSI_OR_SS3, 'C' }, // RIGHT
 
   { KEYCODE_CSINUM, '~', 2 }, // INS
   { KEYCODE_CSINUM, '~', 3 }, // DEL
-  { KEYCODE_CSI, 'H' }, // HOME
-  { KEYCODE_CSI, 'F' }, // END
+  { KEYCODE_CSI_OR_SS3, 'H' }, // HOME
+  { KEYCODE_CSI_OR_SS3, 'F' }, // END
   { KEYCODE_CSINUM, '~', 5 }, // PAGEUP
   { KEYCODE_CSINUM, '~', 6 }, // PAGEDOWN
 };
@@ -62,6 +63,12 @@ void ecma48_input_push_key(ecma48_t *e48, ecma48_mod_e state, ecma48_key_e key)
     ecma48_push_output_bytes(e48, &k.literal, 1);
     break;
 
+  case KEYCODE_CSI_OR_SS3:
+    if(e48->mode.keypad) {
+      ecma48_push_output_sprintf(e48, "\eO%c", k.literal);
+      break;
+    }
+    /* else FALLTHROUGH */
   case KEYCODE_CSI:
     if(state == 0)
       ecma48_push_output_sprintf(e48, "\e[%c", k.literal);
