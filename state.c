@@ -191,20 +191,15 @@ static void linefeed(ecma48_t *e48)
     state->pos.row++;
 }
 
-int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len)
+int ecma48_state_on_text(ecma48_t *e48, int codepoints[], int npoints)
 {
-  // TODO: Need a Unicode engine here to convert bytes into Chars
-  uint32_t *chars = g_alloca(len * sizeof(uint32_t));
-  int i;
-  for(i = 0; i < len; i++)
-    chars[i] = bytes[i];
-
   ecma48_state_t *state = e48->state;
 
   ecma48_position_t oldpos = state->pos;
 
-  for(i = 0; i < len; i++) {
-    uint32_t c = chars[i];
+  int i;
+  for(i = 0; i < npoints; i++) {
+    int c = codepoints[i];
 
     if(state->pos.col == e48->cols) {
       linefeed(e48);

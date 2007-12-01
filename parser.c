@@ -1,22 +1,28 @@
 #include "ecma48_internal.h"
 
+#define UNICODE_INVALID 0xFFFD
+
+#ifdef DEBUG
+# define DEBUG_PRINT_UTF8
+#endif
+
 #include <stdio.h>
 
 #include <glib.h>
 
-static void ecma48_on_parser_text(ecma48_t *e48, char *bytes, size_t len)
+static void ecma48_on_parser_text(ecma48_t *e48, int codepoints[], int npoints)
 {
   int done = 0;
 
   if(e48->parser_callbacks &&
      e48->parser_callbacks->text)
-    done = (*e48->parser_callbacks->text)(e48, bytes, len);
+    done = (*e48->parser_callbacks->text)(e48, codepoints, npoints);
 
   if(!done && e48->state)
-    done = ecma48_state_on_text(e48, bytes, len);
+    done = ecma48_state_on_text(e48, codepoints, npoints);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled text (%d bytes): %.*s\n", len, len, bytes);
+    fprintf(stderr, "libecma48: Unhandled text (%d chars)", npoints);
 }
 
 static void ecma48_on_parser_control(ecma48_t *e48, char control)
@@ -142,7 +148,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
       }
     }
     else {
-      if(c < 0x20 || (c >= 0x80 && c < 0xa0)) {
+      if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !e48->is_utf8)) {
         switch(c) {
         case 0x1b: // ESC
           in_esc = TRUE; break;
@@ -157,12 +163,135 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         }
       }
       else {
-        size_t start = pos;
+        // We'll have at most (len - pos) codepoints. Doesn't matter
+        // if we overallocate this
+        int *cp = g_alloca((len - pos) * sizeof(int));
+        int cpi = 0;
 
-        while((pos+1) < len && bytes[pos+1] >= 0x20)
-          pos++;
+#ifdef DEBUG_PRINT_UTF8
+        printf("BEGIN UTF-8\n");
+#endif
 
-        ecma48_on_parser_text(e48, bytes + start, pos - start + 1);
+        if(e48->is_utf8) {
+
+          // number of bytes remaining in this codepoint
+          int bytes_remaining = 0;
+
+          for( ; pos < len; pos++) {
+            c = bytes[pos];
+
+#ifdef DEBUG_PRINT_UTF8
+            printf(" pos=%d c=%02x rem=%d\n", pos, c, bytes_remaining);
+#endif
+
+            if(c < 0x20)
+              break;
+
+            else if(c >= 0x20 && c < 0x80) {
+              if(bytes_remaining)
+                cp[cpi++] = UNICODE_INVALID;
+
+              cp[cpi++] = c;
+#ifdef DEBUG_PRINT_UTF8
+              printf(" UTF-8 char: U+%04x\n", cp[cpi-1]);
+#endif
+              bytes_remaining = 0;
+            }
+
+            else if(c >= 0x80 && c < 0xc0) {
+              if(!bytes_remaining) {
+                cp[cpi++] = UNICODE_INVALID;
+                continue;
+              }
+
+              cp[cpi] <<= 6;
+              cp[cpi] |= c & 0x3f;
+              bytes_remaining--;
+
+              if(!bytes_remaining) {
+                cpi++;
+#ifdef DEBUG_PRINT_UTF8
+                printf(" UTF-8 char: U+%04x\n", cp[cpi-1]);
+#endif
+              }
+            }
+
+            else if(c >= 0xc0 && c < 0xe0) {
+              if(bytes_remaining)
+                cp[cpi++] = UNICODE_INVALID;
+
+              if(len - pos < 2)
+                break;
+
+              cp[cpi] = c & 0x1f;
+              bytes_remaining = 1;
+            }
+
+            else if(c >= 0xe0 && c < 0xf0) {
+              if(bytes_remaining)
+                cp[cpi++] = UNICODE_INVALID;
+
+              if(len - pos < 3)
+                break;
+
+              cp[cpi] = c & 0x0f;
+              bytes_remaining = 2;
+            }
+
+            else if(c >= 0xf0 && c < 0xf8) {
+              if(bytes_remaining)
+                cp[cpi++] = UNICODE_INVALID;
+
+              if(len - pos < 4)
+                break;
+
+              cp[cpi] = c & 0x07;
+              bytes_remaining = 3;
+            }
+
+            else if(c >= 0xf8 && c < 0xfc) {
+              if(bytes_remaining)
+                cp[cpi++] = UNICODE_INVALID;
+
+              if(len - pos < 5)
+                break;
+
+              cp[cpi] = c & 0x03;
+              bytes_remaining = 4;
+            }
+
+            else if(c >= 0xfc && c < 0xfe) {
+              if(bytes_remaining)
+                cp[cpi++] = UNICODE_INVALID;
+
+              if(len - pos < 6)
+                break;
+
+              cp[cpi] = c & 0x01;
+              bytes_remaining = 5;
+            }
+
+            else {
+              cp[cpi++] = UNICODE_INVALID;
+            }
+          }
+        }
+        else {
+          for( ; pos < len; pos++) {
+            c = bytes[pos];
+
+            if(c < 0x20 || (c >= 0x80 && c < 0xa0))
+              break;
+
+            cp[cpi++] = c;
+          }
+        }
+
+        ecma48_on_parser_text(e48, cp, cpi);
+
+        // pos is now the first character we didn't like
+        pos--;
+
         pos_end = pos;
       }
     }
