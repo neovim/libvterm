@@ -283,6 +283,18 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
   int argi;
 
   switch(command) {
+  case 0x40: // ICH - ECMA-48 8.3.64
+    count = args[0] == -1 ? 1 : args[0];
+
+    rect.start_row = state->pos.row;
+    rect.end_row   = state->pos.row + 1;
+    rect.start_col = state->pos.col;
+    rect.end_col   = e48->cols;
+
+    scroll(e48, rect, 0, -count);
+
+    break;
+
   case 0x41: // CUU - ECMA-48 8.3.22
     count = args[0] == -1 ? 1 : args[0];
     state->pos.row -= count;
@@ -366,6 +378,18 @@ int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
 
     if(state->callbacks && state->callbacks->erase)
       (*state->callbacks->erase)(e48, rect, state->pen);
+
+    break;
+
+  case 0x50: // DCH - ECMA-48 8.3.26
+    count = args[0] == -1 ? 1 : args[0];
+
+    rect.start_row = state->pos.row;
+    rect.end_row   = state->pos.row + 1;
+    rect.start_col = state->pos.col;
+    rect.end_col   = e48->cols;
+
+    scroll(e48, rect, 0, count);
 
     break;
 
