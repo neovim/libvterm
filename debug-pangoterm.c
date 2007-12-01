@@ -177,11 +177,13 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
 {
   term_pen *pen = pen_p;
 
-  char s[] = { codepoint, 0 };
-
+  char *s = g_ucs4_to_utf8(&codepoint, 1, NULL, NULL, NULL);
   PangoLayout *layout = pen->layout;
 
   pango_layout_set_text(layout, s, -1);
+
+  g_free(s);
+
   if(pen->attrs)
     pango_layout_set_attributes(layout, pen->attrs);
 
@@ -487,6 +489,7 @@ int main(int argc, char *argv[])
   struct winsize size = { 25, 80, 0, 0 };
 
   e48 = ecma48_new();
+  ecma48_parser_set_utf8(e48, 1);
   ecma48_set_size(e48, size.ws_row, size.ws_col);
 
   ecma48_set_state_callbacks(e48, &cb);

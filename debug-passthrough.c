@@ -14,9 +14,16 @@
 int master;
 ecma48_t *e48;
 
-int text(ecma48_t *e48, char *s, size_t len)
+int text(ecma48_t *e48, int codepoints[], int npoints)
 {
-  printf("Wrote %d text: %.*s\n", len, len, s);
+  printf("Wrote %d chars: ", npoints);
+  int i;
+  for(i = 0; i < npoints; i++) {
+    int c = codepoints[i];
+    printf("U+%04x ", c);
+  }
+  printf("\n");
+
   return 1;
 }
 

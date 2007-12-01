@@ -21,7 +21,7 @@ typedef struct {
 } ecma48_rectangle_t;
 
 typedef struct {
-  int (*text)(ecma48_t *e48, char *s, size_t len);
+  int (*text)(ecma48_t *e48, int codepoints[], int npoints);
   int (*control)(ecma48_t *e48, char control);
   int (*escape)(ecma48_t *e48, char escape);
   int (*csi_raw)(ecma48_t *e48, char *args, size_t arglen, char command);
@@ -49,6 +49,7 @@ void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos);
 void ecma48_input_push_str(ecma48_t *e48, ecma48_mod_e state, char *str, size_t len);
 void ecma48_input_push_key(ecma48_t *e48, ecma48_mod_e state, ecma48_key_e key);
 
+void ecma48_parser_set_utf8(ecma48_t *e48, int is_utf8);
 void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len);
 
 size_t ecma48_output_bufferlen(ecma48_t *e48);
