@@ -142,7 +142,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
       }
     }
     else {
-      if(c < 0x20 || (c >= 0x80 && c < 0x9f)) {
+      if(c < 0x20 || (c >= 0x80 && c < 0xa0)) {
         switch(c) {
         case 0x1b: // ESC
           in_esc = TRUE; break;
