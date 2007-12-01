@@ -23,6 +23,7 @@ int cell_width;
 int cell_height;
 
 GdkRectangle invalid_area;
+int cursor_visible;
 GdkRectangle cursor_area;
 
 GtkWidget *termwin;
@@ -125,7 +126,7 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
 {
   repaint_area(&event->area);
 
-  if(gdk_rectangle_intersect(&cursor_area, &event->area, NULL))
+  if(cursor_visible && gdk_rectangle_intersect(&cursor_area, &event->area, NULL))
     gdk_draw_rectangle(termwin->window,
         cursor_gc,
         FALSE,
@@ -226,7 +227,7 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
   return 1;
 }
 
-int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos)
+int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos, int visible)
 {
   GdkRectangle destarea = {
     .x      = oldpos.col * cell_width,
@@ -241,6 +242,8 @@ int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldp
   cursor_area.y      = pos.row * cell_height;
   cursor_area.width  = cell_width;
   cursor_area.height = cell_height;
+
+  cursor_visible = visible;
 
   return 1;
 }
@@ -451,13 +454,14 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
   if(invalid_area.width && invalid_area.height)
     repaint_area(&invalid_area);
 
-  gdk_draw_rectangle(termwin->window,
-      cursor_gc,
-      FALSE,
-      cursor_area.x,
-      cursor_area.y,
-      cursor_area.width - 1,
-      cursor_area.height - 1);
+  if(cursor_visible)
+    gdk_draw_rectangle(termwin->window,
+        cursor_gc,
+        FALSE,
+        cursor_area.x,
+        cursor_area.y,
+        cursor_area.width - 1,
+        cursor_area.height - 1);
 
   return TRUE;
 }
