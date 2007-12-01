@@ -9,10 +9,18 @@ void ecma48_input_push_str(ecma48_t *e48, ecma48_mod_e state, char *str, size_t 
   if(state_noshift == 0)
     // Normal text - ignore just shift
     ecma48_push_output_bytes(e48, str, len);
-  else if (state_noshift == ECMA48_MOD_CTRL && len == 1) {
-    // Ctrl + normal symbol
-    char c = str[0] & 0x1f;
-    ecma48_push_output_bytes(e48, &c, 1);
+  else if(len == 1) {
+    char c = str[0];
+
+    if(state & ECMA48_MOD_CTRL)
+      c &= 0x1f;
+
+    if(state & ECMA48_MOD_ALT) {
+      ecma48_push_output_sprintf(e48, "\e%c", c);
+    }
+    else {
+      ecma48_push_output_bytes(e48, &c, 1);
+    }
   }
   else {
     printf("Can't cope with push_str with non-zero state %d\n", state);
