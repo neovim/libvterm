@@ -39,9 +39,12 @@ int escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-int csi(ecma48_t *e48, int *args, int argcount, char command)
+int csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
 {
   printf("CSI ");
+
+  if(intermed)
+    printf("[int '%s'] ", intermed);
 
   int argi;
   for(argi = 0; argi < argcount; argi++)
