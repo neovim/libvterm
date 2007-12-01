@@ -170,7 +170,7 @@ static void updatecursor(ecma48_t *e48, ecma48_state_t *state, ecma48_position_t
   if(state->pos.col != oldpos->col || state->pos.row != oldpos->row) {
     if(state->callbacks &&
       state->callbacks->movecursor)
-      (*state->callbacks->movecursor)(e48, state->pos, *oldpos);
+      (*state->callbacks->movecursor)(e48, state->pos, *oldpos, e48->mode.cursor_visible);
   }
 }
 
@@ -283,9 +283,17 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
 
 static void change_dec_mode(ecma48_t *e48, int mode, int set)
 {
+  ecma48_state_t *state = e48->state;
+
   switch(mode) {
   case 1:
     e48->mode.cursor = set;
+    break;
+
+  case 25:
+    e48->mode.cursor_visible = set;
+    if(state->callbacks && state->callbacks->movecursor)
+      (*state->callbacks->movecursor)(e48, state->pos, state->pos, e48->mode.cursor_visible);
     break;
 
   default:
