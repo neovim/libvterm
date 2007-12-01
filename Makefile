@@ -12,15 +12,12 @@ CFILES=$(wildcard *.c)
 OFILES=$(CFILES:.c=.o)
 HFILES=$(wildcard *.h)
 
-DEBUGS=debug-passthrough debug-gtkterm debug-pangoterm
+DEBUGS=debug-passthrough debug-pangoterm
 
 all: $(DEBUGS)
 
 debug-%: debug-%.c libecma48.so
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS)
-
-debug-gtkterm: debug-gtkterm.c libecma48.so
-	gcc -o $@ $^ $(CCFLAGS) $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
 debug-pangoterm: debug-pangoterm.c libecma48.so
 	gcc -o $@ $^ $(CCFLAGS) $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
