@@ -22,6 +22,7 @@ struct ecma48_s
 
   struct {
     int keypad:1;
+    int cursor:1;
   } mode;
 };
 
