@@ -280,8 +280,11 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command)
+int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
 {
+  if(intermed)
+    return 0;
+
   ecma48_state_t *state = e48->state;
 
   ecma48_position_t oldpos = state->pos;
