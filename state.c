@@ -254,6 +254,22 @@ int ecma48_state_on_control(ecma48_t *e48, unsigned char control)
     state->pos.col = 0;
     break;
 
+  case 0x8d: // RI - ECMA-48 8.3.104
+    if(state->pos.row == state->scrollregion_start) {
+      ecma48_rectangle_t rect = {
+        .start_row = state->scrollregion_start,
+        .end_row   = state->scrollregion_end,
+        .start_col = 0,
+        .end_col   = e48->cols,
+      };
+
+      scroll(e48, rect, -1, 0);
+    }
+    else
+      if(state->pos.row)
+        state->pos.row--;
+    break;
+
   default:
     return 0;
   }
@@ -440,6 +456,30 @@ int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, 
 
     if(state->callbacks && state->callbacks->erase)
       (*state->callbacks->erase)(e48, rect, state->pen);
+
+    break;
+
+  case 0x4c: // IL - ECMA-48 8.3.67
+    count = args[0] == -1 ? 1 : args[0];
+
+    rect.start_row = state->pos.row;
+    rect.end_row   = state->scrollregion_end;
+    rect.start_col = 0;
+    rect.end_col   = e48->cols;
+
+    scroll(e48, rect, -count, 0);
+
+    break;
+
+  case 0x4d: // DL - ECMA-48 8.3.32
+    count = args[0] == -1 ? 1 : args[0];
+
+    rect.start_row = state->pos.row;
+    rect.end_row   = state->scrollregion_end;
+    rect.start_col = 0;
+    rect.end_col   = e48->cols;
+
+    scroll(e48, rect, count, 0);
 
     break;
 
