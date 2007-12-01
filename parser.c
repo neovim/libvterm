@@ -155,7 +155,12 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         csi_start = pos + 1;
         break;
       default:
-        ecma48_on_parser_escape(e48, c);
+        if(c >= 0x40 && c < 0x60)
+          // C1 emulations using 7bit clean
+          // ESC 0x40 == 0x80
+          ecma48_on_parser_control(e48, c + 0x40);
+        else 
+          ecma48_on_parser_escape(e48, c);
         in_esc = FALSE;
         pos_end = pos;
       }
