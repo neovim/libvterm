@@ -519,15 +519,10 @@ int main(int argc, char *argv[])
   int width = (pango_font_metrics_get_approximate_char_width(metrics) + 
                pango_font_metrics_get_approximate_digit_width(metrics)) / 2;
 
-  printf("Font metrics: ascent=%d descent=%d width=%d\n", 
-      pango_font_metrics_get_ascent(metrics),
-      pango_font_metrics_get_descent(metrics),
-      width);
-
   int height = pango_font_metrics_get_ascent(metrics) + pango_font_metrics_get_descent(metrics);
 
-  cell_width  = PANGO_PIXELS_CEIL(width);
-  cell_height = PANGO_PIXELS_CEIL(height);
+  cell_width  = PANGO_PIXELS_CEIL(width) - 1;
+  cell_height = PANGO_PIXELS_CEIL(height) + 1;
 
   gtk_widget_show_all(window);
 
