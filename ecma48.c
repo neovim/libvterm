@@ -31,6 +31,11 @@ void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callb
   e48->parser_callbacks = callbacks;
 }
 
+void ecma48_parser_set_utf8(ecma48_t *e48, int is_utf8)
+{
+  e48->is_utf8 = is_utf8;
+}
+
 void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
 {
   if((e48->inbuffer->len)) {

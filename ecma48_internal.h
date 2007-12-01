@@ -12,6 +12,8 @@ struct ecma48_s
   int rows;
   int cols;
 
+  int is_utf8;
+
   ecma48_parser_callbacks_t *parser_callbacks;
 
   GString *inbuffer;
@@ -25,7 +27,7 @@ void ecma48_push_output_bytes(ecma48_t *e48, char *bytes, size_t len);
 void ecma48_push_output_vsprintf(ecma48_t *e48, char *format, va_list args);
 void ecma48_push_output_sprintf(ecma48_t *e48, char *format, ...);
 
-int ecma48_state_on_text(ecma48_t *e48, char *bytes, size_t len);
+int ecma48_state_on_text(ecma48_t *e48, int codepoints[], int npoints);
 int ecma48_state_on_control(ecma48_t *e48, char control);
 int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command);
 
