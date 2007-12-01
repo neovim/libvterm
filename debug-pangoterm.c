@@ -505,7 +505,7 @@ int main(int argc, char *argv[])
 
   int height = pango_font_metrics_get_ascent(metrics) + pango_font_metrics_get_descent(metrics);
 
-  cell_width  = PANGO_PIXELS_CEIL(width) - 1;
+  cell_width  = PANGO_PIXELS_CEIL(width);
   cell_height = PANGO_PIXELS_CEIL(height) + 1;
 
   gtk_widget_show_all(window);
