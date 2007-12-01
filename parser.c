@@ -48,6 +48,9 @@ static void ecma48_on_parser_escape(ecma48_t *e48, char escape)
      e48->parser_callbacks->escape)
     done = (*e48->parser_callbacks->escape)(e48, escape);
 
+  if(!done && e48->state)
+    done = ecma48_state_on_escape(e48, escape);
+
   if(!done)
     fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
 }
