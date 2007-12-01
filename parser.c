@@ -26,7 +26,7 @@ static void ecma48_on_parser_text(ecma48_t *e48, int codepoints[], int npoints)
     fprintf(stderr, "libecma48: Unhandled text (%d chars)", npoints);
 }
 
-static void ecma48_on_parser_control(ecma48_t *e48, char control)
+static void ecma48_on_parser_control(ecma48_t *e48, unsigned char control)
 {
   int done = 0;
 
@@ -38,7 +38,7 @@ static void ecma48_on_parser_control(ecma48_t *e48, char control)
     done = ecma48_state_on_control(e48, control);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", (unsigned char)control);
+    fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", control);
 }
 
 static void ecma48_on_parser_escape(ecma48_t *e48, char escape)

@@ -225,7 +225,7 @@ int ecma48_state_on_text(ecma48_t *e48, int codepoints[], int npoints)
   return 1;
 }
 
-int ecma48_state_on_control(ecma48_t *e48, char control)
+int ecma48_state_on_control(ecma48_t *e48, unsigned char control)
 {
   ecma48_state_t *state = e48->state;
 
