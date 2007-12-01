@@ -86,22 +86,18 @@ void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos)
   }
 }
 
-static void scroll(ecma48_t *e48)
+static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
 {
   ecma48_state_t *state = e48->state;
 
-  ecma48_rectangle_t rect = {
-    .start_row = state->scrollregion_start,
-    .end_row   = state->scrollregion_end,
-    .start_col = 0,
-    .end_col   = e48->cols,
-  };
+  if(!downward && !rightward)
+    return;
 
   int done_scroll = 0;
 
   if(state->callbacks &&
      state->callbacks->scroll)
-    done_scroll = (*state->callbacks->scroll)(e48, rect, 1, 0);
+    done_scroll = (*state->callbacks->scroll)(e48, rect, downward, rightward);
 
   if(!done_scroll &&
      state->callbacks &&
@@ -111,25 +107,57 @@ static void scroll(ecma48_t *e48)
     int init_row, test_row, init_col, test_col;
     int inc_row, inc_col;
 
-    init_row = rect.start_row + 1;
-    test_row = rect.end_row - 1;
-    inc_row = +1;
+    if(downward < 0) {
+      init_row = rect.end_row - 1;
+      test_row = rect.start_row - downward;
+      inc_row = -1;
+    }
+    else if(downward == 0) {
+      init_row = rect.start_row;
+      test_row = rect.end_row;
+      inc_row = +1;
+    }
+    else /* downward > 0 */ {
+      init_row = rect.start_row + downward;
+      test_row = rect.end_row - 1;
+      inc_row = +1;
+    }
 
-    init_col = rect.start_col;
-    test_col = rect.end_col;
-    inc_col = +1;
+    if(rightward < 0) {
+      init_col = rect.end_col - 1;
+      test_col = rect.start_col - rightward;
+      inc_col = -1;
+    }
+    else if(rightward == 0) {
+      init_col = rect.start_col;
+      test_col = rect.end_col;
+      inc_col = +1;
+    }
+    else /* rightward > 0 */ {
+      init_col = rect.start_col + rightward;
+      test_col = rect.end_col - 1;
+      inc_col = +1;
+    }
 
     ecma48_position_t pos;
     for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
       for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
-        ecma48_position_t srcpos = { pos.row + 1, pos.col };
+        ecma48_position_t srcpos = { pos.row + downward, pos.col + rightward };
         (*state->callbacks->copycell)(e48, pos, srcpos);
       }
 
     done_scroll = 1;
   }
 
-  rect.start_row = rect.end_row - 1;
+  if(downward > 0)
+    rect.start_row = rect.end_row - downward;
+  else if(downward < 0)
+    rect.end_row = rect.start_row - downward;
+
+  if(rightward > 0)
+    rect.start_col = rect.end_col - rightward;
+  else if(rightward < 0)
+    rect.end_col = rect.start_col - rightward;
 
   if(state->callbacks &&
      state->callbacks->erase)
@@ -149,8 +177,16 @@ static void linefeed(ecma48_t *e48)
 {
   ecma48_state_t *state = e48->state;
 
-  if(state->pos.row == (state->scrollregion_end-1))
-    scroll(e48);
+  if(state->pos.row == (state->scrollregion_end-1)) {
+    ecma48_rectangle_t rect = {
+      .start_row = state->scrollregion_start,
+      .end_row   = state->scrollregion_end,
+      .start_col = 0,
+      .end_col   = e48->cols,
+    };
+
+    scroll(e48, rect, 1, 0);
+  }
   else
     state->pos.row++;
 }
