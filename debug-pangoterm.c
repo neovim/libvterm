@@ -414,26 +414,6 @@ static ecma48_state_callbacks_t cb = {
   .setpen     = term_setpen,
 };
 
-gboolean stdin_readable(GIOChannel *source, GIOCondition cond, gpointer data)
-{
-  char buffer[8192];
-
-  ssize_t bytes = read(0, buffer, sizeof buffer);
-
-  if(bytes == 0) {
-    fprintf(stderr, "STDIN closed\n");
-    exit(0);
-  }
-  if(bytes < 0) {
-    fprintf(stderr, "read(STDIN) failed - %s\n", strerror(errno));
-    exit(1);
-  }
-
-  write(master, buffer, bytes);
-
-  return TRUE;
-}
-
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 {
   char buffer[8192];
@@ -548,9 +528,6 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Cannot exec(%s) - %s\n", argv[1], strerror(errno));
     _exit(1);
   }
-
-  GIOChannel *gio_stdin = g_io_channel_unix_new(0);
-  g_io_add_watch(gio_stdin, G_IO_IN|G_IO_HUP, stdin_readable, NULL);
 
   GIOChannel *gio_master = g_io_channel_unix_new(master);
   g_io_add_watch(gio_master, G_IO_IN|G_IO_HUP, master_readable, NULL);
