@@ -197,6 +197,8 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         printf("BEGIN UTF-8\n");
 #endif
 
+        int finished = 1;
+
         if(e48->is_utf8) {
 
           // number of bytes remaining in this codepoint
@@ -209,8 +211,10 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
             printf(" pos=%d c=%02x rem=%d\n", pos, c, bytes_remaining);
 #endif
 
-            if(c < 0x20)
+            if(c < 0x20) {
+              finished = 0;
               break;
+            }
 
             else if(c >= 0x20 && c < 0x80) {
               if(bytes_remaining)
@@ -313,6 +317,9 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         }
 
         ecma48_on_parser_text(e48, cp, cpi);
+
+        if(finished)
+          return pos;
 
         // pos is now the first character we didn't like
         pos--;
