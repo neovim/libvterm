@@ -28,10 +28,10 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
   return 1;
 }
 
-int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos)
+int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos, int visible)
 {
   // TODO: Need to find some way to display this information
-  printf("Cursor is now at (%d,%d)\n", pos.col, pos.row);
+  printf("Cursor is now %s at (%d,%d)\n", visible ? "showing" : "hiding", pos.col, pos.row);
 
   return 1;
 }
