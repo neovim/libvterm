@@ -19,6 +19,10 @@ struct ecma48_s
   GString *inbuffer;
   GString *outbuffer;
   ecma48_state_t *state;
+
+  struct {
+    int keypad:1;
+  } mode;
 };
 
 size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len);
@@ -29,6 +33,7 @@ void ecma48_push_output_sprintf(ecma48_t *e48, char *format, ...);
 
 int ecma48_state_on_text(ecma48_t *e48, int codepoints[], int npoints);
 int ecma48_state_on_control(ecma48_t *e48, char control);
+int ecma48_state_on_escape(ecma48_t *e48, char escape);
 int ecma48_state_on_csi(ecma48_t *e48, int *args, int argcount, char command);
 
 #endif
