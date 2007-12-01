@@ -7,6 +7,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 #include <glib.h>
 
@@ -66,11 +67,19 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
   if(done)
     return;
 
-  if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3f) {
-    int argcount = 1; // Always at least 1 arg
-
+  if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3e) {
     int i;
     for(i = 0; i < arglen; i++)
+      // Treat 0x3f '?' as an intermediate byte, even though it's actually a
+      // DEC custom extension. Most terms seem to use that
+      if((args[i] & 0xf0) != 0x20 && args[i] != 0x3f)
+        break;
+
+    int intermedcount = i;
+
+    int argcount = 1; // Always at least 1 arg
+
+    for( ; i < arglen; i++)
       if(args[i] == 0x3b)
         argcount++;
 
@@ -84,7 +93,7 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
 
     argi = 0;
     int pos;
-    for(pos = 0; pos < arglen; pos++) {
+    for(pos = intermedcount; pos < arglen; pos++) {
       switch(args[pos]) {
       case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
       case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
@@ -102,17 +111,25 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
       }
     }
 
-    //printf("Parsed CSI args %.*s as:", arglen, args);
+    char *intermed = NULL;
+    if(intermedcount) {
+      intermed = g_alloca(intermedcount + 1); // for terminating NUL
+      strncpy(intermed, args, intermedcount);
+      intermed[intermedcount] = 0;
+    }
+
+    //printf("Parsed CSI args %.*s as:\n", arglen, args);
+    //printf(" intermed: %s\n", intermed);
     //for(argi = 0; argi < argcount; argi++)
     //  printf(" %d", csi_args[argi]);
     //printf("\n");
 
     if(e48->parser_callbacks &&
-       e48->parser_callbacks->csi)
-      done = (*e48->parser_callbacks->csi)(e48, csi_args, argcount, command);
+      e48->parser_callbacks->csi)
+      done = (*e48->parser_callbacks->csi)(e48, intermed, csi_args, argcount, command);
 
     if(!done && e48->state)
-      done = ecma48_state_on_csi(e48, csi_args, argcount, command);
+      done = ecma48_state_on_csi(e48, intermed, csi_args, argcount, command);
   }
 
   if(!done)
