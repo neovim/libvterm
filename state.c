@@ -3,20 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-struct ecma48_state_s
-{
-  ecma48_state_callbacks_t *callbacks;
-
-  /* Current cursor position */
-  ecma48_position_t pos;
-
-  int scrollregion_start;
-  int scrollregion_end;
-
-  /* Current pen - entirely managed by user code */
-  void *pen;
-};
-
 static ecma48_state_t *ecma48_state_new(void)
 {
   ecma48_state_t *state = g_new0(ecma48_state_t, 1);
