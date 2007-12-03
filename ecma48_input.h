@@ -6,7 +6,7 @@ typedef enum {
   ECMA48_MOD_SHIFT = 0x01,
   ECMA48_MOD_ALT   = 0x02,
   ECMA48_MOD_CTRL  = 0x04,
-} ecma48_mod_e;
+} ecma48_mod;
 
 typedef enum {
   ECMA48_KEY_NONE,
@@ -29,6 +29,6 @@ typedef enum {
   ECMA48_KEY_PAGEDOWN,
 
   ECMA48_KEY_MAX, // Must be last
-} ecma48_key_e;
+} ecma48_key;
 
 #endif

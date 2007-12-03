@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-void ecma48_input_push_str(ecma48_t *e48, ecma48_mod_e state, char *str, size_t len)
+void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, char *str, size_t len)
 {
-  ecma48_mod_e state_noshift = state & ~ECMA48_MOD_SHIFT;
+  ecma48_mod state_noshift = state & ~ECMA48_MOD_SHIFT;
 
   if(state_noshift == 0)
     // Normal text - ignore just shift
@@ -59,7 +59,7 @@ keycodes_s keycodes[] = {
   { KEYCODE_CSINUM, '~', 6 }, // PAGEDOWN
 };
 
-void ecma48_input_push_key(ecma48_t *e48, ecma48_mod_e state, ecma48_key_e key)
+void ecma48_input_push_key(ecma48_t *e48, ecma48_mod state, ecma48_key key)
 {
   if(key == ECMA48_KEY_NONE || key >= ECMA48_KEY_MAX)
     return;
