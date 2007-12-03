@@ -46,8 +46,8 @@ void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbac
 void ecma48_state_initialise(ecma48_t *e48);
 void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos);
 
-void ecma48_input_push_str(ecma48_t *e48, ecma48_mod_e state, char *str, size_t len);
-void ecma48_input_push_key(ecma48_t *e48, ecma48_mod_e state, ecma48_key_e key);
+void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, char *str, size_t len);
+void ecma48_input_push_key(ecma48_t *e48, ecma48_mod state, ecma48_key key);
 
 void ecma48_parser_set_utf8(ecma48_t *e48, int is_utf8);
 void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len);
