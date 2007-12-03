@@ -38,6 +38,7 @@ typedef struct {
   int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect, void *pen);
   int (*setpen)(ecma48_t *e48, int sgrcmd, void **penstore);
   int (*setpenattr)(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void **penstore);
+  int (*setmode)(ecma48_t *e48, ecma48_mode mode, int val);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);

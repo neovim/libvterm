@@ -6,6 +6,10 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 {
   ecma48_state_t *state = e48->state;
 
+  int done = 0;
+  if(state->callbacks && state->callbacks->setmode)
+    done = (*state->callbacks->setmode)(e48, mode, val);
+
   switch(mode) {
   case ECMA48_MODE_NONE:
     break;
@@ -20,8 +24,6 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 
   case ECMA48_MODE_DEC_CURSORVISIBLE:
     e48->mode.cursor_visible = val;
-    if(state->callbacks && state->callbacks->movecursor)
-      (*state->callbacks->movecursor)(e48, state->pos, state->pos, e48->mode.cursor_visible);
     break;
 
   }

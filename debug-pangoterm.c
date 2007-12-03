@@ -23,7 +23,7 @@ int cell_width;
 int cell_height;
 
 GdkRectangle invalid_area;
-int cursor_visible;
+int cursor_visible = 1;
 GdkRectangle cursor_area;
 
 GtkWidget *termwin;
@@ -441,6 +441,21 @@ int term_setpenattr(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void
   return 1;
 }
 
+int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
+{
+  switch(mode) {
+  case ECMA48_MODE_DEC_CURSORVISIBLE:
+    cursor_visible = val;
+    gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
+    break;
+
+  default:
+    return 0;
+  }
+
+  return 1;
+}
+
 static ecma48_state_callbacks_t cb = {
   .putchar    = term_putchar,
   .movecursor = term_movecursor,
@@ -449,6 +464,7 @@ static ecma48_state_callbacks_t cb = {
   .erase      = term_erase,
   .setpen     = term_setpen,
   .setpenattr = term_setpenattr,
+  .setmode    = term_setmode,
 };
 
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
