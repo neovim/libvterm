@@ -324,13 +324,6 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
 
 int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
 {
-#define CLONEATTRS \
-  do { \
-    PangoAttrList *newattrs = pango_attr_list_copy(pen->attrs); \
-    pango_attr_list_unref(pen->attrs); \
-    pen->attrs = newattrs; \
-  } while(0)
-
 #define ADDATTR(a) \
   do { \
     PangoAttribute *newattr = (a); \
@@ -362,12 +355,10 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
     break;
 
   case 1: // Bold
-    CLONEATTRS;
     ADDATTR(pango_attr_weight_new(PANGO_WEIGHT_BOLD));
     break;
 
   case 4: // Single underline
-    CLONEATTRS;
     ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
     break;
 
@@ -376,12 +367,10 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
     break;
 
   case 21: // Double underline
-    CLONEATTRS;
     ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_DOUBLE));
     break;
 
   case 24: // Not underlined
-    CLONEATTRS;
     ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_NONE));
     break;
 
