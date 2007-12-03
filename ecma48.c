@@ -23,6 +23,14 @@ ecma48_t *ecma48_new(void)
   return e48;
 }
 
+void ecma48_get_size(ecma48_t *e48, int *rowsp, int *colsp)
+{
+  if(rowsp)
+    *rowsp = e48->rows;
+  if(colsp)
+    *colsp = e48->cols;
+}
+
 void ecma48_set_size(ecma48_t *e48, int rows, int cols)
 {
   e48->rows = rows;
