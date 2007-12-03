@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "ecma48_input.h"
+#include "ecma48_pen.h"
 
 typedef struct ecma48_s ecma48_t;
 
@@ -35,6 +36,7 @@ typedef struct {
   int (*copycell)(ecma48_t *e48, ecma48_position_t dest, ecma48_position_t src);
   int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect, void *pen);
   int (*setpen)(ecma48_t *e48, int sgrcmd, void **penstore);
+  int (*setpenattr)(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void **penstore);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);
