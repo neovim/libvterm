@@ -32,11 +32,7 @@ struct ecma48_s
   GString *outbuffer;
   ecma48_state_t *state;
 
-  struct {
-    int keypad:1;
-    int cursor:1;
-    int cursor_visible:1;
-  } mode;
+  ecma48_modevalues mode;
 };
 
 size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len);
@@ -51,5 +47,7 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape);
 int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command);
 
 void ecma48_state_setpen(ecma48_t *e48, int args[], int argcount);
+
+void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val);
 
 #endif

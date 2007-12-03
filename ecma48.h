@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "ecma48_input.h"
+#include "ecma48_mode.h"
 #include "ecma48_pen.h"
 
 typedef struct ecma48_s ecma48_t;
