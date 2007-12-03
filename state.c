@@ -344,7 +344,6 @@ int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, 
   int count;
   int row, col;
   ecma48_rectangle_t rect;
-  int argi;
 
   switch(command) {
   case 0x40: // ICH - ECMA-48 8.3.64
@@ -482,13 +481,7 @@ int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, 
     break;
 
   case 0x6d: // SGR - ECMA-48 8.3.117
-    if(state->callbacks &&
-       state->callbacks->setpen)
-      for(argi = 0; argi < argcount; argi++) {
-        if(!(*state->callbacks->setpen)(e48, args[argi], &state->pen))
-          fprintf(stderr, "libecma48: Unhandled CSI SGR %d\n", args[argi]);
-      }
-
+    ecma48_state_setpen(e48, args, argcount);
     break;
 
   case 0x72: // DECSTBM - DEC custom

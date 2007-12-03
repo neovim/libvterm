@@ -50,4 +50,6 @@ int ecma48_state_on_control(ecma48_t *e48, unsigned char control);
 int ecma48_state_on_escape(ecma48_t *e48, char escape);
 int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command);
 
+void ecma48_state_setpen(ecma48_t *e48, int args[], int argcount);
+
 #endif
