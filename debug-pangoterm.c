@@ -48,6 +48,8 @@ const int default_size = 9;
 
 PangoFontDescription *fontdesc;
 
+GtkIMContext *im_context;
+
 const char *col_spec[] = {
   "black",
   "red",
@@ -140,6 +142,11 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
 
 gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
+  gboolean ret = gtk_im_context_filter_keypress(im_context, event);
+
+  if(ret)
+    return TRUE;
+
   // We don't need to track the state of modifier bits
   if(event->is_modifier)
     return FALSE;
@@ -163,6 +170,20 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
     else
       printf("Unsure how to handle key %d with no string\n", event->keyval);
   }
+
+  size_t bufflen = ecma48_output_bufferlen(e48);
+  if(bufflen) {
+    char buffer[bufflen];
+    bufflen = ecma48_output_bufferread(e48, buffer, bufflen);
+    write(master, buffer, bufflen);
+  }
+
+  return FALSE;
+}
+
+gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
+{
+  ecma48_input_push_str(e48, 0, str, strlen(str));
 
   size_t bufflen = ecma48_output_bufferlen(e48);
   if(bufflen) {
@@ -496,6 +517,10 @@ int main(int argc, char *argv[])
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
+
+  im_context = gtk_im_context_simple_new();
+
+  g_signal_connect(G_OBJECT(im_context), "commit", GTK_SIGNAL_FUNC(im_commit), NULL);
 
   PangoContext *pctx = gtk_widget_get_pango_context(window);
 
