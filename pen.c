@@ -90,6 +90,17 @@ void ecma48_state_setpen(ecma48_t *e48, int args[], int argcount)
       setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, 0, args[argi] - 30);
       break;
 
+    case 38: // Foreground colour alternative palette
+      // Expect two more attributes
+      if(argcount - argi >= 2) {
+        setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, args[argi+1], args[argi+2]);
+        argi += 2;
+      }
+      else {
+        argi = argcount-1;
+      }
+      break;
+
     case 39: // Foreground colour default
       setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, 0, -1);
       break;
@@ -97,6 +108,17 @@ void ecma48_state_setpen(ecma48_t *e48, int args[], int argcount)
     case 40: case 41: case 42: case 43:
     case 44: case 45: case 46: case 47: // Background colour palette
       setpenattr_col(e48, ECMA48_ATTR_BACKGROUND, 0, args[argi] - 40);
+      break;
+
+    case 48: // Background colour alternative palette
+      // Expect two more attributes
+      if(argcount - argi >= 2) {
+        setpenattr_col(e48, ECMA48_ATTR_BACKGROUND, args[argi+1], args[argi+2]);
+        argi += 2;
+      }
+      else {
+        argi = argcount-1;
+      }
       break;
 
     case 49: // Default background
