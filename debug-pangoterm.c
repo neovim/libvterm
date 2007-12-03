@@ -67,7 +67,7 @@ typedef struct {
   PangoLayout *layout;
 } term_pen;
 
-ecma48_key_e convert_keyval(guint gdk_keyval)
+ecma48_key convert_keyval(guint gdk_keyval)
 {
   switch(gdk_keyval) {
   case GDK_BackSpace:
@@ -144,7 +144,7 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->is_modifier)
     return FALSE;
 
-  ecma48_mod_e state = ECMA48_MOD_NONE;
+  ecma48_mod state = ECMA48_MOD_NONE;
   if(event->state & GDK_SHIFT_MASK)
     state |= ECMA48_MOD_SHIFT;
   if(event->state & GDK_CONTROL_MASK)
@@ -152,7 +152,7 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->state & GDK_MOD1_MASK)
     state |= ECMA48_MOD_ALT;
 
-  ecma48_key_e keyval = convert_keyval(event->keyval);
+  ecma48_key keyval = convert_keyval(event->keyval);
 
   if(keyval)
     ecma48_input_push_key(e48, state, keyval);
