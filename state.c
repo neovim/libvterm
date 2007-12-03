@@ -269,11 +269,11 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
 {
   switch(escape) {
   case 0x3d:
-    e48->mode.keypad = 1;
+    ecma48_state_setmode(e48, ECMA48_MODE_KEYPAD, 1);
     break;
 
   case 0x3e:
-    e48->mode.keypad = 0;
+    ecma48_state_setmode(e48, ECMA48_MODE_KEYPAD, 0);
     break;
 
   default:
@@ -283,24 +283,17 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-static void change_dec_mode(ecma48_t *e48, int mode, int set)
+static ecma48_mode convert_dec_mode(int num)
 {
-  ecma48_state_t *state = e48->state;
-
-  switch(mode) {
+  switch(num) {
   case 1:
-    e48->mode.cursor = set;
-    break;
-
+    return ECMA48_MODE_DEC_CURSOR;
   case 25:
-    e48->mode.cursor_visible = set;
-    if(state->callbacks && state->callbacks->movecursor)
-      (*state->callbacks->movecursor)(e48, state->pos, state->pos, e48->mode.cursor_visible);
-    break;
+    return ECMA48_MODE_DEC_CURSORVISIBLE;
 
   default:
-    printf("libecma48: Unknown DEC mode %d\n", mode);
-    break;
+    printf("libecma48: Unknown DEC mode %d\n", num);
+    return ECMA48_MODE_NONE;
   }
 }
 
@@ -308,13 +301,19 @@ static int ecma48_state_on_csi_qmark(ecma48_t *e48, int *args, int argcount, cha
 {
   switch(command) {
   case 0x68: // DEC private mode set
-    if(args[0] != -1)
-      change_dec_mode(e48, args[0], 1);
+    if(args[0] != -1) {
+      ecma48_mode mode = convert_dec_mode(args[0]);
+      if(mode)
+        ecma48_state_setmode(e48, mode, 1);
+    }
     break;
 
   case 0x6c: // DEC private mode reset
-    if(args[0] != -1)
-      change_dec_mode(e48, args[0], 0);
+    if(args[0] != -1) {
+      ecma48_mode mode = convert_dec_mode(args[0]);
+      if(mode)
+        ecma48_state_setmode(e48, mode, 0);
+    }
     break;
 
   default:
