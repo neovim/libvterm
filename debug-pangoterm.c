@@ -324,6 +324,34 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
 
 int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
 {
+  term_pen *pen = *penstore;
+
+  if(!*penstore) {
+    pen = g_new0(term_pen, 1);
+    *penstore = pen;
+    pen->attrs = pango_attr_list_new();
+    pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
+    pango_layout_set_font_description(pen->layout, fontdesc);
+    gdk_color_parse(default_fg, &pen->fg_col);
+    gdk_color_parse(default_bg, &pen->bg_col);
+    return 1;
+  }
+
+  return 0;
+}
+
+static void lookup_colour(int palette, int index, const char *def, GdkColor *col)
+{
+  switch(palette) {
+  case 0:
+    // TODO: boundscheck index
+    gdk_color_parse(index == -1 ? def : col_spec[index], col);
+    break;
+  }
+}
+
+int term_setpenattr(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void **penstore)
+{
 #define ADDATTR(a) \
   do { \
     PangoAttribute *newattr = (a); \
@@ -334,60 +362,27 @@ int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
 
   term_pen *pen = *penstore;
 
-  if(!*penstore) {
-    pen = g_new0(term_pen, 1);
-    *penstore = pen;
-    pen->attrs = NULL;
-    pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
-    pango_layout_set_font_description(pen->layout, fontdesc);
-  }
-
-  switch(sgrcmd) {
-  case -1:
-  case 0: // Reset all
-    gdk_color_parse(default_fg, &pen->fg_col);
-    gdk_color_parse(default_bg, &pen->bg_col);
-    pen->reverse = FALSE;
-
-    if(pen->attrs)
-      pango_attr_list_unref(pen->attrs);
-    pen->attrs = pango_attr_list_new();
+  switch(attr) {
+  case ECMA48_ATTR_BOLD:
+    ADDATTR(pango_attr_weight_new(val->boolean ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
     break;
 
-  case 1: // Bold
-    ADDATTR(pango_attr_weight_new(PANGO_WEIGHT_BOLD));
+  case ECMA48_ATTR_UNDERLINE:
+    ADDATTR(pango_attr_underline_new(val->value == 1 ? PANGO_UNDERLINE_SINGLE :
+                                     val->value == 2 ? PANGO_UNDERLINE_DOUBLE :
+                                                      PANGO_UNDERLINE_NONE));
     break;
 
-  case 4: // Single underline
-    ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
+  case ECMA48_ATTR_REVERSE:
+    pen->reverse = val->boolean;
     break;
 
-  case 7: // Reverse video
-    pen->reverse = TRUE;
+  case ECMA48_ATTR_FOREGROUND:
+    lookup_colour(val->color.palette, val->color.index, default_fg, &pen->fg_col);
     break;
 
-  case 21: // Double underline
-    ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_DOUBLE));
-    break;
-
-  case 24: // Not underlined
-    ADDATTR(pango_attr_underline_new(PANGO_UNDERLINE_NONE));
-    break;
-
-  case 27: // Not reverse
-    pen->reverse = FALSE;
-    break;
-
-  case 30: case 31: case 32: case 33:
-  case 34: case 35: case 36: case 37: // Foreground colour
-  case 39: // Default foreground
-    gdk_color_parse(sgrcmd == 39 ? default_fg : col_spec[sgrcmd - 30], &pen->fg_col);
-    break;
-
-  case 40: case 41: case 42: case 43:
-  case 44: case 45: case 46: case 47: // Background colour
-  case 49: // Default background
-    gdk_color_parse(sgrcmd == 49 ? default_bg : col_spec[sgrcmd - 40], &pen->bg_col);
+  case ECMA48_ATTR_BACKGROUND:
+    lookup_colour(val->color.palette, val->color.index, default_bg, &pen->bg_col);
     break;
 
   default:
@@ -404,6 +399,7 @@ static ecma48_state_callbacks_t cb = {
   .copycell   = term_copycell,
   .erase      = term_erase,
   .setpen     = term_setpen,
+  .setpenattr = term_setpenattr,
 };
 
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
