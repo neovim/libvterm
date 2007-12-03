@@ -5,7 +5,19 @@
 
 #include <glib.h>
 
-typedef struct ecma48_state_s ecma48_state_t;
+typedef struct ecma48_state_s
+{
+  ecma48_state_callbacks_t *callbacks;
+
+  /* Current cursor position */
+  ecma48_position_t pos;
+
+  int scrollregion_start;
+  int scrollregion_end;
+
+  /* Current pen - entirely managed by user code */
+  void *pen;
+} ecma48_state_t;
 
 struct ecma48_s
 {
