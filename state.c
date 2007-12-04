@@ -283,17 +283,33 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-static ecma48_mode convert_dec_mode(int num)
+static void set_dec_mode(ecma48_t *e48, int num, int val)
 {
   switch(num) {
   case 1:
-    return ECMA48_MODE_DEC_CURSOR;
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSOR, val);
+    break;
+
   case 25:
-    return ECMA48_MODE_DEC_CURSORVISIBLE;
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSORVISIBLE, val);
+    break;
+
+  case 1047:
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_ALTSCREEN, val);
+    break;
+
+  case 1048:
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_SAVECURSOR, val);
+    break;
+
+  case 1049:
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_ALTSCREEN, val);
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_SAVECURSOR, val);
+    break;
 
   default:
     printf("libecma48: Unknown DEC mode %d\n", num);
-    return ECMA48_MODE_NONE;
+    return;
   }
 }
 
@@ -301,19 +317,13 @@ static int ecma48_state_on_csi_qmark(ecma48_t *e48, int *args, int argcount, cha
 {
   switch(command) {
   case 0x68: // DEC private mode set
-    if(args[0] != -1) {
-      ecma48_mode mode = convert_dec_mode(args[0]);
-      if(mode)
-        ecma48_state_setmode(e48, mode, 1);
-    }
+    if(args[0] != -1)
+      set_dec_mode(e48, args[0], 1);
     break;
 
   case 0x6c: // DEC private mode reset
-    if(args[0] != -1) {
-      ecma48_mode mode = convert_dec_mode(args[0]);
-      if(mode)
-        ecma48_state_setmode(e48, mode, 0);
-    }
+    if(args[0] != -1)
+      set_dec_mode(e48, args[0], 0);
     break;
 
   default:
