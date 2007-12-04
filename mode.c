@@ -2,6 +2,12 @@
 
 #include <stdio.h>
 
+void ecma48_state_initmodes(ecma48_t *e48)
+{
+  // Some of the modes default to being set
+  e48->mode.cursor_visible = 1;
+}
+
 void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 {
   ecma48_state_t *state = e48->state;

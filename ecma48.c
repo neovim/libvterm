@@ -17,8 +17,7 @@ ecma48_t *ecma48_new(void)
   e48->inbuffer = g_string_new(NULL);
   e48->outbuffer = g_string_new(NULL);
 
-  // Some of the modes default to being set
-  e48->mode.cursor_visible = 1;
+  ecma48_state_initmodes(e48);
 
   return e48;
 }
