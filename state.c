@@ -96,7 +96,7 @@ static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rig
 
     if(downward < 0) {
       init_row = rect.end_row - 1;
-      test_row = rect.start_row - downward;
+      test_row = rect.start_row - downward - 1;
       inc_row = -1;
     }
     else if(downward == 0) {
@@ -105,14 +105,14 @@ static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rig
       inc_row = +1;
     }
     else /* downward > 0 */ {
-      init_row = rect.start_row + downward;
-      test_row = rect.end_row - 1;
+      init_row = rect.start_row;
+      test_row = rect.end_row - downward;
       inc_row = +1;
     }
 
     if(rightward < 0) {
       init_col = rect.end_col - 1;
-      test_col = rect.start_col - rightward;
+      test_col = rect.start_col - rightward - 1;
       inc_col = -1;
     }
     else if(rightward == 0) {
@@ -121,8 +121,8 @@ static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rig
       inc_col = +1;
     }
     else /* rightward > 0 */ {
-      init_col = rect.start_col + rightward;
-      test_col = rect.end_col - 1;
+      init_col = rect.start_col;
+      test_col = rect.end_col - rightward;
       inc_col = +1;
     }
 
