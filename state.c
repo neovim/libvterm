@@ -290,6 +290,10 @@ static void set_dec_mode(ecma48_t *e48, int num, int val)
     ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSOR, val);
     break;
 
+  case 12:
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSORBLINK, val);
+    break;
+
   case 25:
     ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSORVISIBLE, val);
     break;
