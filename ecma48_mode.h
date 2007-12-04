@@ -12,6 +12,8 @@ typedef enum {
   ECMA48_MODE_DEC_CURSORVISIBLE,
   ECMA48_MODE_DEC_ALTSCREEN,
   ECMA48_MODE_DEC_SAVECURSOR,
+
+  ECMA48_MODE_MAX, // Must be last
 } ecma48_mode;
 
 typedef struct {
