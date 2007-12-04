@@ -25,6 +25,9 @@ void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbac
       e48->state = ecma48_state_new();
     }
     e48->state->callbacks = callbacks;
+
+    // Initialise the modes
+    ecma48_state_initmodes(e48);
   }
   else {
     if(e48->state) {
