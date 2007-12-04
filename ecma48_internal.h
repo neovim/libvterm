@@ -11,6 +11,8 @@ typedef struct ecma48_state_s
 
   /* Current cursor position */
   ecma48_position_t pos;
+  /* Saved cursor position under DEC mode 1048/1049 */
+  ecma48_position_t saved_pos;
 
   int scrollregion_start;
   int scrollregion_end;
