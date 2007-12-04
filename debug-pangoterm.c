@@ -26,6 +26,8 @@ GdkRectangle invalid_area;
 int cursor_visible;
 GdkRectangle cursor_area;
 
+guint cursor_timer_id;
+
 GtkWidget *termwin;
 
 // Actual stores of Pixmaps
@@ -48,6 +50,7 @@ const char *default_fg = "gray90";
 const char *default_bg = "black";
 
 const char *cursor_col = "white";
+const gint cursor_blink_interval = 500;
 
 const char *default_font = "Leonine Sans Mono";
 const int default_size = 9;
@@ -275,6 +278,31 @@ int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldp
   return 1;
 }
 
+gboolean cursor_blink(gpointer data)
+{
+  invalid_area.x = 0;
+  invalid_area.y = 0;
+  invalid_area.width = 0;
+  invalid_area.height = 0;
+
+  cursor_visible = !cursor_visible;
+  gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
+
+  if(invalid_area.width && invalid_area.height)
+    repaint_area(&invalid_area);
+
+  if(cursor_visible)
+    gdk_draw_rectangle(termwin->window,
+        cursor_gc,
+        FALSE,
+        cursor_area.x,
+        cursor_area.y,
+        cursor_area.width - 1,
+        cursor_area.height - 1);
+
+  return TRUE;
+}
+
 int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
 {
   GdkGC *gc = gdk_gc_new(termbuffer);
@@ -453,6 +481,15 @@ int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
   case ECMA48_MODE_DEC_CURSORVISIBLE:
     cursor_visible = val;
     gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
+    break;
+
+  case ECMA48_MODE_DEC_CURSORBLINK:
+    if(val) {
+      cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, NULL);
+    }
+    else {
+      g_source_remove(cursor_timer_id);
+    }
     break;
 
   case ECMA48_MODE_DEC_ALTSCREEN:
