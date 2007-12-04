@@ -5,6 +5,7 @@
 void ecma48_state_initmodes(ecma48_t *e48)
 {
   // Some of the modes default to being set
+  e48->mode.cursor_blink = 1;
   e48->mode.cursor_visible = 1;
 }
 
@@ -26,6 +27,10 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 
   case ECMA48_MODE_DEC_CURSOR:
     e48->mode.cursor = val;
+    break;
+
+  case ECMA48_MODE_DEC_CURSORBLINK:
+    e48->mode.cursor_blink = val;
     break;
 
   case ECMA48_MODE_DEC_CURSORVISIBLE:
