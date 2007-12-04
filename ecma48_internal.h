@@ -50,6 +50,7 @@ int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, 
 
 void ecma48_state_setpen(ecma48_t *e48, int args[], int argcount);
 
+void ecma48_state_initmodes(ecma48_t *e48);
 void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val);
 
 #endif
