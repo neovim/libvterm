@@ -27,6 +27,12 @@ int cursor_visible = 1;
 GdkRectangle cursor_area;
 
 GtkWidget *termwin;
+
+// Actual stores of Pixmaps
+GdkPixmap *termbuffer_main;
+GdkPixmap *termbuffer_alternate;
+
+// This always points at one of the above
 GdkPixmap *termbuffer;
 
 GdkGC *cursor_gc;
@@ -449,6 +455,24 @@ int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
     gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
     break;
 
+  case ECMA48_MODE_DEC_ALTSCREEN:
+    {
+      int rows, cols;
+      ecma48_get_size(e48, &rows, &cols);
+
+      GdkRectangle rect = {
+        .x = 0,
+        .y = 0,
+        .width  = cols * cell_width,
+        .height = rows * cell_height,
+      };
+
+      termbuffer = val ? termbuffer_alternate : termbuffer_main;
+
+      gdk_rectangle_union(&rect, &invalid_area, &invalid_area);
+    }
+    break;
+
   default:
     return 0;
   }
@@ -564,8 +588,12 @@ int main(int argc, char *argv[])
 
   gtk_widget_show_all(window);
 
-  termbuffer = gdk_pixmap_new(window->window,
+  termbuffer_main = gdk_pixmap_new(window->window,
       size.ws_col * cell_width, size.ws_row * cell_height, -1);
+  termbuffer_alternate = gdk_pixmap_new(window->window,
+      size.ws_col * cell_width, size.ws_row * cell_height, -1);
+
+  termbuffer = termbuffer_main;
 
   gtk_window_resize(GTK_WINDOW(window), 
       size.ws_col * cell_width, size.ws_row * cell_height);
