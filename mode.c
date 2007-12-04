@@ -4,9 +4,22 @@
 
 void ecma48_state_initmodes(ecma48_t *e48)
 {
-  // Some of the modes default to being set
-  e48->mode.cursor_blink = 1;
-  e48->mode.cursor_visible = 1;
+  ecma48_mode mode;
+  for(mode = ECMA48_MODE_NONE; mode < ECMA48_MODE_MAX; mode++) {
+    int val = 0;
+
+    switch(mode) {
+    case ECMA48_MODE_DEC_CURSORBLINK:
+    case ECMA48_MODE_DEC_CURSORVISIBLE:
+      val = 1;
+      break;
+
+    default:
+      break;
+    }
+
+    ecma48_state_setmode(e48, mode, val);
+  }
 }
 
 void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
@@ -19,6 +32,7 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 
   switch(mode) {
   case ECMA48_MODE_NONE:
+  case ECMA48_MODE_MAX:
     break;
 
   case ECMA48_MODE_KEYPAD:

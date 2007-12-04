@@ -23,7 +23,7 @@ int cell_width;
 int cell_height;
 
 GdkRectangle invalid_area;
-int cursor_visible = 1;
+int cursor_visible;
 GdkRectangle cursor_area;
 
 GtkWidget *termwin;
