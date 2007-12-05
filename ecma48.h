@@ -30,6 +30,8 @@ typedef struct {
   int (*csi)(ecma48_t *e48, char *intermed, int *args, int argcount, char command);
 } ecma48_parser_callbacks_t;
 
+typedef void (*ecma48_mousefunc)(int x, int y, int button, int pressed, void *data);
+
 typedef struct {
   int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void *pen);
   int (*movecursor)(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos, int visible);
@@ -39,6 +41,7 @@ typedef struct {
   int (*setpen)(ecma48_t *e48, int sgrcmd, void **penstore);
   int (*setpenattr)(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void **penstore);
   int (*setmode)(ecma48_t *e48, ecma48_mode mode, int val);
+  int (*setmousefunc)(ecma48_t *e48, ecma48_mousefunc func, void *data);
 } ecma48_state_callbacks_t;
 
 ecma48_t *ecma48_new(void);

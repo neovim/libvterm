@@ -59,6 +59,9 @@ PangoFontDescription *fontdesc;
 
 GtkIMContext *im_context;
 
+ecma48_mousefunc mousefunc;
+void *mousedata;
+
 const char *col_spec[] = {
   "black",
   "red",
@@ -179,6 +182,20 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
     else
       printf("Unsure how to handle key %d with no string\n", event->keyval);
   }
+
+  size_t bufflen = ecma48_output_bufferlen(e48);
+  if(bufflen) {
+    char buffer[bufflen];
+    bufflen = ecma48_output_bufferread(e48, buffer, bufflen);
+    write(master, buffer, bufflen);
+  }
+
+  return FALSE;
+}
+
+gboolean term_mousepress(GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+  (*mousefunc)(event->x / cell_width, event->y / cell_height, event->button, event->type == GDK_BUTTON_PRESS, mousedata);
 
   size_t bufflen = ecma48_output_bufferlen(e48);
   if(bufflen) {
@@ -517,15 +534,33 @@ int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
   return 1;
 }
 
+int term_setmousefunc(ecma48_t *e48, ecma48_mousefunc func, void *data)
+{
+  mousefunc = func;
+  mousedata = data;
+
+  GdkEventMask mask = gdk_window_get_events(termwin->window);
+
+  if(func)
+    mask |= GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK;
+  else
+    mask &= ~(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+
+  gdk_window_set_events(termwin->window, mask);
+
+  return 1;
+}
+
 static ecma48_state_callbacks_t cb = {
-  .putchar    = term_putchar,
-  .movecursor = term_movecursor,
-  .scroll     = term_scroll,
-  .copycell   = term_copycell,
-  .erase      = term_erase,
-  .setpen     = term_setpen,
-  .setpenattr = term_setpenattr,
-  .setmode    = term_setmode,
+  .putchar      = term_putchar,
+  .movecursor   = term_movecursor,
+  .scroll       = term_scroll,
+  .copycell     = term_copycell,
+  .erase        = term_erase,
+  .setpen       = term_setpen,
+  .setpenattr   = term_setpenattr,
+  .setmode      = term_setmode,
+  .setmousefunc = term_setmousefunc,
 };
 
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
@@ -587,13 +622,18 @@ int main(int argc, char *argv[])
   ecma48_parser_set_utf8(e48, 1);
   ecma48_set_size(e48, size.ws_row, size.ws_col);
 
-  ecma48_set_state_callbacks(e48, &cb);
-
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   termwin = window;
 
+  gtk_widget_realize(window);
+
+  ecma48_set_state_callbacks(e48, &cb);
+
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
+
+  g_signal_connect(G_OBJECT(termwin), "button-press-event",   GTK_SIGNAL_FUNC(term_mousepress), NULL);
+  g_signal_connect(G_OBJECT(termwin), "button-release-event", GTK_SIGNAL_FUNC(term_mousepress), NULL);
 
   im_context = gtk_im_context_simple_new();
 

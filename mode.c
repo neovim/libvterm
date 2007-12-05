@@ -22,6 +22,25 @@ void ecma48_state_initmodes(ecma48_t *e48)
   }
 }
 
+static void mousefunc(int x, int y, int button, int pressed, void *data)
+{
+  ecma48_t *e48 = data;
+  ecma48_state_t *state = e48->state;
+
+  int old_buttons = state->mouse_buttons;
+
+  if(pressed)
+    state->mouse_buttons |= (1 << button);
+  else
+    state->mouse_buttons &= ~(1 << button);
+
+  if(state->mouse_buttons != old_buttons) {
+    if(button < 4) {
+      ecma48_push_output_sprintf(e48, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
+    }
+  }
+}
+
 void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 {
   ecma48_state_t *state = e48->state;
@@ -49,6 +68,15 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 
   case ECMA48_MODE_DEC_CURSORVISIBLE:
     e48->mode.cursor_visible = val;
+    break;
+
+  case ECMA48_MODE_DEC_MOUSE:
+    if(state->callbacks && state->callbacks->setmousefunc) {
+      if(val) {
+        state->mouse_buttons = 0;
+      }
+      (*state->callbacks->setmousefunc)(e48, val ? mousefunc : NULL, e48);
+    }
     break;
 
   case ECMA48_MODE_DEC_ALTSCREEN:
