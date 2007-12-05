@@ -301,6 +301,10 @@ static void set_dec_mode(ecma48_t *e48, int num, int val)
     ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSORVISIBLE, val);
     break;
 
+  case 1000:
+    ecma48_state_setmode(e48, ECMA48_MODE_DEC_MOUSE, val);
+    break;
+
   case 1047:
     ecma48_state_setmode(e48, ECMA48_MODE_DEC_ALTSCREEN, val);
     break;

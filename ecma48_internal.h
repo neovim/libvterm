@@ -19,6 +19,10 @@ typedef struct ecma48_state_s
 
   /* Current pen - entirely managed by user code */
   void *pen;
+
+  /* Mouse state */
+  int mouse_col, mouse_row;
+  int mouse_buttons;
 } ecma48_state_t;
 
 struct ecma48_s
