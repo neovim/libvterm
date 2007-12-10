@@ -12,6 +12,9 @@ CFILES=$(wildcard *.c)
 OFILES=$(CFILES:.c=.o)
 HFILES=$(wildcard *.h)
 
+TEST_CFILES=$(wildcard t/*.c)
+TEST_OFILES=$(TEST_CFILES:.c=.o)
+
 DEBUGS=debug-passthrough debug-pangoterm
 
 all: $(DEBUGS)
@@ -27,6 +30,13 @@ libecma48.so: ecma48.o parser.o state.o input.o pen.o mode.o
 
 %.o: %.c $(HFILES)
 	gcc -fPIC -o $@ -c $< $(CCFLAGS)
+
+t/test: libecma48.so $(TEST_OFILES)
+	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS) -lcunit
+
+.PHONY: test
+test: libecma48.so t/test
+	LD_LIBRARY_PATH=. t/test
 
 .PHONY: clean
 clean:
