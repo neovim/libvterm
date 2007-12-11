@@ -15,11 +15,6 @@ static void test_size(void)
   CU_ASSERT_EQUAL(cols, 40);
 }
 
-CU_TestInfo ecma48_tests[] = {
-  { "size", test_size },
-  CU_TEST_INFO_NULL,
-};
-
 int ecma48_init(void)
 {
   e48 = ecma48_new();
@@ -31,3 +26,5 @@ int ecma48_fini(void)
   // TODO: free
   return 0;
 }
+
+#include "01ecma48.inc"
