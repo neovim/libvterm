@@ -32,8 +32,14 @@ libecma48.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
 src/%.o: src/%.c $(HFILES)
 	gcc -fPIC -o $@ -c $< $(CCFLAGS)
 
-t/%.o: t/%.c
+# Need first to cancel the implict rule
+%.o: %.c
+
+t/%.o: t/%.c t/%.inc
 	gcc -c -o $@ $< $(CCFLAGS)
+
+t/%.inc: t/%.c
+	t/gen-test.inc.sh $< >$@
 
 t/test.o: t/test.c t/extern.h t/suites.h
 	gcc -c -o $@ $< $(CCFLAGS)
