@@ -197,9 +197,12 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         printf("BEGIN UTF-8\n");
 #endif
 
-        int finished = 1;
+        int finished;
 
         if(e48->is_utf8) {
+          // Most of the exits from this for loop will want finished=1
+          // Easiest to set it now
+          finished = 1;
 
           // number of bytes remaining in this codepoint
           int bytes_remaining = 0;
@@ -306,6 +309,8 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
           }
         }
         else {
+          finished = 0;
+
           for( ; pos < len; pos++) {
             c = bytes[pos];
 
