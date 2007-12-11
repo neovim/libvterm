@@ -4,7 +4,7 @@
 
 ecma48_t *e48;
 
-static void size_test(void)
+static void test_size(void)
 {
   ecma48_set_size(e48, 100, 40);
 
@@ -16,7 +16,7 @@ static void size_test(void)
 }
 
 CU_TestInfo ecma48_tests[] = {
-  { "size", size_test },
+  { "size", test_size },
   CU_TEST_INFO_NULL,
 };
 
