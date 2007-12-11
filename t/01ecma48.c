@@ -16,7 +16,7 @@ static void size_test(void)
 }
 
 CU_TestInfo ecma48_tests[] = {
-  "size", size_test,
+  { "size", size_test },
   CU_TEST_INFO_NULL,
 };
 

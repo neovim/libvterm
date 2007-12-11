@@ -31,7 +31,12 @@ libecma48.so: ecma48.o parser.o state.o input.o pen.o mode.o
 %.o: %.c $(HFILES)
 	gcc -fPIC -o $@ -c $< $(CCFLAGS)
 
+t/test.o: t/test.c
+	t/test.c.sh
+	gcc -c -o $@ $^ $(CCFLAGS)
+
 t/test: libecma48.so $(TEST_OFILES)
+	t/test.c.sh
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS) -lcunit
 
 .PHONY: test
@@ -40,4 +45,4 @@ test: libecma48.so t/test
 
 .PHONY: clean
 clean:
-	rm -f $(DEBUGS) $(OFILES) libecma48.so
+	rm -f $(DEBUGS) $(OFILES) $(TEST_OFILES) libecma48.so
