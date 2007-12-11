@@ -3,12 +3,10 @@
 
 #include <CUnit/Basic.h>
 
-extern CU_TestInfo ecma48_tests[];
-extern int ecma48_init(void);
-extern int ecma48_fini(void);
+#include "t/externs.h"
 
 static CU_SuiteInfo suites[] = {
-  { "ecma48", ecma48_init, ecma48_fini, ecma48_tests },
+#include "t/suites.h"
   CU_SUITE_INFO_NULL,
 };
 
