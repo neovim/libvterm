@@ -3,10 +3,10 @@
 
 #include <CUnit/Basic.h>
 
-#include "t/externs.h"
+#include "externs.h"
 
 static CU_SuiteInfo suites[] = {
-#include "t/suites.h"
+#include "suites.h"
   CU_SUITE_INFO_NULL,
 };
 
