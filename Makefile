@@ -1,4 +1,4 @@
-CCFLAGS=-Wall -I. -std=c99
+CCFLAGS=-Wall -Iinclude -std=c99
 LDFLAGS=-lutil
 
 ifeq ($(DEBUG),1)
@@ -8,13 +8,14 @@ endif
 CCFLAGS+=$(shell pkg-config --cflags glib-2.0)
 LDFLAGS+=$(shell pkg-config --libs   glib-2.0)
 
-CFILES=$(wildcard *.c)
+CFILES=$(wildcard src/*.c)
 OFILES=$(CFILES:.c=.o)
-HFILES=$(wildcard *.h)
+HFILES=$(wildcard src/*.h include/*.h)
 
 TEST_CFILES=$(wildcard t/*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
 
+LIBPIECES=ecma48 parser state input pen mode
 DEBUGS=debug-passthrough debug-pangoterm
 
 all: $(DEBUGS)
@@ -25,17 +26,20 @@ debug-%: debug-%.c libecma48.so
 debug-pangoterm: debug-pangoterm.c libecma48.so
 	gcc -o $@ $^ $(CCFLAGS) $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
-libecma48.so: ecma48.o parser.o state.o input.o pen.o mode.o
+libecma48.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
 	gcc -shared -o $@ $^ $(LDFLAGS)
 
-%.o: %.c $(HFILES)
+src/%.o: src/%.c $(HFILES)
 	gcc -fPIC -o $@ -c $< $(CCFLAGS)
 
-t/extern.h: t
-	t/test.c.sh
+t/%.o: t/%.c
+	gcc -c -o $@ $< $(CCFLAGS)
 
 t/test.o: t/test.c t/extern.h t/suites.h
 	gcc -c -o $@ $< $(CCFLAGS)
+
+t/extern.h: t
+	t/test.c.sh
 
 t/test: libecma48.so $(TEST_OFILES)
 	t/test.c.sh
