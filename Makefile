@@ -10,7 +10,9 @@ LDFLAGS+=$(shell pkg-config --libs   glib-2.0)
 
 CFILES=$(wildcard src/*.c)
 OFILES=$(CFILES:.c=.o)
-HFILES=$(wildcard src/*.h include/*.h)
+HFILES=$(wildcard include/*.h)
+
+HFILES_INT=$(wildcard src/*.h) $(HFILES)
 
 TEST_CFILES=$(wildcard t/*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
@@ -29,13 +31,13 @@ debug-pangoterm: debug-pangoterm.c libecma48.so
 libecma48.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
 	gcc -shared -o $@ $^ $(LDFLAGS)
 
-src/%.o: src/%.c $(HFILES)
+src/%.o: src/%.c $(HFILES_INT)
 	gcc -fPIC -o $@ -c $< $(CCFLAGS)
 
 # Need first to cancel the implict rule
 %.o: %.c
 
-t/%.o: t/%.c t/%.inc
+t/%.o: t/%.c t/%.inc $(HFILES)
 	gcc -c -o $@ $< $(CCFLAGS)
 
 t/%.inc: t/%.c
