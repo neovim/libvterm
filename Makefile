@@ -57,4 +57,4 @@ test: libecma48.so t/test
 
 .PHONY: clean
 clean:
-	rm -f $(DEBUGS) $(OFILES) $(TEST_OFILES) libecma48.so
+	rm -f $(DEBUGS) $(OFILES) $(TEST_OFILES) $(TEST_CFILES:.c=.inc) libecma48.so
