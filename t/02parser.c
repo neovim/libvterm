@@ -87,6 +87,7 @@ static int cb_csi(ecma48_t *_e48, char *intermed, int *args, int argcount, char 
   cb *c = g_new0(cb, 1);
   c->type = CB_CSI;
   c->val.csi.intermed = g_strdup(intermed);
+  c->val.csi.argcount = argcount;
   c->val.csi.args = g_new0(int, argcount);
   memcpy(c->val.csi.args, args, argcount * sizeof(args[0]));
   c->val.csi.command = command;
@@ -262,6 +263,194 @@ static void test_mixed(void)
   CU_ASSERT_EQUAL(c->type, CB_TEXT);
   CU_ASSERT_EQUAL(c->val.text.npoints, 1);
   CU_ASSERT_EQUAL(c->val.text.codepoints[0], '2');
+
+  free_cbs();
+}
+
+static void test_escape(void)
+{
+  ecma48_push_bytes(e48, "\e=", 2);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_ESCAPE);
+  CU_ASSERT_EQUAL(c->val.control, '=');
+
+  free_cbs();
+}
+
+static void test_csi_raw(void)
+{
+  capture_csi_raw = 1;
+
+  ecma48_push_bytes(e48, "\e[A", 3);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI_RAW);
+  CU_ASSERT_EQUAL(c->val.csi_raw.command, 'A');
+  CU_ASSERT_EQUAL(c->val.csi_raw.arglen, 0);
+
+  free_cbs();
+
+  ecma48_push_bytes(e48, "\e[15B", 5);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI_RAW);
+  CU_ASSERT_EQUAL(c->val.csi_raw.command, 'B');
+  CU_ASSERT_EQUAL(c->val.csi_raw.arglen, 2);
+  CU_ASSERT_NSTRING_EQUAL(c->val.csi_raw.args, "15", 2);
+
+  free_cbs();
+
+  ecma48_push_bytes(e48, "\e[?004C", 7);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI_RAW);
+  CU_ASSERT_EQUAL(c->val.csi_raw.command, 'C');
+  CU_ASSERT_EQUAL(c->val.csi_raw.arglen, 4);
+  CU_ASSERT_NSTRING_EQUAL(c->val.csi_raw.args, "?004", 4);
+
+  free_cbs();
+}
+
+static void test_csi_0arg(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e[a", 3);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'a');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], -1);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_csi_1arg(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e[9b", 4);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'b');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 9);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_csi_2arg(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e[3;4c", 6);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'c');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 2);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 3);
+  CU_ASSERT_EQUAL(c->val.csi.args[1], 4);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_csi_manydigits(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e[678d", 6);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'd');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 678);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_csi_leadingzero(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e[007e", 6);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'e');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 7);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_csi_qmark(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e[?2;7f", 7);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'f');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 2);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 2);
+  CU_ASSERT_EQUAL(c->val.csi.args[1], 7);
+  CU_ASSERT_PTR_NOT_NULL(c->val.csi.intermed);
+  CU_ASSERT_STRING_EQUAL(c->val.csi.intermed, "?");
+
+  free_cbs();
+}
+
+static void test_mixedcsi(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "A\e[8mB", 6);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 3);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_TEXT);
+  CU_ASSERT_EQUAL(c->val.text.npoints, 1);
+  CU_ASSERT_EQUAL(c->val.text.codepoints[0], 'A');
+
+  c = cbs->next->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'm');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 8);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  c = cbs->next->next->data;
+  CU_ASSERT_EQUAL(c->type, CB_TEXT);
+  CU_ASSERT_EQUAL(c->val.text.npoints, 1);
+  CU_ASSERT_EQUAL(c->val.text.codepoints[0], 'B');
 
   free_cbs();
 }
