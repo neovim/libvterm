@@ -618,9 +618,8 @@ int main(int argc, char *argv[])
 
   struct winsize size = { 25, 80, 0, 0 };
 
-  e48 = ecma48_new();
+  e48 = ecma48_new(size.ws_row, size.ws_col);
   ecma48_parser_set_utf8(e48, 1);
-  ecma48_set_size(e48, size.ws_row, size.ws_col);
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   termwin = window;
