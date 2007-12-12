@@ -130,7 +130,7 @@ static ecma48_parser_callbacks_t parser_cbs = {
 
 int parser_init(void)
 {
-  e48 = ecma48_new();
+  e48 = ecma48_new(80, 25);
   if(!e48)
     return 1;
 
