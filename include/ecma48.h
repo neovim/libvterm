@@ -44,7 +44,7 @@ typedef struct {
   int (*setmousefunc)(ecma48_t *e48, ecma48_mousefunc func, void *data);
 } ecma48_state_callbacks_t;
 
-ecma48_t *ecma48_new(void);
+ecma48_t *ecma48_new(int rows, int cols);
 void ecma48_get_size(ecma48_t *e48, int *rowsp, int *colsp);
 void ecma48_set_size(ecma48_t *e48, int rows, int cols);
 

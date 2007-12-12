@@ -109,7 +109,7 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 
 int main(int argc, char *argv[])
 {
-  e48 = ecma48_new();
+  e48 = ecma48_new(80, 25);
   ecma48_set_parser_callbacks(e48, &cb);
 
   pid_t kid = forkpty(&master, NULL, NULL, NULL);

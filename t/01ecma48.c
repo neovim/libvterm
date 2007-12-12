@@ -4,7 +4,22 @@
 
 ecma48_t *e48;
 
-static void test_size(void)
+int ecma48_init(void)
+{
+  e48 = ecma48_new(80, 25);
+  return e48 ? 0 : 1;
+}
+
+static void test_getsize(void)
+{
+  int rows, cols;
+  ecma48_get_size(e48, &rows, &cols);
+
+  CU_ASSERT_EQUAL(rows, 80);
+  CU_ASSERT_EQUAL(cols, 25);
+}
+
+static void test_setsize(void)
 {
   ecma48_set_size(e48, 100, 40);
 
@@ -15,11 +30,6 @@ static void test_size(void)
   CU_ASSERT_EQUAL(cols, 40);
 }
 
-int ecma48_init(void)
-{
-  e48 = ecma48_new();
-  return e48 ? 0 : 1;
-}
 
 int ecma48_fini(void)
 {

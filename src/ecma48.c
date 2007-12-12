@@ -10,9 +10,12 @@
  * API functions *
  *****************/
 
-ecma48_t *ecma48_new(void)
+ecma48_t *ecma48_new(int rows, int cols)
 {
   ecma48_t *e48 = g_new0(struct ecma48_s, 1);
+
+  e48->rows = rows;
+  e48->cols = cols;
 
   e48->inbuffer = g_string_new(NULL);
   e48->outbuffer = g_string_new(NULL);
