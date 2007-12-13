@@ -475,6 +475,32 @@ static void test_splitwrite(void)
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
+
+  ecma48_push_bytes(e48, "foo\e[", 5);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_TEXT);
+  CU_ASSERT_EQUAL(c->val.text.npoints, 3);
+  CU_ASSERT_EQUAL(c->val.text.codepoints[0], 'f');
+  CU_ASSERT_EQUAL(c->val.text.codepoints[1], 'o');
+  CU_ASSERT_EQUAL(c->val.text.codepoints[2], 'o');
+
+  free_cbs();
+
+  ecma48_push_bytes(e48, "4b", 2);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'b');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], 4);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
 }
 
 #include "02parser.inc"
