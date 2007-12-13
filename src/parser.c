@@ -141,17 +141,22 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
   size_t pos = 0;
   size_t eaten = 0;
 
-  gboolean in_esc = FALSE;
-  gboolean in_csi = FALSE;
+  enum {
+    NORMAL,
+    ESC,
+    CSI,
+  } parse_state = NORMAL;
+
   size_t csi_start;
 
   for(pos = 0; pos < len; pos++) {
     unsigned char c = bytes[pos];
 
-    if(in_esc) {
+    switch(parse_state) {
+    case ESC:
       switch(c) {
       case 0x5b: // CSI
-        in_csi = TRUE; in_esc = FALSE;
+        parse_state = CSI;
         csi_start = pos + 1;
         break;
       default:
@@ -161,24 +166,27 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
           ecma48_on_parser_control(e48, c + 0x40);
         else 
           ecma48_on_parser_escape(e48, c);
-        in_esc = FALSE;
+        parse_state = NORMAL;
         eaten = pos + 1;
       }
-    }
-    else if(in_csi) {
+      break;
+
+    case CSI:
       if(c >= 0x40 && c <= 0x7f) {
         ecma48_on_parser_csi(e48, bytes + csi_start, pos - csi_start, c);
-        in_csi = FALSE;
+        parse_state = NORMAL;
         eaten = pos + 1;
       }
-    }
-    else {
+      break;
+
+    case NORMAL:
       if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !e48->is_utf8)) {
         switch(c) {
         case 0x1b: // ESC
-          in_esc = TRUE; break;
+          parse_state = ESC;
+          break;
         case 0x9b: // CSI
-          in_csi = TRUE; in_esc = FALSE;
+          parse_state = CSI;
           csi_start = pos + 1;
           break;
         default:
@@ -331,6 +339,8 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 
         eaten = pos + 1;
       }
+      break;
+
     }
   }
 
