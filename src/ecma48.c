@@ -57,7 +57,7 @@ void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
   else {
     size_t eaten = ecma48_parser_interpret_bytes(e48, bytes, len);
     if(eaten < len)
-      g_string_append_len(e48->inbuffer, bytes, len);
+      g_string_append_len(e48->inbuffer, bytes + eaten, len - eaten);
   }
 }
 
