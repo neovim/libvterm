@@ -106,4 +106,83 @@ static void test_4byte(void)
   CU_ASSERT_EQUAL(cb_p[1], 0x1FFFFF);
 }
 
+/* Next up, we check some invalid sequences
+ *  + Early termination (back to low bytes too soon)
+ *  + Early restart (another sequence introduction before the previous one was finished)
+ */
+
+#define UTF8_INVALID 0xFFFD
+
+static void test_earlyterm(void)
+{
+  // Two byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xC2!", 2);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 2);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], '!');
+
+  // Three byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xE0!\xE0\xA0!", 5);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 4);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], '!');
+  CU_ASSERT_EQUAL(cb_p[2], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[3], '!');
+
+  // Four byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xF0!\xF0\x90!\xF0\x90\x80!", 9);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 6);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], '!');
+  CU_ASSERT_EQUAL(cb_p[2], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[3], '!');
+  CU_ASSERT_EQUAL(cb_p[4], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[5], '!');
+}
+
+static void test_earlyrestart(void)
+{
+  // Two byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xC2\xC2\x90", 3);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 2);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], 0x0090);
+
+  // Three byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xE0\xC2\x90\xE0\xA0\xC2\x90", 7);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 4);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], 0x0090);
+  CU_ASSERT_EQUAL(cb_p[2], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[3], 0x0090);
+
+  // Four byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xF0\xC2\x90\xF0\x90\xC2\x90\xF0\x90\x80\xC2\x90", 12);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 6);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], 0x0090);
+  CU_ASSERT_EQUAL(cb_p[2], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[3], 0x0090);
+  CU_ASSERT_EQUAL(cb_p[4], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[5], 0x0090);
+}
+
 #include "03parser_utf8.inc"
