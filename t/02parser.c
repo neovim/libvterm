@@ -455,4 +455,26 @@ static void test_mixedcsi(void)
   free_cbs();
 }
 
+static void test_splitwrite(void)
+{
+  capture_csi_raw = 0;
+
+  ecma48_push_bytes(e48, "\e", 1);
+
+  CU_ASSERT_PTR_NULL(cbs);
+
+  ecma48_push_bytes(e48, "[a", 2);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'a');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
+  CU_ASSERT_EQUAL(c->val.csi.args[0], -1);
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
 #include "02parser.inc"

@@ -139,7 +139,7 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
 size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 {
   size_t pos = 0;
-  size_t pos_end = 0;
+  size_t eaten = 0;
 
   gboolean in_esc = FALSE;
   gboolean in_csi = FALSE;
@@ -162,14 +162,14 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         else 
           ecma48_on_parser_escape(e48, c);
         in_esc = FALSE;
-        pos_end = pos;
+        eaten = pos + 1;
       }
     }
     else if(in_csi) {
       if(c >= 0x40 && c <= 0x7f) {
         ecma48_on_parser_csi(e48, bytes + csi_start, pos - csi_start, c);
         in_csi = FALSE;
-        pos_end = pos;
+        eaten = pos + 1;
       }
     }
     else {
@@ -183,7 +183,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
           break;
         default:
           ecma48_on_parser_control(e48, c);
-          pos_end = pos;
+          eaten = pos + 1;
           break;
         }
       }
@@ -329,10 +329,10 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
         // pos is now the first character we didn't like
         pos--;
 
-        pos_end = pos;
+        eaten = pos + 1;
       }
     }
   }
 
-  return pos_end + 1;
+  return eaten;
 }
