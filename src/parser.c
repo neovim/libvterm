@@ -214,6 +214,9 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 
           // number of bytes remaining in this codepoint
           int bytes_remaining = 0;
+          // number of bytes total in this codepoint once it's finished
+          // (for detecting overlongs)
+          int bytes_total     = 0;
 
           for( ; pos < len; pos++) {
             c = bytes[pos];
@@ -249,10 +252,25 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
               bytes_remaining--;
 
               if(!bytes_remaining) {
-                cpi++;
 #ifdef DEBUG_PRINT_UTF8
-                printf(" UTF-8 char: U+%04x\n", cp[cpi-1]);
+                printf(" UTF-8 raw char U+%04x len=%d ", cp[cpi], bytes_total);
 #endif
+                // Check for overlong sequences
+                switch(bytes_total) {
+                case 2:
+                  if(cp[cpi] <  0x0080) cp[cpi] = UNICODE_INVALID; break;
+                case 3:
+                  if(cp[cpi] <  0x0800) cp[cpi] = UNICODE_INVALID; break;
+                case 4:
+                  if(cp[cpi] < 0x10000) cp[cpi] = UNICODE_INVALID; break;
+                // case 5:
+                // case 6:
+                //   TODO
+                }
+#ifdef DEBUG_PRINT_UTF8
+                printf(" char: U+%04x\n", cp[cpi]);
+#endif
+                cpi++;
               }
             }
 
@@ -264,6 +282,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
                 break;
 
               cp[cpi] = c & 0x1f;
+              bytes_total = 2;
               bytes_remaining = 1;
             }
 
@@ -275,6 +294,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
                 break;
 
               cp[cpi] = c & 0x0f;
+              bytes_total = 3;
               bytes_remaining = 2;
             }
 
@@ -286,6 +306,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
                 break;
 
               cp[cpi] = c & 0x07;
+              bytes_total = 4;
               bytes_remaining = 3;
             }
 
@@ -297,6 +318,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
                 break;
 
               cp[cpi] = c & 0x03;
+              bytes_total = 5;
               bytes_remaining = 4;
             }
 
@@ -308,6 +330,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
                 break;
 
               cp[cpi] = c & 0x01;
+              bytes_total = 6;
               bytes_remaining = 5;
             }
 
