@@ -185,4 +185,53 @@ static void test_earlyrestart(void)
   CU_ASSERT_EQUAL(cb_p[5], 0x0090);
 }
 
+/* Test the overlong sequences by giving an overlong encoding of U+0000 and
+ * an encoding of the highest codepoint still too short
+ *
+ * Two bytes:
+ * U+0000 = C0 80
+ * U+007F = 000 01111111 =>    00001   111111 =>
+ *                       => 11000001 10111111 => C1 BF
+ *
+ * Three bytes:
+ * U+0000 = E0 80 80
+ * U+07FF = 00000111 11111111 =>     0000   011111   111111
+ *                            => 11100000 10011111 10111111 = E0 9F BF
+ *
+ * Four bytes:
+ * U+0000 = F0 80 80 80
+ * U+FFFF = 11111111 11111111 =>      000   001111   111111   111111
+ *                            => 11110000 10001111 10111111 10111111 = F0 8F BF BF
+ */
+
+static void test_overlong(void)
+{
+  // Two byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xC0\x80\xC1\xBF", 4);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 2);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], UTF8_INVALID);
+
+  // Three byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xE0\x80\x80\xE0\x9F\xBF", 6);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 2);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], UTF8_INVALID);
+
+  // Four byte
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF", 8);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 2);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], UTF8_INVALID);
+}
+
 #include "03parser_utf8.inc"
