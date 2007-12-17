@@ -136,6 +136,144 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
+static int interpret_utf8(int cp[], int *cpi, char bytes[], size_t *pos, size_t len)
+{
+  // number of bytes remaining in this codepoint
+  int bytes_remaining = 0;
+  // number of bytes total in this codepoint once it's finished
+  // (for detecting overlongs)
+  int bytes_total     = 0;
+
+  int this_cp;
+
+  for( ; *pos < len; (*pos)++) {
+    unsigned char c = bytes[*pos];
+
+#ifdef DEBUG_PRINT_UTF8
+    printf(" pos=%d c=%02x rem=%d\n", *pos, c, bytes_remaining);
+#endif
+
+    if(c < 0x20)
+      return 0;
+
+    else if(c >= 0x20 && c < 0x80) {
+      if(bytes_remaining)
+        cp[(*cpi)++] = UNICODE_INVALID;
+
+      cp[(*cpi)++] = c;
+#ifdef DEBUG_PRINT_UTF8
+      printf(" UTF-8 char: U+%04x\n", c);
+#endif
+      bytes_remaining = 0;
+    }
+
+    else if(c >= 0x80 && c < 0xc0) {
+      if(!bytes_remaining) {
+        cp[(*cpi)++] = UNICODE_INVALID;
+        continue;
+      }
+
+      this_cp <<= 6;
+      this_cp |= c & 0x3f;
+      bytes_remaining--;
+
+      if(!bytes_remaining) {
+#ifdef DEBUG_PRINT_UTF8
+        printf(" UTF-8 raw char U+%04x len=%d ", this_cp, bytes_total);
+#endif
+        // Check for overlong sequences
+        switch(bytes_total) {
+        case 2:
+          if(this_cp <  0x0080) this_cp = UNICODE_INVALID; break;
+        case 3:
+          if(this_cp <  0x0800) this_cp = UNICODE_INVALID; break;
+        case 4:
+          if(this_cp < 0x10000) this_cp = UNICODE_INVALID; break;
+        case 5:
+          if(this_cp < 0x200000) this_cp = UNICODE_INVALID; break;
+        case 6:
+          if(this_cp < 0x4000000) this_cp = UNICODE_INVALID; break;
+        }
+        // Now look for plain invalid ones
+        if((this_cp >= 0xD800 && this_cp <= 0xDFFF) ||
+           this_cp == 0xFFFE ||
+           this_cp == 0xFFFF)
+          this_cp = UNICODE_INVALID;
+#ifdef DEBUG_PRINT_UTF8
+        printf(" char: U+%04x\n", this_cp);
+#endif
+        cp[(*cpi)++] = this_cp;
+      }
+    }
+
+    else if(c >= 0xc0 && c < 0xe0) {
+      if(bytes_remaining)
+        cp[(*cpi)++] = UNICODE_INVALID;
+
+      if(len - *pos < 2)
+        return 1;
+
+      this_cp = c & 0x1f;
+      bytes_total = 2;
+      bytes_remaining = 1;
+    }
+
+    else if(c >= 0xe0 && c < 0xf0) {
+      if(bytes_remaining)
+        cp[(*cpi)++] = UNICODE_INVALID;
+
+      if(len - *pos < 3)
+        return 1;
+
+      this_cp = c & 0x0f;
+      bytes_total = 3;
+      bytes_remaining = 2;
+    }
+
+    else if(c >= 0xf0 && c < 0xf8) {
+      if(bytes_remaining)
+        cp[(*cpi)++] = UNICODE_INVALID;
+
+      if(len - *pos < 4)
+        return 1;
+
+      this_cp = c & 0x07;
+      bytes_total = 4;
+      bytes_remaining = 3;
+    }
+
+    else if(c >= 0xf8 && c < 0xfc) {
+      if(bytes_remaining)
+        cp[(*cpi)++] = UNICODE_INVALID;
+
+      if(len - *pos < 5)
+        return 1;
+
+      this_cp = c & 0x03;
+      bytes_total = 5;
+      bytes_remaining = 4;
+    }
+
+    else if(c >= 0xfc && c < 0xfe) {
+      if(bytes_remaining)
+        cp[(*cpi)++] = UNICODE_INVALID;
+
+      if(len - *pos < 6)
+        return 1;
+
+      this_cp = c & 0x01;
+      bytes_total = 6;
+      bytes_remaining = 5;
+    }
+
+    else {
+      cp[(*cpi)++] = UNICODE_INVALID;
+    }
+  }
+
+  return 1;
+}
+
 size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 {
   size_t pos = 0;
@@ -207,144 +345,8 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 
         int finished;
 
-        if(e48->is_utf8) {
-          // Most of the exits from this for loop will want finished=1
-          // Easiest to set it now
-          finished = 1;
-
-          // number of bytes remaining in this codepoint
-          int bytes_remaining = 0;
-          // number of bytes total in this codepoint once it's finished
-          // (for detecting overlongs)
-          int bytes_total     = 0;
-
-          for( ; pos < len; pos++) {
-            c = bytes[pos];
-
-#ifdef DEBUG_PRINT_UTF8
-            printf(" pos=%d c=%02x rem=%d\n", pos, c, bytes_remaining);
-#endif
-
-            if(c < 0x20) {
-              finished = 0;
-              break;
-            }
-
-            else if(c >= 0x20 && c < 0x80) {
-              if(bytes_remaining)
-                cp[cpi++] = UNICODE_INVALID;
-
-              cp[cpi++] = c;
-#ifdef DEBUG_PRINT_UTF8
-              printf(" UTF-8 char: U+%04x\n", cp[cpi-1]);
-#endif
-              bytes_remaining = 0;
-            }
-
-            else if(c >= 0x80 && c < 0xc0) {
-              if(!bytes_remaining) {
-                cp[cpi++] = UNICODE_INVALID;
-                continue;
-              }
-
-              cp[cpi] <<= 6;
-              cp[cpi] |= c & 0x3f;
-              bytes_remaining--;
-
-              if(!bytes_remaining) {
-#ifdef DEBUG_PRINT_UTF8
-                printf(" UTF-8 raw char U+%04x len=%d ", cp[cpi], bytes_total);
-#endif
-                // Check for overlong sequences
-                switch(bytes_total) {
-                case 2:
-                  if(cp[cpi] <  0x0080) cp[cpi] = UNICODE_INVALID; break;
-                case 3:
-                  if(cp[cpi] <  0x0800) cp[cpi] = UNICODE_INVALID; break;
-                case 4:
-                  if(cp[cpi] < 0x10000) cp[cpi] = UNICODE_INVALID; break;
-                case 5:
-                  if(cp[cpi] < 0x200000) cp[cpi] = UNICODE_INVALID; break;
-                case 6:
-                  if(cp[cpi] < 0x4000000) cp[cpi] = UNICODE_INVALID; break;
-                }
-                // Now look for plain invalid ones
-                if((cp[cpi] >= 0xD800 && cp[cpi] <= 0xDFFF) ||
-                   cp[cpi] == 0xFFFE ||
-                   cp[cpi] == 0xFFFF)
-                  cp[cpi] = UNICODE_INVALID;
-#ifdef DEBUG_PRINT_UTF8
-                printf(" char: U+%04x\n", cp[cpi]);
-#endif
-                cpi++;
-              }
-            }
-
-            else if(c >= 0xc0 && c < 0xe0) {
-              if(bytes_remaining)
-                cp[cpi++] = UNICODE_INVALID;
-
-              if(len - pos < 2)
-                break;
-
-              cp[cpi] = c & 0x1f;
-              bytes_total = 2;
-              bytes_remaining = 1;
-            }
-
-            else if(c >= 0xe0 && c < 0xf0) {
-              if(bytes_remaining)
-                cp[cpi++] = UNICODE_INVALID;
-
-              if(len - pos < 3)
-                break;
-
-              cp[cpi] = c & 0x0f;
-              bytes_total = 3;
-              bytes_remaining = 2;
-            }
-
-            else if(c >= 0xf0 && c < 0xf8) {
-              if(bytes_remaining)
-                cp[cpi++] = UNICODE_INVALID;
-
-              if(len - pos < 4)
-                break;
-
-              cp[cpi] = c & 0x07;
-              bytes_total = 4;
-              bytes_remaining = 3;
-            }
-
-            else if(c >= 0xf8 && c < 0xfc) {
-              if(bytes_remaining)
-                cp[cpi++] = UNICODE_INVALID;
-
-              if(len - pos < 5)
-                break;
-
-              cp[cpi] = c & 0x03;
-              bytes_total = 5;
-              bytes_remaining = 4;
-            }
-
-            else if(c >= 0xfc && c < 0xfe) {
-              if(bytes_remaining)
-                cp[cpi++] = UNICODE_INVALID;
-
-              if(len - pos < 6)
-                break;
-
-              cp[cpi] = c & 0x01;
-              bytes_total = 6;
-              bytes_remaining = 5;
-            }
-
-            else {
-              cp[cpi++] = UNICODE_INVALID;
-            }
-          }
-        }
+        if(e48->is_utf8)
+          finished = interpret_utf8(cp, &cpi, bytes, &pos, len);
         else {
           finished = 0;
 
