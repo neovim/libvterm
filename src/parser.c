@@ -263,10 +263,16 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
                   if(cp[cpi] <  0x0800) cp[cpi] = UNICODE_INVALID; break;
                 case 4:
                   if(cp[cpi] < 0x10000) cp[cpi] = UNICODE_INVALID; break;
-                // case 5:
-                // case 6:
-                //   TODO
+                case 5:
+                  if(cp[cpi] < 0x200000) cp[cpi] = UNICODE_INVALID; break;
+                case 6:
+                  if(cp[cpi] < 0x4000000) cp[cpi] = UNICODE_INVALID; break;
                 }
+                // Now look for plain invalid ones
+                if((cp[cpi] >= 0xD800 && cp[cpi] <= 0xDFFF) ||
+                   cp[cpi] == 0xFFFE ||
+                   cp[cpi] == 0xFFFF)
+                  cp[cpi] = UNICODE_INVALID;
 #ifdef DEBUG_PRINT_UTF8
                 printf(" char: U+%04x\n", cp[cpi]);
 #endif
