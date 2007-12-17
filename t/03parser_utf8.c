@@ -62,8 +62,9 @@ static void test_low(void)
  * Three bytes:
  * U+0800 = 00001000 00000000 =>     0000   100000   000000
  *                            => 11100000 10100000 10000000 = E0 A0 80
- * U+FFFF = 11111111 11111111 =>     1111   111111   111111
- *                            => 11101111 10111111 10111111 = EF BF BF
+ * U+FFFD = 11111111 11111101 =>     1111   111111   111101
+ *                            => 11101111 10111111 10111101 = EF BF BD
+ * (We avoid U+FFFE and U+FFFF as they're invalid codepoints)
  *
  * Four bytes:
  * U+10000  = 00001 00000000 00000000 =>      000   010000   000000   000000
@@ -87,12 +88,12 @@ static void test_2byte(void)
 static void test_3byte(void)
 {
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xE0\xA0\x80\xEF\xBF\xBF", 6);
+  ecma48_push_bytes(e48, "\xE0\xA0\x80\xEF\xBF\xBD", 6);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
   CU_ASSERT_EQUAL(cb_p[0], 0x0800);
-  CU_ASSERT_EQUAL(cb_p[1], 0xFFFF);
+  CU_ASSERT_EQUAL(cb_p[1], 0xFFFD);
 }
 
 static void test_4byte(void)
@@ -227,6 +228,18 @@ static void test_overlong(void)
   // Four byte
   cb_count = 0;
   ecma48_push_bytes(e48, "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF", 8);
+
+  CU_ASSERT_EQUAL(cb_count, 1);
+  CU_ASSERT_EQUAL(cb_n, 2);
+  CU_ASSERT_EQUAL(cb_p[0], UTF8_INVALID);
+  CU_ASSERT_EQUAL(cb_p[1], UTF8_INVALID);
+}
+
+static void test_utf16surr(void)
+{
+  // UTF-16 surrogates U+D800 and U+DFFF
+  cb_count = 0;
+  ecma48_push_bytes(e48, "\xED\xA0\x80\xED\xBF\xBF", 6);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
