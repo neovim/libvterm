@@ -136,6 +136,18 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
+static void ecma48_on_parser_osc(ecma48_t *e48, char *command, size_t cmdlen)
+{
+  int done = 0;
+
+  if(e48->parser_callbacks &&
+     e48->parser_callbacks->osc)
+    done = (*e48->parser_callbacks->osc)(e48, command, cmdlen);
+
+  if(!done)
+    fprintf(stderr, "libecma48: Unhandled OSC %.*s\n", cmdlen, command);
+}
+
 static int interpret_utf8(int cp[], int *cpi, char bytes[], size_t *pos, size_t len)
 {
   // number of bytes remaining in this codepoint
@@ -283,9 +295,10 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
     NORMAL,
     ESC,
     CSI,
+    OSC,
   } parse_state = NORMAL;
 
-  size_t csi_start;
+  size_t string_start;
 
   for(pos = 0; pos < len; pos++) {
     unsigned char c = bytes[pos];
@@ -295,7 +308,11 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
       switch(c) {
       case 0x5b: // CSI
         parse_state = CSI;
-        csi_start = pos + 1;
+        string_start = pos + 1;
+        break;
+      case 0x5d: // OSC
+        parse_state = OSC;
+        string_start = pos + 1;
         break;
       default:
         if(c >= 0x40 && c < 0x60)
@@ -311,7 +328,20 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
 
     case CSI:
       if(c >= 0x40 && c <= 0x7f) {
-        ecma48_on_parser_csi(e48, bytes + csi_start, pos - csi_start, c);
+        ecma48_on_parser_csi(e48, bytes + string_start, pos - string_start, c);
+        parse_state = NORMAL;
+        eaten = pos + 1;
+      }
+      break;
+
+    case OSC:
+      if(c == 0x07 || (c == 0x9c && !e48->is_utf8)) {
+        ecma48_on_parser_osc(e48, bytes + string_start, pos - string_start);
+        parse_state = NORMAL;
+        eaten = pos + 1;
+      }
+      else if(c == 0x5c && bytes[pos-1] == 0x1b) {
+        ecma48_on_parser_osc(e48, bytes + string_start, pos - string_start - 1);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -325,7 +355,11 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
           break;
         case 0x9b: // CSI
           parse_state = CSI;
-          csi_start = pos + 1;
+          string_start = pos + 1;
+          break;
+        case 0x9d: // OSC
+          parse_state = OSC;
+          string_start = pos + 1;
           break;
         default:
           ecma48_on_parser_control(e48, c);

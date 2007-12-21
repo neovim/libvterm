@@ -58,6 +58,12 @@ int csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
   return 1;
 }
 
+int osc(ecma48_t *e48, char *command, size_t cmdlen)
+{
+  printf("Operating System Command: %.*s\n", cmdlen, command);
+  return 1;
+}
+
 static ecma48_parser_callbacks_t cb = {
   .text    = text,
   .control = control,
