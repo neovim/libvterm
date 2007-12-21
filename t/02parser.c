@@ -9,13 +9,21 @@ static ecma48_t *e48;
 static GSList *cbs;
 
 typedef struct {
-  enum { CB_TEXT, CB_CONTROL, CB_ESCAPE, CB_CSI_RAW, CB_CSI } type;
+  enum { 
+    CB_TEXT,
+    CB_CONTROL,
+    CB_ESCAPE,
+    CB_CSI_RAW,
+    CB_CSI,
+    CB_OSC,
+  } type;
   union {
     struct { int *codepoints; int npoints; } text;
     unsigned char control;
     char escape;
     struct { char *args; size_t arglen; char command; } csi_raw;
     struct { char *intermed; int *args; int argcount; char command; } csi;
+    struct { char *command; size_t cmdlen; } osc;
   } val;
 } cb;
 
@@ -97,6 +105,20 @@ static int cb_csi(ecma48_t *_e48, char *intermed, int *args, int argcount, char 
   return 1;
 }
 
+static int cb_osc(ecma48_t *_e48, char *command, size_t cmdlen)
+{
+  CU_ASSERT_PTR_EQUAL(e48, _e48);
+
+  cb *c = g_new0(cb, 1);
+  c->type = CB_OSC;
+  c->val.osc.command = g_strndup(command, cmdlen);
+  c->val.osc.cmdlen = cmdlen;
+
+  cbs = g_slist_append(cbs, c);
+
+  return 1;
+}
+
 static void free_cbs(void)
 {
   GSList *this_cb_p;
@@ -112,6 +134,8 @@ static void free_cbs(void)
       g_free(c->val.csi_raw.args); break;
     case CB_CSI:
       g_free(c->val.csi.intermed); g_free(c->val.csi.args); break;
+    case CB_OSC:
+      g_free(c->val.osc.command); break;
     }
 
     g_free(c);
@@ -127,6 +151,7 @@ static ecma48_parser_callbacks_t parser_cbs = {
   .escape  = cb_escape,
   .csi_raw = cb_csi_raw,
   .csi     = cb_csi,
+  .osc     = cb_osc,
 };
 
 int parser_init(void)
@@ -499,6 +524,43 @@ static void test_splitwrite(void)
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
   CU_ASSERT_EQUAL(c->val.csi.args[0], 4);
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_osc(void)
+{
+  ecma48_push_bytes(e48, "\e]1;Hello\x07", 10);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_OSC);
+  CU_ASSERT_EQUAL(c->val.osc.cmdlen, 7);
+  CU_ASSERT_STRING_EQUAL(c->val.osc.command, "1;Hello");
+
+  free_cbs();
+
+  ecma48_push_bytes(e48, "\e]1;Hello\e\\", 11);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_OSC);
+  CU_ASSERT_EQUAL(c->val.osc.cmdlen, 7);
+  CU_ASSERT_STRING_EQUAL(c->val.osc.command, "1;Hello");
+
+  free_cbs();
+
+  // We need to string concat this because \x9d1 is \xd1
+  ecma48_push_bytes(e48, "\x9d" "1;Hello\x9c", 9);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_OSC);
+  CU_ASSERT_EQUAL(c->val.osc.cmdlen, 7);
+  CU_ASSERT_STRING_EQUAL(c->val.osc.command, "1;Hello");
 
   free_cbs();
 }

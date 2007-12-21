@@ -28,6 +28,7 @@ typedef struct {
   int (*escape)(ecma48_t *e48, char escape);
   int (*csi_raw)(ecma48_t *e48, char *args, size_t arglen, char command);
   int (*csi)(ecma48_t *e48, char *intermed, int *args, int argcount, char command);
+  int (*osc)(ecma48_t *e48, char *command, size_t cmdlen);
 } ecma48_parser_callbacks_t;
 
 typedef void (*ecma48_mousefunc)(int x, int y, int button, int pressed, void *data);
