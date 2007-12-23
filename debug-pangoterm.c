@@ -563,7 +563,7 @@ static ecma48_state_callbacks_t cb = {
   .setmousefunc = term_setmousefunc,
 };
 
-int term_osc(ecma48_t *e48, char *command, size_t cmdlen)
+int term_osc(ecma48_t *e48, const char *command, size_t cmdlen)
 {
   if(cmdlen < 2)
     return 0;

@@ -56,7 +56,7 @@ static void ecma48_on_parser_escape(ecma48_t *e48, char escape)
     fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
 }
 
-static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char command)
+static void ecma48_on_parser_csi(ecma48_t *e48, const char *args, size_t arglen, char command)
 {
   int done = 0;
 
@@ -136,7 +136,7 @@ static void ecma48_on_parser_csi(ecma48_t *e48, char *args, size_t arglen, char 
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
-static void ecma48_on_parser_osc(ecma48_t *e48, char *command, size_t cmdlen)
+static void ecma48_on_parser_osc(ecma48_t *e48, const char *command, size_t cmdlen)
 {
   int done = 0;
 
@@ -148,7 +148,7 @@ static void ecma48_on_parser_osc(ecma48_t *e48, char *command, size_t cmdlen)
     fprintf(stderr, "libecma48: Unhandled OSC %.*s\n", cmdlen, command);
 }
 
-static int interpret_utf8(int cp[], int *cpi, char bytes[], size_t *pos, size_t len)
+static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
 {
   // number of bytes remaining in this codepoint
   int bytes_remaining = 0;
@@ -286,7 +286,7 @@ static int interpret_utf8(int cp[], int *cpi, char bytes[], size_t *pos, size_t 
   return 1;
 }
 
-size_t ecma48_parser_interpret_bytes(ecma48_t *e48, char *bytes, size_t len)
+size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t len)
 {
   size_t pos = 0;
   size_t eaten = 0;

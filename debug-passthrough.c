@@ -14,7 +14,7 @@
 int master;
 ecma48_t *e48;
 
-int text(ecma48_t *e48, int codepoints[], int npoints)
+int text(ecma48_t *e48, const int codepoints[], int npoints)
 {
   printf("Wrote %d chars: ", npoints);
   int i;
@@ -39,7 +39,7 @@ int escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-int csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
+int csi(ecma48_t *e48, const char *intermed, const int args[], int argcount, char command)
 {
   printf("CSI ");
 
@@ -58,7 +58,7 @@ int csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
   return 1;
 }
 
-int osc(ecma48_t *e48, char *command, size_t cmdlen)
+int osc(ecma48_t *e48, const char *command, size_t cmdlen)
 {
   printf("Operating System Command: %.*s\n", cmdlen, command);
   return 1;

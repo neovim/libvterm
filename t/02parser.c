@@ -27,7 +27,7 @@ typedef struct {
   } val;
 } cb;
 
-static int cb_text(ecma48_t *_e48, int codepoints[], int npoints)
+static int cb_text(ecma48_t *_e48, const int codepoints[], int npoints)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -70,7 +70,7 @@ static int cb_escape(ecma48_t *_e48, char escape)
 
 static int capture_csi_raw = 0;
 
-static int cb_csi_raw(ecma48_t *_e48, char *args, size_t arglen, char command)
+static int cb_csi_raw(ecma48_t *_e48, const char *args, size_t arglen, char command)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -88,7 +88,7 @@ static int cb_csi_raw(ecma48_t *_e48, char *args, size_t arglen, char command)
   return 1;
 }
 
-static int cb_csi(ecma48_t *_e48, char *intermed, int *args, int argcount, char command)
+static int cb_csi(ecma48_t *_e48, const char *intermed, const int args[], int argcount, char command)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -105,7 +105,7 @@ static int cb_csi(ecma48_t *_e48, char *intermed, int *args, int argcount, char 
   return 1;
 }
 
-static int cb_osc(ecma48_t *_e48, char *command, size_t cmdlen)
+static int cb_osc(ecma48_t *_e48, const char *command, size_t cmdlen)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 

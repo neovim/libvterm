@@ -18,7 +18,7 @@ void ecma48_state_free(ecma48_state_t *state)
   g_free(state);
 }
 
-void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbacks)
+void ecma48_set_state_callbacks(ecma48_t *e48, const ecma48_state_callbacks_t *callbacks)
 {
   if(callbacks) {
     if(!e48->state) {
@@ -154,7 +154,7 @@ static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rig
     (*state->callbacks->erase)(e48, rect, state->pen);
 }
 
-static void updatecursor(ecma48_t *e48, ecma48_state_t *state, ecma48_position_t *oldpos)
+static void updatecursor(ecma48_t *e48, const ecma48_state_t *state, ecma48_position_t *oldpos)
 {
   if(state->pos.col != oldpos->col || state->pos.row != oldpos->row) {
     if(state->callbacks &&
@@ -181,7 +181,7 @@ static void linefeed(ecma48_t *e48)
     state->pos.row++;
 }
 
-int ecma48_state_on_text(ecma48_t *e48, int codepoints[], int npoints)
+int ecma48_state_on_text(ecma48_t *e48, const int codepoints[], int npoints)
 {
   ecma48_state_t *state = e48->state;
 
@@ -324,7 +324,7 @@ static void set_dec_mode(ecma48_t *e48, int num, int val)
   }
 }
 
-static int ecma48_state_on_csi_qmark(ecma48_t *e48, int *args, int argcount, char command)
+static int ecma48_state_on_csi_qmark(ecma48_t *e48, const int *args, int argcount, char command)
 {
   switch(command) {
   case 0x68: // DEC private mode set
@@ -344,7 +344,7 @@ static int ecma48_state_on_csi_qmark(ecma48_t *e48, int *args, int argcount, cha
   return 1;
 }
 
-int ecma48_state_on_csi(ecma48_t *e48, char *intermed, int *args, int argcount, char command)
+int ecma48_state_on_csi(ecma48_t *e48, const char *intermed, const int args[], int argcount, char command)
 {
   if(intermed) {
     if(strcmp(intermed, "?") == 0)

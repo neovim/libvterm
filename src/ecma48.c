@@ -37,7 +37,7 @@ void ecma48_set_size(ecma48_t *e48, int rows, int cols)
   e48->cols = cols;
 }
 
-void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callbacks)
+void ecma48_set_parser_callbacks(ecma48_t *e48, const ecma48_parser_callbacks_t *callbacks)
 {
   e48->parser_callbacks = callbacks;
 }
@@ -47,7 +47,7 @@ void ecma48_parser_set_utf8(ecma48_t *e48, int is_utf8)
   e48->is_utf8 = is_utf8;
 }
 
-void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
+void ecma48_push_bytes(ecma48_t *e48, const char *bytes, size_t len)
 {
   if((e48->inbuffer->len)) {
     g_string_append_len(e48->inbuffer, bytes, len);
@@ -61,17 +61,17 @@ void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len)
   }
 }
 
-void ecma48_push_output_bytes(ecma48_t *e48, char *bytes, size_t len)
+void ecma48_push_output_bytes(ecma48_t *e48, const char *bytes, size_t len)
 {
   g_string_append_len(e48->outbuffer, bytes, len);
 }
 
-void ecma48_push_output_vsprintf(ecma48_t *e48, char *format, va_list args)
+void ecma48_push_output_vsprintf(ecma48_t *e48, const char *format, va_list args)
 {
   g_string_append_vprintf(e48->outbuffer, format, args);
 }
 
-void ecma48_push_output_sprintf(ecma48_t *e48, char *format, ...)
+void ecma48_push_output_sprintf(ecma48_t *e48, const char *format, ...)
 {
   va_list args;
   va_start(args, format);

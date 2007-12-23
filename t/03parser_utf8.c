@@ -10,7 +10,7 @@ static int cb_count;
 static int cb_n;
 static int cb_p[256];
 
-static int cb_text(ecma48_t *_e48, int codepoints[], int npoints)
+static int cb_text(ecma48_t *_e48, const int codepoints[], int npoints)
 {
   cb_count++;
   cb_n = npoints;

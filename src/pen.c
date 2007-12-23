@@ -30,7 +30,7 @@ static void setpenattr_col(ecma48_t *e48, ecma48_attr attr, int palette, int ind
     (*state->callbacks->setpenattr)(e48, attr, &val, &state->pen);
 }
 
-void ecma48_state_setpen(ecma48_t *e48, int args[], int argcount)
+void ecma48_state_setpen(ecma48_t *e48, const int args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
   ecma48_state_t *state = e48->state;
