@@ -563,6 +563,38 @@ static ecma48_state_callbacks_t cb = {
   .setmousefunc = term_setmousefunc,
 };
 
+int term_osc(ecma48_t *e48, char *command, size_t cmdlen)
+{
+  if(cmdlen < 2)
+    return 0;
+
+  if(strncmp(command, "0;", 2) == 0) {
+    gchar *title = g_strndup(command + 2, cmdlen - 2);
+    gtk_window_set_title(GTK_WINDOW(termwin), title);
+    gdk_window_set_icon_name(GDK_WINDOW(termwin->window), title);
+    g_free(title);
+    return 1;
+  }
+  else if(strncmp(command, "1;", 2) == 0) {
+    gchar *title = g_strndup(command + 2, cmdlen - 2);
+    gdk_window_set_icon_name(GDK_WINDOW(termwin->window), title);
+    g_free(title);
+    return 1;
+  }
+  else if(strncmp(command, "2;", 2) == 0) {
+    gchar *title = g_strndup(command + 2, cmdlen - 2);
+    gtk_window_set_title(GTK_WINDOW(termwin), title);
+    g_free(title);
+    return 1;
+  }
+
+  return 0;
+}
+
+static ecma48_parser_callbacks_t parser_cb = {
+  .osc = term_osc,
+};
+
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 {
   char buffer[8192];
@@ -626,6 +658,7 @@ int main(int argc, char *argv[])
 
   gtk_widget_realize(window);
 
+  ecma48_set_parser_callbacks(e48, &parser_cb);
   ecma48_set_state_callbacks(e48, &cb);
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
