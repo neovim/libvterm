@@ -23,12 +23,12 @@ typedef struct {
 } ecma48_rectangle_t;
 
 typedef struct {
-  int (*text)(ecma48_t *e48, int codepoints[], int npoints);
+  int (*text)(ecma48_t *e48, const int codepoints[], int npoints);
   int (*control)(ecma48_t *e48, char control);
   int (*escape)(ecma48_t *e48, char escape);
-  int (*csi_raw)(ecma48_t *e48, char *args, size_t arglen, char command);
-  int (*csi)(ecma48_t *e48, char *intermed, int *args, int argcount, char command);
-  int (*osc)(ecma48_t *e48, char *command, size_t cmdlen);
+  int (*csi_raw)(ecma48_t *e48, const char *args, size_t arglen, char command);
+  int (*csi)(ecma48_t *e48, const char *intermed, const int args[], int argcount, char command);
+  int (*osc)(ecma48_t *e48, const char *command, size_t cmdlen);
 } ecma48_parser_callbacks_t;
 
 typedef void (*ecma48_mousefunc)(int x, int y, int button, int pressed, void *data);
@@ -49,17 +49,17 @@ ecma48_t *ecma48_new(int rows, int cols);
 void ecma48_get_size(ecma48_t *e48, int *rowsp, int *colsp);
 void ecma48_set_size(ecma48_t *e48, int rows, int cols);
 
-void ecma48_set_parser_callbacks(ecma48_t *e48, ecma48_parser_callbacks_t *callbacks);
-void ecma48_set_state_callbacks(ecma48_t *e48, ecma48_state_callbacks_t *callbacks);
+void ecma48_set_parser_callbacks(ecma48_t *e48, const ecma48_parser_callbacks_t *callbacks);
+void ecma48_set_state_callbacks(ecma48_t *e48, const ecma48_state_callbacks_t *callbacks);
 
 void ecma48_state_initialise(ecma48_t *e48);
 void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos);
 
-void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, char *str, size_t len);
+void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, const char *str, size_t len);
 void ecma48_input_push_key(ecma48_t *e48, ecma48_mod state, ecma48_key key);
 
 void ecma48_parser_set_utf8(ecma48_t *e48, int is_utf8);
-void ecma48_push_bytes(ecma48_t *e48, char *bytes, size_t len);
+void ecma48_push_bytes(ecma48_t *e48, const char *bytes, size_t len);
 
 size_t ecma48_output_bufferlen(ecma48_t *e48);
 size_t ecma48_output_bufferread(ecma48_t *e48, char *buffer, size_t len);

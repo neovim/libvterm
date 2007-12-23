@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, char *str, size_t len)
+void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, const char *str, size_t len)
 {
   ecma48_mod state_noshift = state & ~ECMA48_MOD_SHIFT;
 
