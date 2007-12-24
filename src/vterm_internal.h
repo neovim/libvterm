@@ -41,20 +41,20 @@ struct vterm_s
   vterm_modevalues mode;
 };
 
-size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len);
+size_t vterm_parser_interpret_bytes(vterm_t *vt, const char bytes[], size_t len);
 
-void vterm_push_output_bytes(vterm_t *e48, const char *bytes, size_t len);
-void vterm_push_output_vsprintf(vterm_t *e48, const char *format, va_list args);
-void vterm_push_output_sprintf(vterm_t *e48, const char *format, ...);
+void vterm_push_output_bytes(vterm_t *vt, const char *bytes, size_t len);
+void vterm_push_output_vsprintf(vterm_t *vt, const char *format, va_list args);
+void vterm_push_output_sprintf(vterm_t *vt, const char *format, ...);
 
-int vterm_state_on_text(vterm_t *e48, const int codepoints[], int npoints);
-int vterm_state_on_control(vterm_t *e48, unsigned char control);
-int vterm_state_on_escape(vterm_t *e48, char escape);
-int vterm_state_on_csi(vterm_t *e48, const char *intermed, const int args[], int argcount, char command);
+int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints);
+int vterm_state_on_control(vterm_t *vt, unsigned char control);
+int vterm_state_on_escape(vterm_t *vt, char escape);
+int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char command);
 
-void vterm_state_setpen(vterm_t *e48, const int args[], int argcount);
+void vterm_state_setpen(vterm_t *vt, const int args[], int argcount);
 
-void vterm_state_initmodes(vterm_t *e48);
-void vterm_state_setmode(vterm_t *e48, vterm_mode mode, int val);
+void vterm_state_initmodes(vterm_t *vt);
+void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val);
 
 #endif

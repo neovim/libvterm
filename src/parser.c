@@ -11,58 +11,58 @@
 
 #include <glib.h>
 
-static void vterm_on_parser_text(vterm_t *e48, int codepoints[], int npoints)
+static void vterm_on_parser_text(vterm_t *vt, int codepoints[], int npoints)
 {
   int done = 0;
 
-  if(e48->parser_callbacks &&
-     e48->parser_callbacks->text)
-    done = (*e48->parser_callbacks->text)(e48, codepoints, npoints);
+  if(vt->parser_callbacks &&
+     vt->parser_callbacks->text)
+    done = (*vt->parser_callbacks->text)(vt, codepoints, npoints);
 
-  if(!done && e48->state)
-    done = vterm_state_on_text(e48, codepoints, npoints);
+  if(!done && vt->state)
+    done = vterm_state_on_text(vt, codepoints, npoints);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled text (%d chars)", npoints);
 }
 
-static void vterm_on_parser_control(vterm_t *e48, unsigned char control)
+static void vterm_on_parser_control(vterm_t *vt, unsigned char control)
 {
   int done = 0;
 
-  if(e48->parser_callbacks &&
-     e48->parser_callbacks->control)
-    done = (*e48->parser_callbacks->control)(e48, control);
+  if(vt->parser_callbacks &&
+     vt->parser_callbacks->control)
+    done = (*vt->parser_callbacks->control)(vt, control);
 
-  if(!done && e48->state)
-    done = vterm_state_on_control(e48, control);
+  if(!done && vt->state)
+    done = vterm_state_on_control(vt, control);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", control);
 }
 
-static void vterm_on_parser_escape(vterm_t *e48, char escape)
+static void vterm_on_parser_escape(vterm_t *vt, char escape)
 {
   int done = 0;
 
-  if(e48->parser_callbacks &&
-     e48->parser_callbacks->escape)
-    done = (*e48->parser_callbacks->escape)(e48, escape);
+  if(vt->parser_callbacks &&
+     vt->parser_callbacks->escape)
+    done = (*vt->parser_callbacks->escape)(vt, escape);
 
-  if(!done && e48->state)
-    done = vterm_state_on_escape(e48, escape);
+  if(!done && vt->state)
+    done = vterm_state_on_escape(vt, escape);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
 }
 
-static void vterm_on_parser_csi(vterm_t *e48, const char *args, size_t arglen, char command)
+static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, char command)
 {
   int done = 0;
 
-  if(e48->parser_callbacks &&
-     e48->parser_callbacks->csi_raw)
-    done = (*e48->parser_callbacks->csi_raw)(e48, args, arglen, command);
+  if(vt->parser_callbacks &&
+     vt->parser_callbacks->csi_raw)
+    done = (*vt->parser_callbacks->csi_raw)(vt, args, arglen, command);
 
   if(done)
     return;
@@ -124,25 +124,25 @@ static void vterm_on_parser_csi(vterm_t *e48, const char *args, size_t arglen, c
     //  printf(" %d", csi_args[argi]);
     //printf("\n");
 
-    if(e48->parser_callbacks &&
-      e48->parser_callbacks->csi)
-      done = (*e48->parser_callbacks->csi)(e48, intermed, csi_args, argcount, command);
+    if(vt->parser_callbacks &&
+      vt->parser_callbacks->csi)
+      done = (*vt->parser_callbacks->csi)(vt, intermed, csi_args, argcount, command);
 
-    if(!done && e48->state)
-      done = vterm_state_on_csi(e48, intermed, csi_args, argcount, command);
+    if(!done && vt->state)
+      done = vterm_state_on_csi(vt, intermed, csi_args, argcount, command);
   }
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
-static void vterm_on_parser_osc(vterm_t *e48, const char *command, size_t cmdlen)
+static void vterm_on_parser_osc(vterm_t *vt, const char *command, size_t cmdlen)
 {
   int done = 0;
 
-  if(e48->parser_callbacks &&
-     e48->parser_callbacks->osc)
-    done = (*e48->parser_callbacks->osc)(e48, command, cmdlen);
+  if(vt->parser_callbacks &&
+     vt->parser_callbacks->osc)
+    done = (*vt->parser_callbacks->osc)(vt, command, cmdlen);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled OSC %.*s\n", cmdlen, command);
@@ -286,7 +286,7 @@ static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, s
   return 1;
 }
 
-size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len)
+size_t vterm_parser_interpret_bytes(vterm_t *vt, const char bytes[], size_t len)
 {
   size_t pos = 0;
   size_t eaten = 0;
@@ -318,9 +318,9 @@ size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len
         if(c >= 0x40 && c < 0x60)
           // C1 emulations using 7bit clean
           // ESC 0x40 == 0x80
-          vterm_on_parser_control(e48, c + 0x40);
+          vterm_on_parser_control(vt, c + 0x40);
         else 
-          vterm_on_parser_escape(e48, c);
+          vterm_on_parser_escape(vt, c);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -328,27 +328,27 @@ size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len
 
     case CSI:
       if(c >= 0x40 && c <= 0x7f) {
-        vterm_on_parser_csi(e48, bytes + string_start, pos - string_start, c);
+        vterm_on_parser_csi(vt, bytes + string_start, pos - string_start, c);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
       break;
 
     case OSC:
-      if(c == 0x07 || (c == 0x9c && !e48->is_utf8)) {
-        vterm_on_parser_osc(e48, bytes + string_start, pos - string_start);
+      if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
+        vterm_on_parser_osc(vt, bytes + string_start, pos - string_start);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        vterm_on_parser_osc(e48, bytes + string_start, pos - string_start - 1);
+        vterm_on_parser_osc(vt, bytes + string_start, pos - string_start - 1);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
       break;
 
     case NORMAL:
-      if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !e48->is_utf8)) {
+      if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !vt->is_utf8)) {
         switch(c) {
         case 0x1b: // ESC
           parse_state = ESC;
@@ -362,7 +362,7 @@ size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len
           string_start = pos + 1;
           break;
         default:
-          vterm_on_parser_control(e48, c);
+          vterm_on_parser_control(vt, c);
           eaten = pos + 1;
           break;
         }
@@ -379,7 +379,7 @@ size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len
 
         int finished;
 
-        if(e48->is_utf8)
+        if(vt->is_utf8)
           finished = interpret_utf8(cp, &cpi, bytes, &pos, len);
         else {
           finished = 0;
@@ -394,7 +394,7 @@ size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len
           }
         }
 
-        vterm_on_parser_text(e48, cp, cpi);
+        vterm_on_parser_text(vt, cp, cpi);
 
         if(finished)
           return pos;
