@@ -12,9 +12,9 @@
 #include "vterm.h"
 
 int master;
-vterm_t *e48;
+vterm_t *vt;
 
-int text(vterm_t *e48, const int codepoints[], int npoints)
+int text(vterm_t *vt, const int codepoints[], int npoints)
 {
   printf("Wrote %d chars: ", npoints);
   int i;
@@ -27,19 +27,19 @@ int text(vterm_t *e48, const int codepoints[], int npoints)
   return 1;
 }
 
-int control(vterm_t *e48, char control)
+int control(vterm_t *vt, char control)
 {
   printf("Control function 0x%02x\n", control);
   return 1;
 }
 
-int escape(vterm_t *e48, char escape)
+int escape(vterm_t *vt, char escape)
 {
   printf("Escape function ESC 0x%02x\n", escape);
   return 1;
 }
 
-int csi(vterm_t *e48, const char *intermed, const int args[], int argcount, char command)
+int csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char command)
 {
   printf("CSI ");
 
@@ -58,7 +58,7 @@ int csi(vterm_t *e48, const char *intermed, const int args[], int argcount, char
   return 1;
 }
 
-int osc(vterm_t *e48, const char *command, size_t cmdlen)
+int osc(vterm_t *vt, const char *command, size_t cmdlen)
 {
   printf("Operating System Command: %.*s\n", cmdlen, command);
   return 1;
@@ -106,7 +106,7 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
     exit(1);
   }
 
-  vterm_push_bytes(e48, buffer, bytes);
+  vterm_push_bytes(vt, buffer, bytes);
 
   write(1, buffer, bytes);
 
@@ -115,8 +115,8 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 
 int main(int argc, char *argv[])
 {
-  e48 = vterm_new(80, 25);
-  vterm_set_parser_callbacks(e48, &cb);
+  vt = vterm_new(80, 25);
+  vterm_set_parser_callbacks(vt, &cb);
 
   pid_t kid = forkpty(&master, NULL, NULL, NULL);
   if(kid == 0) {
