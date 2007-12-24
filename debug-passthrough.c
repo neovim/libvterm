@@ -9,7 +9,7 @@
 
 #include <glib.h>
 
-#include "ecma48.h"
+#include "vterm.h"
 
 int master;
 ecma48_t *e48;

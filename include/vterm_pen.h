@@ -1,5 +1,5 @@
-#ifndef __ECMA48_PEN_H__
-#define __ECMA48_PEN_H__
+#ifndef __VTERM_PEN_H__
+#define __VTERM_PEN_H__
 
 typedef union {
   int boolean;

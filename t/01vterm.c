@@ -1,10 +1,10 @@
 #include "CUnit/CUnit.h"
 
-#include "ecma48.h"
+#include "vterm.h"
 
 ecma48_t *e48;
 
-int ecma48_init(void)
+int vterm_init(void)
 {
   e48 = ecma48_new(80, 25);
   return e48 ? 0 : 1;
@@ -31,10 +31,10 @@ static void test_setsize(void)
 }
 
 
-int ecma48_fini(void)
+int vterm_fini(void)
 {
   // TODO: free
   return 0;
 }
 
-#include "01ecma48.inc"
+#include "01vterm.inc"

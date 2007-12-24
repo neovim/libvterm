@@ -1,5 +1,5 @@
-#ifndef __ECMA48_MODE_H__
-#define __ECMA48_MODE_H__
+#ifndef __VTERM_MODE_H__
+#define __VTERM_MODE_H__
 
 typedef enum {
   ECMA48_MODE_NONE,

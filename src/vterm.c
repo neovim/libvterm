@@ -1,4 +1,4 @@
-#include "ecma48_internal.h"
+#include "vterm_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,6 +1,6 @@
 #include "CUnit/CUnit.h"
 
-#include "ecma48.h"
+#include "vterm.h"
 
 #include <glib.h>
 
