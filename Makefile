@@ -17,7 +17,7 @@ HFILES_INT=$(wildcard src/*.h) $(HFILES)
 TEST_CFILES=$(wildcard t/*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
 
-LIBPIECES=vterm parser state input pen mode
+LIBPIECES=vterm parser state input pen mode unicode
 DEBUGS=debug-passthrough debug-pangoterm
 
 all: $(DEBUGS)
