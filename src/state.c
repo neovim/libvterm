@@ -202,7 +202,7 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
 
     if(state->callbacks && state->callbacks->putglyph) {
       uint32_t chars[] = { c, 0 };
-      done =-(*state->callbacks->putglyph)(vt, chars, width, state->pos, state->pen);
+      done = (*state->callbacks->putglyph)(vt, chars, width, state->pos, state->pen);
     }
 
     if(!done && state->callbacks && state->callbacks->putchar)
