@@ -221,7 +221,7 @@ gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
   return FALSE;
 }
 
-int term_putchar(vterm_t *vt, uint32_t codepoint, vterm_position_t pos, void *pen_p)
+int term_putchar(vterm_t *vt, uint32_t codepoint, int width, vterm_position_t pos, void *pen_p)
 {
   term_pen *pen = pen_p;
 
@@ -245,7 +245,7 @@ int term_putchar(vterm_t *vt, uint32_t codepoint, vterm_position_t pos, void *pe
   GdkRectangle destarea = {
     .x      = pos.col * cell_width,
     .y      = pos.row * cell_height,
-    .width  = cell_width,
+    .width  = cell_width * width,
     .height = cell_height
   };
 
