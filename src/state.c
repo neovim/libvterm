@@ -196,17 +196,19 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
       state->pos.col = 0;
     }
 
+    int width = vterm_unicode_width(c);
+
     int done = 0;
 
     if(state->callbacks &&
        state->callbacks->putchar)
-      done = (*state->callbacks->putchar)(vt, c, state->pos, state->pen);
+      done = (*state->callbacks->putchar)(vt, c, width, state->pos, state->pen);
 
     if(!done)
       fprintf(stderr, "libvterm: Unhandled putchar U+%04x at (%d,%d)\n",
           c, state->pos.col, state->pos.row);
 
-    state->pos.col += vterm_unicode_width(c);
+    state->pos.col += width;
   }
 
   updatecursor(vt, state, &oldpos);
