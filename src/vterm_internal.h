@@ -57,4 +57,6 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount);
 void vterm_state_initmodes(vterm_t *vt);
 void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val);
 
+int vterm_unicode_width(int codepoint);
+
 #endif

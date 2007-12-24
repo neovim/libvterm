@@ -76,4 +76,21 @@ static void test_uni_1char(void)
   CU_ASSERT_EQUAL(column[1], 1);
 }
 
+static void test_uni_widechar(void)
+{
+  this_cp = 0;
+  vterm_state_initialise(vt);
+
+  /* U+FF10 = 0xEF 0xBC 0x90  name: FULLWIDTH DIGIT ZERO
+   */
+  vterm_push_bytes(vt, "\xEF\xBC\x90 ", 4);
+
+  CU_ASSERT_EQUAL(this_cp, 2);
+
+  CU_ASSERT_EQUAL(codepoints[0], 0xFF10);
+  CU_ASSERT_EQUAL(column[0], 0);
+  CU_ASSERT_EQUAL(codepoints[1], ' ');
+  CU_ASSERT_EQUAL(column[1], 2);
+}
+
 #include "10state_putchar.inc"
