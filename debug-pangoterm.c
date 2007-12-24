@@ -221,11 +221,11 @@ gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
   return FALSE;
 }
 
-int term_putchar(vterm_t *vt, uint32_t codepoint, int width, vterm_position_t pos, void *pen_p)
+int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position_t pos, void *pen_p)
 {
   term_pen *pen = pen_p;
 
-  char *s = g_ucs4_to_utf8(&codepoint, 1, NULL, NULL, NULL);
+  char *s = g_ucs4_to_utf8(chars, -1, NULL, NULL, NULL);
   PangoLayout *layout = pen->layout;
 
   pango_layout_set_text(layout, s, -1);
@@ -552,7 +552,7 @@ int term_setmousefunc(vterm_t *vt, vterm_mousefunc func, void *data)
 }
 
 static vterm_state_callbacks_t cb = {
-  .putchar      = term_putchar,
+  .putglyph     = term_putglyph,
   .movecursor   = term_movecursor,
   .scroll       = term_scroll,
   .copycell     = term_copycell,
