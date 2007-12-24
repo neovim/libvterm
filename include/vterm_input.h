@@ -1,5 +1,5 @@
-#ifndef __ECMA48_INPUT_H__
-#define __ECMA48_INPUT_H__
+#ifndef __VTERM_INPUT_H__
+#define __VTERM_INPUT_H__
 
 typedef enum {
   ECMA48_MOD_NONE  = 0x00,

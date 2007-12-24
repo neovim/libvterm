@@ -1,12 +1,12 @@
-#ifndef __ECMA48_H__
-#define __ECMA48_H__
+#ifndef __VTERM_H__
+#define __VTERM_H__
 
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "ecma48_input.h"
-#include "ecma48_mode.h"
-#include "ecma48_pen.h"
+#include "vterm_input.h"
+#include "vterm_mode.h"
+#include "vterm_pen.h"
 
 typedef struct ecma48_s ecma48_t;
 

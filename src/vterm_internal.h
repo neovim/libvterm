@@ -1,7 +1,7 @@
-#ifndef __ECMA48_INTERNAL_H__
-#define __ECMA48_INTERNAL_H__
+#ifndef __VTERM_INTERNAL_H__
+#define __VTERM_INTERNAL_H__
 
-#include "ecma48.h"
+#include "vterm.h"
 
 #include <glib.h>
 
