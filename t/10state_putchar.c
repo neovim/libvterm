@@ -8,16 +8,18 @@ static vterm_t *vt;
 
 #define MAX_CP 100
 static uint32_t codepoints[MAX_CP];
+static int width[MAX_CP];
 static int column[MAX_CP];
 static int this_cp;
 
-static int cb_putchar(vterm_t *_vt, uint32_t codepoint, vterm_position_t pos, void *pen)
+static int cb_putchar(vterm_t *_vt, uint32_t codepoint, int _width, vterm_position_t pos, void *pen)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
   CU_ASSERT_TRUE_FATAL(this_cp < MAX_CP);
 
   codepoints[this_cp] = codepoint;
+  width[this_cp] = _width;
   column[this_cp] = pos.col;
 
   this_cp++;
@@ -51,10 +53,15 @@ static void test_low(void)
   CU_ASSERT_EQUAL(this_cp, 3);
 
   CU_ASSERT_EQUAL(codepoints[0], 'A');
+  CU_ASSERT_EQUAL(width[0], 1);
   CU_ASSERT_EQUAL(column[0], 0);
+
   CU_ASSERT_EQUAL(codepoints[1], 'B');
+  CU_ASSERT_EQUAL(width[1], 1);
   CU_ASSERT_EQUAL(column[1], 1);
+
   CU_ASSERT_EQUAL(codepoints[2], 'C');
+  CU_ASSERT_EQUAL(width[2], 1);
   CU_ASSERT_EQUAL(column[2], 2);
 }
 
@@ -71,8 +78,11 @@ static void test_uni_1char(void)
   CU_ASSERT_EQUAL(this_cp, 2);
 
   CU_ASSERT_EQUAL(codepoints[0], 0x00C1);
+  CU_ASSERT_EQUAL(width[0], 1);
   CU_ASSERT_EQUAL(column[0], 0);
+
   CU_ASSERT_EQUAL(codepoints[1], 0x00E9);
+  CU_ASSERT_EQUAL(width[1], 1);
   CU_ASSERT_EQUAL(column[1], 1);
 }
 
@@ -88,8 +98,11 @@ static void test_uni_widechar(void)
   CU_ASSERT_EQUAL(this_cp, 2);
 
   CU_ASSERT_EQUAL(codepoints[0], 0xFF10);
+  CU_ASSERT_EQUAL(width[0], 2);
   CU_ASSERT_EQUAL(column[0], 0);
+
   CU_ASSERT_EQUAL(codepoints[1], ' ');
+  CU_ASSERT_EQUAL(width[1], 1);
   CU_ASSERT_EQUAL(column[1], 2);
 }
 
