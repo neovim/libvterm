@@ -12,26 +12,29 @@ static int width[MAX_CP];
 static int column[MAX_CP];
 static int this_cp;
 
-static int cb_putchar(vterm_t *_vt, uint32_t codepoint, int _width, vterm_position_t pos, void *pen)
+static int cb_putglyph(vterm_t *_vt, const uint32_t chars[], int _width, vterm_position_t pos, void *pen)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
   CU_ASSERT_TRUE_FATAL(this_cp < MAX_CP);
 
-  codepoints[this_cp] = codepoint;
-  width[this_cp] = _width;
-  column[this_cp] = pos.col;
+  int i;
+  for(i = 0; chars[i]; i++) {
+    codepoints[this_cp] = chars[i];
+    width[this_cp] = _width;
+    column[this_cp] = pos.col;
 
-  this_cp++;
+    this_cp++;
+  }
 
   return 1;
 }
 
 static vterm_state_callbacks_t state_cbs = {
-  .putchar = cb_putchar,
+  .putglyph = cb_putglyph,
 };
 
-int state_putchar_init(void)
+int state_putglyph_init(void)
 {
   vt = vterm_new(80, 25);
   if(!vt)
@@ -106,4 +109,4 @@ static void test_uni_widechar(void)
   CU_ASSERT_EQUAL(column[1], 2);
 }
 
-#include "10state_putchar.inc"
+#include "10state_putglyph.inc"

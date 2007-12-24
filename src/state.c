@@ -200,12 +200,16 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
 
     int done = 0;
 
-    if(state->callbacks &&
-       state->callbacks->putchar)
+    if(state->callbacks && state->callbacks->putglyph) {
+      uint32_t chars[] = { c, 0 };
+      done =-(*state->callbacks->putglyph)(vt, chars, width, state->pos, state->pen);
+    }
+
+    if(!done && state->callbacks && state->callbacks->putchar)
       done = (*state->callbacks->putchar)(vt, c, width, state->pos, state->pen);
 
     if(!done)
-      fprintf(stderr, "libvterm: Unhandled putchar U+%04x at (%d,%d)\n",
+      fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n",
           c, state->pos.col, state->pos.row);
 
     state->pos.col += width;
