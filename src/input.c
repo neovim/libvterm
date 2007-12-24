@@ -2,13 +2,13 @@
 
 #include <stdio.h>
 
-void vterm_input_push_str(vterm_t *e48, vterm_mod state, const char *str, size_t len)
+void vterm_input_push_str(vterm_t *vt, vterm_mod state, const char *str, size_t len)
 {
   vterm_mod state_noshift = state & ~VTERM_MOD_SHIFT;
 
   if(state_noshift == 0)
     // Normal text - ignore just shift
-    vterm_push_output_bytes(e48, str, len);
+    vterm_push_output_bytes(vt, str, len);
   else if(len == 1) {
     char c = str[0];
 
@@ -16,10 +16,10 @@ void vterm_input_push_str(vterm_t *e48, vterm_mod state, const char *str, size_t
       c &= 0x1f;
 
     if(state & VTERM_MOD_ALT) {
-      vterm_push_output_sprintf(e48, "\e%c", c);
+      vterm_push_output_sprintf(vt, "\e%c", c);
     }
     else {
-      vterm_push_output_bytes(e48, &c, 1);
+      vterm_push_output_bytes(vt, &c, 1);
     }
   }
   else {
@@ -59,7 +59,7 @@ keycodes_s keycodes[] = {
   { KEYCODE_CSINUM, '~', 6 }, // PAGEDOWN
 };
 
-void vterm_input_push_key(vterm_t *e48, vterm_mod state, vterm_key key)
+void vterm_input_push_key(vterm_t *vt, vterm_mod state, vterm_key key)
 {
   if(key == VTERM_KEY_NONE || key >= VTERM_KEY_MAX)
     return;
@@ -68,27 +68,27 @@ void vterm_input_push_key(vterm_t *e48, vterm_mod state, vterm_key key)
 
   switch(k.type) {
   case KEYCODE_LITERAL:
-    vterm_push_output_bytes(e48, &k.literal, 1);
+    vterm_push_output_bytes(vt, &k.literal, 1);
     break;
 
   case KEYCODE_CSI_CURSOR:
-    if(e48->mode.cursor) {
-      vterm_push_output_sprintf(e48, "\eO%c", k.literal);
+    if(vt->mode.cursor) {
+      vterm_push_output_sprintf(vt, "\eO%c", k.literal);
       break;
     }
     /* else FALLTHROUGH */
   case KEYCODE_CSI:
     if(state == 0)
-      vterm_push_output_sprintf(e48, "\e[%c", k.literal);
+      vterm_push_output_sprintf(vt, "\e[%c", k.literal);
     else
-      vterm_push_output_sprintf(e48, "\e[1;%d%c", state + 1, k.literal);
+      vterm_push_output_sprintf(vt, "\e[1;%d%c", state + 1, k.literal);
     break;
 
   case KEYCODE_CSINUM:
     if(state == 0)
-      vterm_push_output_sprintf(e48, "\e[%d%c", k.csinum, k.literal);
+      vterm_push_output_sprintf(vt, "\e[%d%c", k.csinum, k.literal);
     else
-      vterm_push_output_sprintf(e48, "\e[%d;%d%c", k.csinum, state + 1, k.literal);
+      vterm_push_output_sprintf(vt, "\e[%d;%d%c", k.csinum, state + 1, k.literal);
     break;
   }
 }
