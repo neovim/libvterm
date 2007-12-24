@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-void ecma48_state_initmodes(ecma48_t *e48)
+void vterm_state_initmodes(vterm_t *e48)
 {
-  ecma48_mode mode;
+  vterm_mode mode;
   for(mode = VTERM_MODE_NONE; mode < VTERM_MODE_MAX; mode++) {
     int val = 0;
 
@@ -18,14 +18,14 @@ void ecma48_state_initmodes(ecma48_t *e48)
       break;
     }
 
-    ecma48_state_setmode(e48, mode, val);
+    vterm_state_setmode(e48, mode, val);
   }
 }
 
 static void mousefunc(int x, int y, int button, int pressed, void *data)
 {
-  ecma48_t *e48 = data;
-  ecma48_state_t *state = e48->state;
+  vterm_t *e48 = data;
+  vterm_state_t *state = e48->state;
 
   int old_buttons = state->mouse_buttons;
 
@@ -36,14 +36,14 @@ static void mousefunc(int x, int y, int button, int pressed, void *data)
 
   if(state->mouse_buttons != old_buttons) {
     if(button < 4) {
-      ecma48_push_output_sprintf(e48, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
+      vterm_push_output_sprintf(e48, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
     }
   }
 }
 
-void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
+void vterm_state_setmode(vterm_t *e48, vterm_mode mode, int val)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
   int done = 0;
   if(state->callbacks && state->callbacks->setmode)
@@ -86,7 +86,7 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
       e48->mode.alt_screen = val;
     if(done && val) {
       if(state->callbacks && state->callbacks->erase) {
-        ecma48_rectangle_t rect = {
+        vterm_rectangle_t rect = {
           .start_row = 0,
           .start_col = 0,
           .end_row = e48->rows,
@@ -103,7 +103,7 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
       state->saved_pos = state->pos;
     }
     else {
-      ecma48_position_t oldpos = state->pos;
+      vterm_position_t oldpos = state->pos;
       state->pos = state->saved_pos;
       if(state->callbacks && state->callbacks->movecursor)
         (*state->callbacks->movecursor)(e48, state->pos, oldpos, e48->mode.cursor_visible);

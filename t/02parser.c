@@ -4,7 +4,7 @@
 
 #include <glib.h>
 
-static ecma48_t *e48;
+static vterm_t *e48;
 
 static GSList *cbs;
 
@@ -27,7 +27,7 @@ typedef struct {
   } val;
 } cb;
 
-static int cb_text(ecma48_t *_e48, const int codepoints[], int npoints)
+static int cb_text(vterm_t *_e48, const int codepoints[], int npoints)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -42,7 +42,7 @@ static int cb_text(ecma48_t *_e48, const int codepoints[], int npoints)
   return 1;
 }
 
-static int cb_control(ecma48_t *_e48, char control)
+static int cb_control(vterm_t *_e48, char control)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -55,7 +55,7 @@ static int cb_control(ecma48_t *_e48, char control)
   return 1;
 }
 
-static int cb_escape(ecma48_t *_e48, char escape)
+static int cb_escape(vterm_t *_e48, char escape)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -70,7 +70,7 @@ static int cb_escape(ecma48_t *_e48, char escape)
 
 static int capture_csi_raw = 0;
 
-static int cb_csi_raw(ecma48_t *_e48, const char *args, size_t arglen, char command)
+static int cb_csi_raw(vterm_t *_e48, const char *args, size_t arglen, char command)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -88,7 +88,7 @@ static int cb_csi_raw(ecma48_t *_e48, const char *args, size_t arglen, char comm
   return 1;
 }
 
-static int cb_csi(ecma48_t *_e48, const char *intermed, const int args[], int argcount, char command)
+static int cb_csi(vterm_t *_e48, const char *intermed, const int args[], int argcount, char command)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -105,7 +105,7 @@ static int cb_csi(ecma48_t *_e48, const char *intermed, const int args[], int ar
   return 1;
 }
 
-static int cb_osc(ecma48_t *_e48, const char *command, size_t cmdlen)
+static int cb_osc(vterm_t *_e48, const char *command, size_t cmdlen)
 {
   CU_ASSERT_PTR_EQUAL(e48, _e48);
 
@@ -145,7 +145,7 @@ static void free_cbs(void)
   cbs = NULL;
 }
 
-static ecma48_parser_callbacks_t parser_cbs = {
+static vterm_parser_callbacks_t parser_cbs = {
   .text    = cb_text,
   .control = cb_control,
   .escape  = cb_escape,
@@ -156,19 +156,19 @@ static ecma48_parser_callbacks_t parser_cbs = {
 
 int parser_init(void)
 {
-  e48 = ecma48_new(80, 25);
+  e48 = vterm_new(80, 25);
   if(!e48)
     return 1;
 
-  ecma48_parser_set_utf8(e48, 0);
-  ecma48_set_parser_callbacks(e48, &parser_cbs);
+  vterm_parser_set_utf8(e48, 0);
+  vterm_set_parser_callbacks(e48, &parser_cbs);
 
   return 0;
 }
 
 static void test_basictext(void)
 {
-  ecma48_push_bytes(e48, "hello", 5);
+  vterm_push_bytes(e48, "hello", 5);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -186,7 +186,7 @@ static void test_basictext(void)
 
 static void test_c0(void)
 {
-  ecma48_push_bytes(e48, "\x03", 1);
+  vterm_push_bytes(e48, "\x03", 1);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -196,7 +196,7 @@ static void test_c0(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "\x1f", 1);
+  vterm_push_bytes(e48, "\x1f", 1);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -209,7 +209,7 @@ static void test_c0(void)
 
 static void test_c1_8bit(void)
 {
-  ecma48_push_bytes(e48, "\x83", 1);
+  vterm_push_bytes(e48, "\x83", 1);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -219,7 +219,7 @@ static void test_c1_8bit(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "\x9f", 1);
+  vterm_push_bytes(e48, "\x9f", 1);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -232,7 +232,7 @@ static void test_c1_8bit(void)
 
 static void test_c1_7bit(void)
 {
-  ecma48_push_bytes(e48, "\e\x43", 2);
+  vterm_push_bytes(e48, "\e\x43", 2);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -242,7 +242,7 @@ static void test_c1_7bit(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "\e\x5f", 2);
+  vterm_push_bytes(e48, "\e\x5f", 2);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -255,7 +255,7 @@ static void test_c1_7bit(void)
 
 static void test_highbytes(void)
 {
-  ecma48_push_bytes(e48, "\xa0\xcc\xfe", 3);
+  vterm_push_bytes(e48, "\xa0\xcc\xfe", 3);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -271,7 +271,7 @@ static void test_highbytes(void)
 
 static void test_mixed(void)
 {
-  ecma48_push_bytes(e48, "1\n2", 3);
+  vterm_push_bytes(e48, "1\n2", 3);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 3);
 
@@ -294,7 +294,7 @@ static void test_mixed(void)
 
 static void test_escape(void)
 {
-  ecma48_push_bytes(e48, "\e=", 2);
+  vterm_push_bytes(e48, "\e=", 2);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -309,7 +309,7 @@ static void test_csi_raw(void)
 {
   capture_csi_raw = 1;
 
-  ecma48_push_bytes(e48, "\e[A", 3);
+  vterm_push_bytes(e48, "\e[A", 3);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -320,7 +320,7 @@ static void test_csi_raw(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "\e[15B", 5);
+  vterm_push_bytes(e48, "\e[15B", 5);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -332,7 +332,7 @@ static void test_csi_raw(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "\e[?004C", 7);
+  vterm_push_bytes(e48, "\e[?004C", 7);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -349,7 +349,7 @@ static void test_csi_0arg(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e[a", 3);
+  vterm_push_bytes(e48, "\e[a", 3);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -367,7 +367,7 @@ static void test_csi_1arg(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e[9b", 4);
+  vterm_push_bytes(e48, "\e[9b", 4);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -385,7 +385,7 @@ static void test_csi_2arg(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e[3;4c", 6);
+  vterm_push_bytes(e48, "\e[3;4c", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -404,7 +404,7 @@ static void test_csi_manydigits(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e[678d", 6);
+  vterm_push_bytes(e48, "\e[678d", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -422,7 +422,7 @@ static void test_csi_leadingzero(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e[007e", 6);
+  vterm_push_bytes(e48, "\e[007e", 6);
 
   cb *c = cbs->data;
   CU_ASSERT_EQUAL(c->type, CB_CSI);
@@ -438,7 +438,7 @@ static void test_csi_qmark(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e[?2;7f", 7);
+  vterm_push_bytes(e48, "\e[?2;7f", 7);
 
   cb *c = cbs->data;
   CU_ASSERT_EQUAL(c->type, CB_CSI);
@@ -456,7 +456,7 @@ static void test_mixedcsi(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "A\e[8mB", 6);
+  vterm_push_bytes(e48, "A\e[8mB", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 3);
 
@@ -484,11 +484,11 @@ static void test_splitwrite(void)
 {
   capture_csi_raw = 0;
 
-  ecma48_push_bytes(e48, "\e", 1);
+  vterm_push_bytes(e48, "\e", 1);
 
   CU_ASSERT_PTR_NULL(cbs);
 
-  ecma48_push_bytes(e48, "[a", 2);
+  vterm_push_bytes(e48, "[a", 2);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -501,7 +501,7 @@ static void test_splitwrite(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "foo\e[", 5);
+  vterm_push_bytes(e48, "foo\e[", 5);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -514,7 +514,7 @@ static void test_splitwrite(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "4b", 2);
+  vterm_push_bytes(e48, "4b", 2);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -530,7 +530,7 @@ static void test_splitwrite(void)
 
 static void test_osc(void)
 {
-  ecma48_push_bytes(e48, "\e]1;Hello\x07", 10);
+  vterm_push_bytes(e48, "\e]1;Hello\x07", 10);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -541,7 +541,7 @@ static void test_osc(void)
 
   free_cbs();
 
-  ecma48_push_bytes(e48, "\e]1;Hello\e\\", 11);
+  vterm_push_bytes(e48, "\e]1;Hello\e\\", 11);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 
@@ -553,7 +553,7 @@ static void test_osc(void)
   free_cbs();
 
   // We need to string concat this because \x9d1 is \xd1
-  ecma48_push_bytes(e48, "\x9d" "1;Hello\x9c", 9);
+  vterm_push_bytes(e48, "\x9d" "1;Hello\x9c", 9);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
 

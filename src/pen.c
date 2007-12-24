@@ -3,37 +3,37 @@
 #include <stdio.h>
 
 // Some conveniences
-static void setpenattr_bool(ecma48_t *e48, ecma48_attr attr, int boolean)
+static void setpenattr_bool(vterm_t *e48, vterm_attr attr, int boolean)
 {
-  ecma48_state_t *state = e48->state;
-  ecma48_attrvalue val = { .boolean = boolean };
+  vterm_state_t *state = e48->state;
+  vterm_attrvalue val = { .boolean = boolean };
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(e48, attr, &val, &state->pen);
 }
 
-static void setpenattr_int(ecma48_t *e48, ecma48_attr attr, int value)
+static void setpenattr_int(vterm_t *e48, vterm_attr attr, int value)
 {
-  ecma48_state_t *state = e48->state;
-  ecma48_attrvalue val = { .value = value };
+  vterm_state_t *state = e48->state;
+  vterm_attrvalue val = { .value = value };
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(e48, attr, &val, &state->pen);
 }
 
-static void setpenattr_col(ecma48_t *e48, ecma48_attr attr, int palette, int index)
+static void setpenattr_col(vterm_t *e48, vterm_attr attr, int palette, int index)
 {
-  ecma48_state_t *state = e48->state;
-  ecma48_attrvalue val = { .color.palette = palette, .color.index = index };
+  vterm_state_t *state = e48->state;
+  vterm_attrvalue val = { .color.palette = palette, .color.index = index };
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(e48, attr, &val, &state->pen);
 }
 
-void ecma48_state_setpen(ecma48_t *e48, const int args[], int argcount)
+void vterm_state_setpen(vterm_t *e48, const int args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
   int argi;
 
