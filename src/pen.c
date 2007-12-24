@@ -131,6 +131,6 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
     }
 
     if(!done)
-      fprintf(stderr, "libecma48: Unhandled CSI SGR %d\n", args[argi]);
+      fprintf(stderr, "libvterm: Unhandled CSI SGR %d\n", args[argi]);
   }
 }
