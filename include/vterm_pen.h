@@ -8,7 +8,7 @@ typedef union {
     int palette;
     int index;
   } color;
-} ecma48_attrvalue;
+} vterm_attrvalue;
 
 typedef enum {
   VTERM_ATTR_NONE,
@@ -17,6 +17,6 @@ typedef enum {
   VTERM_ATTR_REVERSE,    // bool:  7, 27
   VTERM_ATTR_FOREGROUND, // color: 30-39
   VTERM_ATTR_BACKGROUND, // color: 40-49
-} ecma48_attr;
+} vterm_attr;
 
 #endif

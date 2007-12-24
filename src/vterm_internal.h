@@ -5,14 +5,14 @@
 
 #include <glib.h>
 
-typedef struct ecma48_state_s
+typedef struct vterm_state_s
 {
-  const ecma48_state_callbacks_t *callbacks;
+  const vterm_state_callbacks_t *callbacks;
 
   /* Current cursor position */
-  ecma48_position_t pos;
+  vterm_position_t pos;
   /* Saved cursor position under DEC mode 1048/1049 */
-  ecma48_position_t saved_pos;
+  vterm_position_t saved_pos;
 
   int scrollregion_start;
   int scrollregion_end;
@@ -23,38 +23,38 @@ typedef struct ecma48_state_s
   /* Mouse state */
   int mouse_col, mouse_row;
   int mouse_buttons;
-} ecma48_state_t;
+} vterm_state_t;
 
-struct ecma48_s
+struct vterm_s
 {
   int rows;
   int cols;
 
   int is_utf8;
 
-  const ecma48_parser_callbacks_t *parser_callbacks;
+  const vterm_parser_callbacks_t *parser_callbacks;
 
   GString *inbuffer;
   GString *outbuffer;
-  ecma48_state_t *state;
+  vterm_state_t *state;
 
-  ecma48_modevalues mode;
+  vterm_modevalues mode;
 };
 
-size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t len);
+size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len);
 
-void ecma48_push_output_bytes(ecma48_t *e48, const char *bytes, size_t len);
-void ecma48_push_output_vsprintf(ecma48_t *e48, const char *format, va_list args);
-void ecma48_push_output_sprintf(ecma48_t *e48, const char *format, ...);
+void vterm_push_output_bytes(vterm_t *e48, const char *bytes, size_t len);
+void vterm_push_output_vsprintf(vterm_t *e48, const char *format, va_list args);
+void vterm_push_output_sprintf(vterm_t *e48, const char *format, ...);
 
-int ecma48_state_on_text(ecma48_t *e48, const int codepoints[], int npoints);
-int ecma48_state_on_control(ecma48_t *e48, unsigned char control);
-int ecma48_state_on_escape(ecma48_t *e48, char escape);
-int ecma48_state_on_csi(ecma48_t *e48, const char *intermed, const int args[], int argcount, char command);
+int vterm_state_on_text(vterm_t *e48, const int codepoints[], int npoints);
+int vterm_state_on_control(vterm_t *e48, unsigned char control);
+int vterm_state_on_escape(vterm_t *e48, char escape);
+int vterm_state_on_csi(vterm_t *e48, const char *intermed, const int args[], int argcount, char command);
 
-void ecma48_state_setpen(ecma48_t *e48, const int args[], int argcount);
+void vterm_state_setpen(vterm_t *e48, const int args[], int argcount);
 
-void ecma48_state_initmodes(ecma48_t *e48);
-void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val);
+void vterm_state_initmodes(vterm_t *e48);
+void vterm_state_setmode(vterm_t *e48, vterm_mode mode, int val);
 
 #endif

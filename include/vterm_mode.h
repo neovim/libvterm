@@ -15,7 +15,7 @@ typedef enum {
   VTERM_MODE_DEC_SAVECURSOR,
 
   VTERM_MODE_MAX, // Must be last
-} ecma48_mode;
+} vterm_mode;
 
 typedef struct {
   int keypad:1;
@@ -24,6 +24,6 @@ typedef struct {
   int cursor_visible:1;
   int alt_screen:1;
   int saved_cursor:1;
-} ecma48_modevalues;
+} vterm_modevalues;
 
 #endif

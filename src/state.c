@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
-static ecma48_state_t *ecma48_state_new(void)
+static vterm_state_t *vterm_state_new(void)
 {
-  ecma48_state_t *state = g_new0(ecma48_state_t, 1);
+  vterm_state_t *state = g_new0(vterm_state_t, 1);
 
   state->pos.row = 0;
   state->pos.col = 0;
@@ -13,33 +13,33 @@ static ecma48_state_t *ecma48_state_new(void)
   return state;
 }
 
-void ecma48_state_free(ecma48_state_t *state)
+void vterm_state_free(vterm_state_t *state)
 {
   g_free(state);
 }
 
-void ecma48_set_state_callbacks(ecma48_t *e48, const ecma48_state_callbacks_t *callbacks)
+void vterm_set_state_callbacks(vterm_t *e48, const vterm_state_callbacks_t *callbacks)
 {
   if(callbacks) {
     if(!e48->state) {
-      e48->state = ecma48_state_new();
+      e48->state = vterm_state_new();
     }
     e48->state->callbacks = callbacks;
 
     // Initialise the modes
-    ecma48_state_initmodes(e48);
+    vterm_state_initmodes(e48);
   }
   else {
     if(e48->state) {
-      ecma48_state_free(e48->state);
+      vterm_state_free(e48->state);
       e48->state = NULL;
     }
   }
 }
 
-void ecma48_state_initialise(ecma48_t *e48)
+void vterm_state_initialise(vterm_t *e48)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
   if(!state)
     return;
@@ -58,14 +58,14 @@ void ecma48_state_initialise(ecma48_t *e48)
 
   if(state->callbacks &&
      state->callbacks->erase) {
-    ecma48_rectangle_t rect = { 0, e48->rows, 0, e48->cols };
+    vterm_rectangle_t rect = { 0, e48->rows, 0, e48->cols };
     (*state->callbacks->erase)(e48, rect, state->pen);
   }
 }
 
-void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos)
+void vterm_state_get_cursorpos(vterm_t *e48, vterm_position_t *cursorpos)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
   if(!state) {
     cursorpos->col = -1;
@@ -76,9 +76,9 @@ void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos)
   }
 }
 
-static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
+static void scroll(vterm_t *e48, vterm_rectangle_t rect, int downward, int rightward)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
   if(!downward && !rightward)
     return;
@@ -129,10 +129,10 @@ static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rig
       inc_col = +1;
     }
 
-    ecma48_position_t pos;
+    vterm_position_t pos;
     for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
       for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
-        ecma48_position_t srcpos = { pos.row + downward, pos.col + rightward };
+        vterm_position_t srcpos = { pos.row + downward, pos.col + rightward };
         (*state->callbacks->copycell)(e48, pos, srcpos);
       }
 
@@ -154,7 +154,7 @@ static void scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rig
     (*state->callbacks->erase)(e48, rect, state->pen);
 }
 
-static void updatecursor(ecma48_t *e48, const ecma48_state_t *state, ecma48_position_t *oldpos)
+static void updatecursor(vterm_t *e48, const vterm_state_t *state, vterm_position_t *oldpos)
 {
   if(state->pos.col != oldpos->col || state->pos.row != oldpos->row) {
     if(state->callbacks &&
@@ -163,12 +163,12 @@ static void updatecursor(ecma48_t *e48, const ecma48_state_t *state, ecma48_posi
   }
 }
 
-static void linefeed(ecma48_t *e48)
+static void linefeed(vterm_t *e48)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
   if(state->pos.row == (state->scrollregion_end-1)) {
-    ecma48_rectangle_t rect = {
+    vterm_rectangle_t rect = {
       .start_row = state->scrollregion_start,
       .end_row   = state->scrollregion_end,
       .start_col = 0,
@@ -181,11 +181,11 @@ static void linefeed(ecma48_t *e48)
     state->pos.row++;
 }
 
-int ecma48_state_on_text(ecma48_t *e48, const int codepoints[], int npoints)
+int vterm_state_on_text(vterm_t *e48, const int codepoints[], int npoints)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
-  ecma48_position_t oldpos = state->pos;
+  vterm_position_t oldpos = state->pos;
 
   int i;
   for(i = 0; i < npoints; i++) {
@@ -214,11 +214,11 @@ int ecma48_state_on_text(ecma48_t *e48, const int codepoints[], int npoints)
   return 1;
 }
 
-int ecma48_state_on_control(ecma48_t *e48, unsigned char control)
+int vterm_state_on_control(vterm_t *e48, unsigned char control)
 {
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
-  ecma48_position_t oldpos = state->pos;
+  vterm_position_t oldpos = state->pos;
 
   switch(control) {
   case 0x08: // BS - ECMA-48 8.3.5
@@ -245,7 +245,7 @@ int ecma48_state_on_control(ecma48_t *e48, unsigned char control)
 
   case 0x8d: // RI - ECMA-48 8.3.104
     if(state->pos.row == state->scrollregion_start) {
-      ecma48_rectangle_t rect = {
+      vterm_rectangle_t rect = {
         .start_row = state->scrollregion_start,
         .end_row   = state->scrollregion_end,
         .start_col = 0,
@@ -268,15 +268,15 @@ int ecma48_state_on_control(ecma48_t *e48, unsigned char control)
   return 1;
 }
 
-int ecma48_state_on_escape(ecma48_t *e48, char escape)
+int vterm_state_on_escape(vterm_t *e48, char escape)
 {
   switch(escape) {
   case 0x3d:
-    ecma48_state_setmode(e48, VTERM_MODE_KEYPAD, 1);
+    vterm_state_setmode(e48, VTERM_MODE_KEYPAD, 1);
     break;
 
   case 0x3e:
-    ecma48_state_setmode(e48, VTERM_MODE_KEYPAD, 0);
+    vterm_state_setmode(e48, VTERM_MODE_KEYPAD, 0);
     break;
 
   default:
@@ -286,36 +286,36 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
   return 1;
 }
 
-static void set_dec_mode(ecma48_t *e48, int num, int val)
+static void set_dec_mode(vterm_t *e48, int num, int val)
 {
   switch(num) {
   case 1:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_CURSOR, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_CURSOR, val);
     break;
 
   case 12:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_CURSORBLINK, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_CURSORBLINK, val);
     break;
 
   case 25:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_CURSORVISIBLE, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_CURSORVISIBLE, val);
     break;
 
   case 1000:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_MOUSE, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_MOUSE, val);
     break;
 
   case 1047:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_ALTSCREEN, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_ALTSCREEN, val);
     break;
 
   case 1048:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_SAVECURSOR, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_SAVECURSOR, val);
     break;
 
   case 1049:
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_ALTSCREEN, val);
-    ecma48_state_setmode(e48, VTERM_MODE_DEC_SAVECURSOR, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_ALTSCREEN, val);
+    vterm_state_setmode(e48, VTERM_MODE_DEC_SAVECURSOR, val);
     break;
 
   default:
@@ -324,7 +324,7 @@ static void set_dec_mode(ecma48_t *e48, int num, int val)
   }
 }
 
-static int ecma48_state_on_csi_qmark(ecma48_t *e48, const int *args, int argcount, char command)
+static int vterm_state_on_csi_qmark(vterm_t *e48, const int *args, int argcount, char command)
 {
   switch(command) {
   case 0x68: // DEC private mode set
@@ -344,18 +344,18 @@ static int ecma48_state_on_csi_qmark(ecma48_t *e48, const int *args, int argcoun
   return 1;
 }
 
-int ecma48_state_on_csi(ecma48_t *e48, const char *intermed, const int args[], int argcount, char command)
+int vterm_state_on_csi(vterm_t *e48, const char *intermed, const int args[], int argcount, char command)
 {
   if(intermed) {
     if(strcmp(intermed, "?") == 0)
-      return ecma48_state_on_csi_qmark(e48, args, argcount, command);
+      return vterm_state_on_csi_qmark(e48, args, argcount, command);
 
     return 0;
   }
 
-  ecma48_state_t *state = e48->state;
+  vterm_state_t *state = e48->state;
 
-  ecma48_position_t oldpos = state->pos;
+  vterm_position_t oldpos = state->pos;
 
 #define LBOUND(v,min) if((v) < (min)) (v) = (min)
 #define UBOUND(v,max) if((v) > (max)) (v) = (max)
@@ -363,7 +363,7 @@ int ecma48_state_on_csi(ecma48_t *e48, const char *intermed, const int args[], i
   // Some temporaries for later code
   int count;
   int row, col;
-  ecma48_rectangle_t rect;
+  vterm_rectangle_t rect;
 
   switch(command) {
   case 0x40: // ICH - ECMA-48 8.3.64
@@ -501,7 +501,7 @@ int ecma48_state_on_csi(ecma48_t *e48, const char *intermed, const int args[], i
     break;
 
   case 0x6d: // SGR - ECMA-48 8.3.117
-    ecma48_state_setpen(e48, args, argcount);
+    vterm_state_setpen(e48, args, argcount);
     break;
 
   case 0x72: // DECSTBM - DEC custom

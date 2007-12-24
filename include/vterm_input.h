@@ -6,7 +6,7 @@ typedef enum {
   VTERM_MOD_SHIFT = 0x01,
   VTERM_MOD_ALT   = 0x02,
   VTERM_MOD_CTRL  = 0x04,
-} ecma48_mod;
+} vterm_mod;
 
 typedef enum {
   VTERM_KEY_NONE,
@@ -29,6 +29,6 @@ typedef enum {
   VTERM_KEY_PAGEDOWN,
 
   VTERM_KEY_MAX, // Must be last
-} ecma48_key;
+} vterm_key;
 
 #endif
