@@ -34,7 +34,8 @@ typedef struct {
 typedef void (*vterm_mousefunc)(int x, int y, int button, int pressed, void *data);
 
 typedef struct {
-  int (*putchar)(vterm_t *vt, uint32_t codepoint, int width, vterm_position_t pos, void *pen);
+  int (*putchar)(vterm_t *vt, uint32_t codepoint, int width, vterm_position_t pos, void *pen); // DEPRECATED in favour of putglyph
+  int (*putglyph)(vterm_t *vt, const uint32_t chars[], int width, vterm_position_t pos, void *pen);
   int (*movecursor)(vterm_t *vt, vterm_position_t pos, vterm_position_t oldpos, int visible);
   int (*scroll)(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward);
   int (*copycell)(vterm_t *vt, vterm_position_t dest, vterm_position_t src);
