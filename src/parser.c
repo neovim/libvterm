@@ -11,7 +11,7 @@
 
 #include <glib.h>
 
-static void ecma48_on_parser_text(ecma48_t *e48, int codepoints[], int npoints)
+static void vterm_on_parser_text(vterm_t *e48, int codepoints[], int npoints)
 {
   int done = 0;
 
@@ -20,13 +20,13 @@ static void ecma48_on_parser_text(ecma48_t *e48, int codepoints[], int npoints)
     done = (*e48->parser_callbacks->text)(e48, codepoints, npoints);
 
   if(!done && e48->state)
-    done = ecma48_state_on_text(e48, codepoints, npoints);
+    done = vterm_state_on_text(e48, codepoints, npoints);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled text (%d chars)", npoints);
 }
 
-static void ecma48_on_parser_control(ecma48_t *e48, unsigned char control)
+static void vterm_on_parser_control(vterm_t *e48, unsigned char control)
 {
   int done = 0;
 
@@ -35,13 +35,13 @@ static void ecma48_on_parser_control(ecma48_t *e48, unsigned char control)
     done = (*e48->parser_callbacks->control)(e48, control);
 
   if(!done && e48->state)
-    done = ecma48_state_on_control(e48, control);
+    done = vterm_state_on_control(e48, control);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", control);
 }
 
-static void ecma48_on_parser_escape(ecma48_t *e48, char escape)
+static void vterm_on_parser_escape(vterm_t *e48, char escape)
 {
   int done = 0;
 
@@ -50,13 +50,13 @@ static void ecma48_on_parser_escape(ecma48_t *e48, char escape)
     done = (*e48->parser_callbacks->escape)(e48, escape);
 
   if(!done && e48->state)
-    done = ecma48_state_on_escape(e48, escape);
+    done = vterm_state_on_escape(e48, escape);
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
 }
 
-static void ecma48_on_parser_csi(ecma48_t *e48, const char *args, size_t arglen, char command)
+static void vterm_on_parser_csi(vterm_t *e48, const char *args, size_t arglen, char command)
 {
   int done = 0;
 
@@ -129,14 +129,14 @@ static void ecma48_on_parser_csi(ecma48_t *e48, const char *args, size_t arglen,
       done = (*e48->parser_callbacks->csi)(e48, intermed, csi_args, argcount, command);
 
     if(!done && e48->state)
-      done = ecma48_state_on_csi(e48, intermed, csi_args, argcount, command);
+      done = vterm_state_on_csi(e48, intermed, csi_args, argcount, command);
   }
 
   if(!done)
     fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
-static void ecma48_on_parser_osc(ecma48_t *e48, const char *command, size_t cmdlen)
+static void vterm_on_parser_osc(vterm_t *e48, const char *command, size_t cmdlen)
 {
   int done = 0;
 
@@ -286,7 +286,7 @@ static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, s
   return 1;
 }
 
-size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t len)
+size_t vterm_parser_interpret_bytes(vterm_t *e48, const char bytes[], size_t len)
 {
   size_t pos = 0;
   size_t eaten = 0;
@@ -318,9 +318,9 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t l
         if(c >= 0x40 && c < 0x60)
           // C1 emulations using 7bit clean
           // ESC 0x40 == 0x80
-          ecma48_on_parser_control(e48, c + 0x40);
+          vterm_on_parser_control(e48, c + 0x40);
         else 
-          ecma48_on_parser_escape(e48, c);
+          vterm_on_parser_escape(e48, c);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -328,7 +328,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t l
 
     case CSI:
       if(c >= 0x40 && c <= 0x7f) {
-        ecma48_on_parser_csi(e48, bytes + string_start, pos - string_start, c);
+        vterm_on_parser_csi(e48, bytes + string_start, pos - string_start, c);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -336,12 +336,12 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t l
 
     case OSC:
       if(c == 0x07 || (c == 0x9c && !e48->is_utf8)) {
-        ecma48_on_parser_osc(e48, bytes + string_start, pos - string_start);
+        vterm_on_parser_osc(e48, bytes + string_start, pos - string_start);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        ecma48_on_parser_osc(e48, bytes + string_start, pos - string_start - 1);
+        vterm_on_parser_osc(e48, bytes + string_start, pos - string_start - 1);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -362,7 +362,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t l
           string_start = pos + 1;
           break;
         default:
-          ecma48_on_parser_control(e48, c);
+          vterm_on_parser_control(e48, c);
           eaten = pos + 1;
           break;
         }
@@ -394,7 +394,7 @@ size_t ecma48_parser_interpret_bytes(ecma48_t *e48, const char bytes[], size_t l
           }
         }
 
-        ecma48_on_parser_text(e48, cp, cpi);
+        vterm_on_parser_text(e48, cp, cpi);
 
         if(finished)
           return pos;

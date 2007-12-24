@@ -8,60 +8,60 @@
 #include "vterm_mode.h"
 #include "vterm_pen.h"
 
-typedef struct ecma48_s ecma48_t;
+typedef struct vterm_s vterm_t;
 
 typedef struct {
   int row;
   int col;
-} ecma48_position_t;
+} vterm_position_t;
 
 typedef struct {
   int start_row;
   int end_row;
   int start_col;
   int end_col;
-} ecma48_rectangle_t;
+} vterm_rectangle_t;
 
 typedef struct {
-  int (*text)(ecma48_t *e48, const int codepoints[], int npoints);
-  int (*control)(ecma48_t *e48, char control);
-  int (*escape)(ecma48_t *e48, char escape);
-  int (*csi_raw)(ecma48_t *e48, const char *args, size_t arglen, char command);
-  int (*csi)(ecma48_t *e48, const char *intermed, const int args[], int argcount, char command);
-  int (*osc)(ecma48_t *e48, const char *command, size_t cmdlen);
-} ecma48_parser_callbacks_t;
+  int (*text)(vterm_t *e48, const int codepoints[], int npoints);
+  int (*control)(vterm_t *e48, char control);
+  int (*escape)(vterm_t *e48, char escape);
+  int (*csi_raw)(vterm_t *e48, const char *args, size_t arglen, char command);
+  int (*csi)(vterm_t *e48, const char *intermed, const int args[], int argcount, char command);
+  int (*osc)(vterm_t *e48, const char *command, size_t cmdlen);
+} vterm_parser_callbacks_t;
 
-typedef void (*ecma48_mousefunc)(int x, int y, int button, int pressed, void *data);
+typedef void (*vterm_mousefunc)(int x, int y, int button, int pressed, void *data);
 
 typedef struct {
-  int (*putchar)(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void *pen);
-  int (*movecursor)(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos, int visible);
-  int (*scroll)(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward);
-  int (*copycell)(ecma48_t *e48, ecma48_position_t dest, ecma48_position_t src);
-  int (*erase)(ecma48_t *e48, ecma48_rectangle_t rect, void *pen);
-  int (*setpen)(ecma48_t *e48, int sgrcmd, void **penstore);
-  int (*setpenattr)(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void **penstore);
-  int (*setmode)(ecma48_t *e48, ecma48_mode mode, int val);
-  int (*setmousefunc)(ecma48_t *e48, ecma48_mousefunc func, void *data);
-} ecma48_state_callbacks_t;
+  int (*putchar)(vterm_t *e48, uint32_t codepoint, vterm_position_t pos, void *pen);
+  int (*movecursor)(vterm_t *e48, vterm_position_t pos, vterm_position_t oldpos, int visible);
+  int (*scroll)(vterm_t *e48, vterm_rectangle_t rect, int downward, int rightward);
+  int (*copycell)(vterm_t *e48, vterm_position_t dest, vterm_position_t src);
+  int (*erase)(vterm_t *e48, vterm_rectangle_t rect, void *pen);
+  int (*setpen)(vterm_t *e48, int sgrcmd, void **penstore);
+  int (*setpenattr)(vterm_t *e48, vterm_attr attr, vterm_attrvalue *val, void **penstore);
+  int (*setmode)(vterm_t *e48, vterm_mode mode, int val);
+  int (*setmousefunc)(vterm_t *e48, vterm_mousefunc func, void *data);
+} vterm_state_callbacks_t;
 
-ecma48_t *ecma48_new(int rows, int cols);
-void ecma48_get_size(ecma48_t *e48, int *rowsp, int *colsp);
-void ecma48_set_size(ecma48_t *e48, int rows, int cols);
+vterm_t *vterm_new(int rows, int cols);
+void vterm_get_size(vterm_t *e48, int *rowsp, int *colsp);
+void vterm_set_size(vterm_t *e48, int rows, int cols);
 
-void ecma48_set_parser_callbacks(ecma48_t *e48, const ecma48_parser_callbacks_t *callbacks);
-void ecma48_set_state_callbacks(ecma48_t *e48, const ecma48_state_callbacks_t *callbacks);
+void vterm_set_parser_callbacks(vterm_t *e48, const vterm_parser_callbacks_t *callbacks);
+void vterm_set_state_callbacks(vterm_t *e48, const vterm_state_callbacks_t *callbacks);
 
-void ecma48_state_initialise(ecma48_t *e48);
-void ecma48_state_get_cursorpos(ecma48_t *e48, ecma48_position_t *cursorpos);
+void vterm_state_initialise(vterm_t *e48);
+void vterm_state_get_cursorpos(vterm_t *e48, vterm_position_t *cursorpos);
 
-void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, const char *str, size_t len);
-void ecma48_input_push_key(ecma48_t *e48, ecma48_mod state, ecma48_key key);
+void vterm_input_push_str(vterm_t *e48, vterm_mod state, const char *str, size_t len);
+void vterm_input_push_key(vterm_t *e48, vterm_mod state, vterm_key key);
 
-void ecma48_parser_set_utf8(ecma48_t *e48, int is_utf8);
-void ecma48_push_bytes(ecma48_t *e48, const char *bytes, size_t len);
+void vterm_parser_set_utf8(vterm_t *e48, int is_utf8);
+void vterm_push_bytes(vterm_t *e48, const char *bytes, size_t len);
 
-size_t ecma48_output_bufferlen(ecma48_t *e48);
-size_t ecma48_output_bufferread(ecma48_t *e48, char *buffer, size_t len);
+size_t vterm_output_bufferlen(vterm_t *e48);
+size_t vterm_output_bufferread(vterm_t *e48, char *buffer, size_t len);
 
 #endif

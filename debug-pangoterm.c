@@ -17,7 +17,7 @@
 #endif
 
 int master;
-ecma48_t *e48;
+vterm_t *e48;
 
 int cell_width;
 int cell_height;
@@ -59,7 +59,7 @@ PangoFontDescription *fontdesc;
 
 GtkIMContext *im_context;
 
-ecma48_mousefunc mousefunc;
+vterm_mousefunc mousefunc;
 void *mousedata;
 
 const char *col_spec[] = {
@@ -81,7 +81,7 @@ typedef struct {
   PangoLayout *layout;
 } term_pen;
 
-ecma48_key convert_keyval(guint gdk_keyval)
+vterm_key convert_keyval(guint gdk_keyval)
 {
   switch(gdk_keyval) {
   case GDK_BackSpace:
@@ -163,7 +163,7 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->is_modifier)
     return FALSE;
 
-  ecma48_mod state = VTERM_MOD_NONE;
+  vterm_mod state = VTERM_MOD_NONE;
   if(event->state & GDK_SHIFT_MASK)
     state |= VTERM_MOD_SHIFT;
   if(event->state & GDK_CONTROL_MASK)
@@ -171,22 +171,22 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->state & GDK_MOD1_MASK)
     state |= VTERM_MOD_ALT;
 
-  ecma48_key keyval = convert_keyval(event->keyval);
+  vterm_key keyval = convert_keyval(event->keyval);
 
   if(keyval)
-    ecma48_input_push_key(e48, state, keyval);
+    vterm_input_push_key(e48, state, keyval);
   else {
     size_t len = strlen(event->string);
     if(len)
-      ecma48_input_push_str(e48, state, event->string, len);
+      vterm_input_push_str(e48, state, event->string, len);
     else
       printf("Unsure how to handle key %d with no string\n", event->keyval);
   }
 
-  size_t bufflen = ecma48_output_bufferlen(e48);
+  size_t bufflen = vterm_output_bufferlen(e48);
   if(bufflen) {
     char buffer[bufflen];
-    bufflen = ecma48_output_bufferread(e48, buffer, bufflen);
+    bufflen = vterm_output_bufferread(e48, buffer, bufflen);
     write(master, buffer, bufflen);
   }
 
@@ -197,10 +197,10 @@ gboolean term_mousepress(GtkWidget *widget, GdkEventButton *event, gpointer data
 {
   (*mousefunc)(event->x / cell_width, event->y / cell_height, event->button, event->type == GDK_BUTTON_PRESS, mousedata);
 
-  size_t bufflen = ecma48_output_bufferlen(e48);
+  size_t bufflen = vterm_output_bufferlen(e48);
   if(bufflen) {
     char buffer[bufflen];
-    bufflen = ecma48_output_bufferread(e48, buffer, bufflen);
+    bufflen = vterm_output_bufferread(e48, buffer, bufflen);
     write(master, buffer, bufflen);
   }
 
@@ -209,19 +209,19 @@ gboolean term_mousepress(GtkWidget *widget, GdkEventButton *event, gpointer data
 
 gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
 {
-  ecma48_input_push_str(e48, 0, str, strlen(str));
+  vterm_input_push_str(e48, 0, str, strlen(str));
 
-  size_t bufflen = ecma48_output_bufferlen(e48);
+  size_t bufflen = vterm_output_bufferlen(e48);
   if(bufflen) {
     char buffer[bufflen];
-    bufflen = ecma48_output_bufferread(e48, buffer, bufflen);
+    bufflen = vterm_output_bufferread(e48, buffer, bufflen);
     write(master, buffer, bufflen);
   }
 
   return FALSE;
 }
 
-int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void *pen_p)
+int term_putchar(vterm_t *e48, uint32_t codepoint, vterm_position_t pos, void *pen_p)
 {
   term_pen *pen = pen_p;
 
@@ -274,7 +274,7 @@ int term_putchar(ecma48_t *e48, uint32_t codepoint, ecma48_position_t pos, void 
   return 1;
 }
 
-int term_movecursor(ecma48_t *e48, ecma48_position_t pos, ecma48_position_t oldpos, int visible)
+int term_movecursor(vterm_t *e48, vterm_position_t pos, vterm_position_t oldpos, int visible)
 {
   GdkRectangle destarea = {
     .x      = oldpos.col * cell_width,
@@ -320,7 +320,7 @@ gboolean cursor_blink(gpointer data)
   return TRUE;
 }
 
-int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightward)
+int term_scroll(vterm_t *e48, vterm_rectangle_t rect, int downward, int rightward)
 {
   GdkGC *gc = gdk_gc_new(termbuffer);
 
@@ -349,7 +349,7 @@ int term_scroll(ecma48_t *e48, ecma48_rectangle_t rect, int downward, int rightw
   return 0; // Because we still need to get copycell to move the metadata
 }
 
-int term_copycell(ecma48_t *e48, ecma48_position_t destpos, ecma48_position_t srcpos)
+int term_copycell(vterm_t *e48, vterm_position_t destpos, vterm_position_t srcpos)
 {
   cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
   cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
@@ -357,7 +357,7 @@ int term_copycell(ecma48_t *e48, ecma48_position_t destpos, ecma48_position_t sr
   return 1;
 }
 
-int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
+int term_erase(vterm_t *e48, vterm_rectangle_t rect, void *pen_p)
 {
   term_pen *pen = pen_p;
 
@@ -394,7 +394,7 @@ int term_erase(ecma48_t *e48, ecma48_rectangle_t rect, void *pen_p)
   return 1;
 }
 
-int term_setpen(ecma48_t *e48, int sgrcmd, void **penstore)
+int term_setpen(vterm_t *e48, int sgrcmd, void **penstore)
 {
   term_pen *pen = *penstore;
 
@@ -450,7 +450,7 @@ static void lookup_colour(int palette, int index, const char *def, GdkColor *col
   }
 }
 
-int term_setpenattr(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void **penstore)
+int term_setpenattr(vterm_t *e48, vterm_attr attr, vterm_attrvalue *val, void **penstore)
 {
 #define ADDATTR(a) \
   do { \
@@ -492,7 +492,7 @@ int term_setpenattr(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void
   return 1;
 }
 
-int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
+int term_setmode(vterm_t *e48, vterm_mode mode, int val)
 {
   switch(mode) {
   case VTERM_MODE_DEC_CURSORVISIBLE:
@@ -512,7 +512,7 @@ int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
   case VTERM_MODE_DEC_ALTSCREEN:
     {
       int rows, cols;
-      ecma48_get_size(e48, &rows, &cols);
+      vterm_get_size(e48, &rows, &cols);
 
       GdkRectangle rect = {
         .x = 0,
@@ -534,7 +534,7 @@ int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
   return 1;
 }
 
-int term_setmousefunc(ecma48_t *e48, ecma48_mousefunc func, void *data)
+int term_setmousefunc(vterm_t *e48, vterm_mousefunc func, void *data)
 {
   mousefunc = func;
   mousedata = data;
@@ -551,7 +551,7 @@ int term_setmousefunc(ecma48_t *e48, ecma48_mousefunc func, void *data)
   return 1;
 }
 
-static ecma48_state_callbacks_t cb = {
+static vterm_state_callbacks_t cb = {
   .putchar      = term_putchar,
   .movecursor   = term_movecursor,
   .scroll       = term_scroll,
@@ -563,7 +563,7 @@ static ecma48_state_callbacks_t cb = {
   .setmousefunc = term_setmousefunc,
 };
 
-int term_osc(ecma48_t *e48, const char *command, size_t cmdlen)
+int term_osc(vterm_t *e48, const char *command, size_t cmdlen)
 {
   if(cmdlen < 2)
     return 0;
@@ -591,7 +591,7 @@ int term_osc(ecma48_t *e48, const char *command, size_t cmdlen)
   return 0;
 }
 
-static ecma48_parser_callbacks_t parser_cb = {
+static vterm_parser_callbacks_t parser_cb = {
   .osc = term_osc,
 };
 
@@ -627,7 +627,7 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
   invalid_area.width = 0;
   invalid_area.height = 0;
 
-  ecma48_push_bytes(e48, buffer, bytes);
+  vterm_push_bytes(e48, buffer, bytes);
 
   if(invalid_area.width && invalid_area.height)
     repaint_area(&invalid_area);
@@ -650,16 +650,16 @@ int main(int argc, char *argv[])
 
   struct winsize size = { 25, 80, 0, 0 };
 
-  e48 = ecma48_new(size.ws_row, size.ws_col);
-  ecma48_parser_set_utf8(e48, 1);
+  e48 = vterm_new(size.ws_row, size.ws_col);
+  vterm_parser_set_utf8(e48, 1);
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   termwin = window;
 
   gtk_widget_realize(window);
 
-  ecma48_set_parser_callbacks(e48, &parser_cb);
-  ecma48_set_state_callbacks(e48, &cb);
+  vterm_set_parser_callbacks(e48, &parser_cb);
+  vterm_set_state_callbacks(e48, &cb);
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
@@ -715,7 +715,7 @@ int main(int argc, char *argv[])
   gdk_color_parse(cursor_col, &col);
   gdk_gc_set_rgb_fg_color(cursor_gc, &col);
 
-  ecma48_state_initialise(e48);
+  vterm_state_initialise(e48);
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {

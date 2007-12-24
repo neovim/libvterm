@@ -4,13 +4,13 @@
 
 #include <glib.h>
 
-static ecma48_t *e48;
+static vterm_t *e48;
 
 static int cb_count;
 static int cb_n;
 static int cb_p[256];
 
-static int cb_text(ecma48_t *_e48, const int codepoints[], int npoints)
+static int cb_text(vterm_t *_e48, const int codepoints[], int npoints)
 {
   cb_count++;
   cb_n = npoints;
@@ -19,18 +19,18 @@ static int cb_text(ecma48_t *_e48, const int codepoints[], int npoints)
   return 1;
 }
 
-static ecma48_parser_callbacks_t parser_cbs = {
+static vterm_parser_callbacks_t parser_cbs = {
   .text = cb_text,
 };
 
 int parser_utf8_init(void)
 {
-  e48 = ecma48_new(80, 25);
+  e48 = vterm_new(80, 25);
   if(!e48)
     return 1;
 
-  ecma48_parser_set_utf8(e48, 1);
-  ecma48_set_parser_callbacks(e48, &parser_cbs);
+  vterm_parser_set_utf8(e48, 1);
+  vterm_set_parser_callbacks(e48, &parser_cbs);
 
   return 0;
 }
@@ -38,7 +38,7 @@ int parser_utf8_init(void)
 static void test_low(void)
 {
   cb_count = 0;
-  ecma48_push_bytes(e48, "123", 3);
+  vterm_push_bytes(e48, "123", 3);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 3);
@@ -77,7 +77,7 @@ static void test_low(void)
 static void test_2byte(void)
 {
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xC2\x80\xDF\xBF", 4);
+  vterm_push_bytes(e48, "\xC2\x80\xDF\xBF", 4);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -88,7 +88,7 @@ static void test_2byte(void)
 static void test_3byte(void)
 {
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xE0\xA0\x80\xEF\xBF\xBD", 6);
+  vterm_push_bytes(e48, "\xE0\xA0\x80\xEF\xBF\xBD", 6);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -99,7 +99,7 @@ static void test_3byte(void)
 static void test_4byte(void)
 {
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xF0\x90\x80\x80\xF7\xBF\xBF\xBF", 8);
+  vterm_push_bytes(e48, "\xF0\x90\x80\x80\xF7\xBF\xBF\xBF", 8);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -118,7 +118,7 @@ static void test_earlyterm(void)
 {
   // Two byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xC2!", 2);
+  vterm_push_bytes(e48, "\xC2!", 2);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -127,7 +127,7 @@ static void test_earlyterm(void)
 
   // Three byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xE0!\xE0\xA0!", 5);
+  vterm_push_bytes(e48, "\xE0!\xE0\xA0!", 5);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 4);
@@ -138,7 +138,7 @@ static void test_earlyterm(void)
 
   // Four byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xF0!\xF0\x90!\xF0\x90\x80!", 9);
+  vterm_push_bytes(e48, "\xF0!\xF0\x90!\xF0\x90\x80!", 9);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 6);
@@ -154,7 +154,7 @@ static void test_earlyrestart(void)
 {
   // Two byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xC2\xC2\x90", 3);
+  vterm_push_bytes(e48, "\xC2\xC2\x90", 3);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -163,7 +163,7 @@ static void test_earlyrestart(void)
 
   // Three byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xE0\xC2\x90\xE0\xA0\xC2\x90", 7);
+  vterm_push_bytes(e48, "\xE0\xC2\x90\xE0\xA0\xC2\x90", 7);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 4);
@@ -174,7 +174,7 @@ static void test_earlyrestart(void)
 
   // Four byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xF0\xC2\x90\xF0\x90\xC2\x90\xF0\x90\x80\xC2\x90", 12);
+  vterm_push_bytes(e48, "\xF0\xC2\x90\xF0\x90\xC2\x90\xF0\x90\x80\xC2\x90", 12);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 6);
@@ -209,7 +209,7 @@ static void test_overlong(void)
 {
   // Two byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xC0\x80\xC1\xBF", 4);
+  vterm_push_bytes(e48, "\xC0\x80\xC1\xBF", 4);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -218,7 +218,7 @@ static void test_overlong(void)
 
   // Three byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xE0\x80\x80\xE0\x9F\xBF", 6);
+  vterm_push_bytes(e48, "\xE0\x80\x80\xE0\x9F\xBF", 6);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -227,7 +227,7 @@ static void test_overlong(void)
 
   // Four byte
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF", 8);
+  vterm_push_bytes(e48, "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF", 8);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
@@ -239,7 +239,7 @@ static void test_utf16surr(void)
 {
   // UTF-16 surrogates U+D800 and U+DFFF
   cb_count = 0;
-  ecma48_push_bytes(e48, "\xED\xA0\x80\xED\xBF\xBF", 6);
+  vterm_push_bytes(e48, "\xED\xA0\x80\xED\xBF\xBF", 6);
 
   CU_ASSERT_EQUAL(cb_count, 1);
   CU_ASSERT_EQUAL(cb_n, 2);
