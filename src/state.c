@@ -272,11 +272,11 @@ int ecma48_state_on_escape(ecma48_t *e48, char escape)
 {
   switch(escape) {
   case 0x3d:
-    ecma48_state_setmode(e48, ECMA48_MODE_KEYPAD, 1);
+    ecma48_state_setmode(e48, VTERM_MODE_KEYPAD, 1);
     break;
 
   case 0x3e:
-    ecma48_state_setmode(e48, ECMA48_MODE_KEYPAD, 0);
+    ecma48_state_setmode(e48, VTERM_MODE_KEYPAD, 0);
     break;
 
   default:
@@ -290,32 +290,32 @@ static void set_dec_mode(ecma48_t *e48, int num, int val)
 {
   switch(num) {
   case 1:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSOR, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_CURSOR, val);
     break;
 
   case 12:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSORBLINK, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_CURSORBLINK, val);
     break;
 
   case 25:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_CURSORVISIBLE, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_CURSORVISIBLE, val);
     break;
 
   case 1000:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_MOUSE, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_MOUSE, val);
     break;
 
   case 1047:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_ALTSCREEN, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_ALTSCREEN, val);
     break;
 
   case 1048:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_SAVECURSOR, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_SAVECURSOR, val);
     break;
 
   case 1049:
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_ALTSCREEN, val);
-    ecma48_state_setmode(e48, ECMA48_MODE_DEC_SAVECURSOR, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_ALTSCREEN, val);
+    ecma48_state_setmode(e48, VTERM_MODE_DEC_SAVECURSOR, val);
     break;
 
   default:

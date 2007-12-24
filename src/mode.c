@@ -5,12 +5,12 @@
 void ecma48_state_initmodes(ecma48_t *e48)
 {
   ecma48_mode mode;
-  for(mode = ECMA48_MODE_NONE; mode < ECMA48_MODE_MAX; mode++) {
+  for(mode = VTERM_MODE_NONE; mode < VTERM_MODE_MAX; mode++) {
     int val = 0;
 
     switch(mode) {
-    case ECMA48_MODE_DEC_CURSORBLINK:
-    case ECMA48_MODE_DEC_CURSORVISIBLE:
+    case VTERM_MODE_DEC_CURSORBLINK:
+    case VTERM_MODE_DEC_CURSORVISIBLE:
       val = 1;
       break;
 
@@ -50,27 +50,27 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
     done = (*state->callbacks->setmode)(e48, mode, val);
 
   switch(mode) {
-  case ECMA48_MODE_NONE:
-  case ECMA48_MODE_MAX:
+  case VTERM_MODE_NONE:
+  case VTERM_MODE_MAX:
     break;
 
-  case ECMA48_MODE_KEYPAD:
+  case VTERM_MODE_KEYPAD:
     e48->mode.keypad = val;
     break;
 
-  case ECMA48_MODE_DEC_CURSOR:
+  case VTERM_MODE_DEC_CURSOR:
     e48->mode.cursor = val;
     break;
 
-  case ECMA48_MODE_DEC_CURSORBLINK:
+  case VTERM_MODE_DEC_CURSORBLINK:
     e48->mode.cursor_blink = val;
     break;
 
-  case ECMA48_MODE_DEC_CURSORVISIBLE:
+  case VTERM_MODE_DEC_CURSORVISIBLE:
     e48->mode.cursor_visible = val;
     break;
 
-  case ECMA48_MODE_DEC_MOUSE:
+  case VTERM_MODE_DEC_MOUSE:
     if(state->callbacks && state->callbacks->setmousefunc) {
       if(val) {
         state->mouse_buttons = 0;
@@ -79,7 +79,7 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
     }
     break;
 
-  case ECMA48_MODE_DEC_ALTSCREEN:
+  case VTERM_MODE_DEC_ALTSCREEN:
     /* Only store that we're on the alternate screen if the usercode said it
      * switched */
     if(done)
@@ -97,7 +97,7 @@ void ecma48_state_setmode(ecma48_t *e48, ecma48_mode mode, int val)
     }
     break;
 
-  case ECMA48_MODE_DEC_SAVECURSOR:
+  case VTERM_MODE_DEC_SAVECURSOR:
     e48->mode.saved_cursor = val;
     if(val) {
       state->saved_pos = state->pos;

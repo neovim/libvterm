@@ -54,46 +54,46 @@ void ecma48_state_setpen(ecma48_t *e48, const int args[], int argcount)
     switch(args[argi]) {
     case -1:
     case 0: // Reset
-      setpenattr_bool(e48, ECMA48_ATTR_BOLD, 0);
-      setpenattr_int(e48, ECMA48_ATTR_UNDERLINE, 0);
-      setpenattr_bool(e48, ECMA48_ATTR_REVERSE, 0);
-      setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, 0, -1);
-      setpenattr_col(e48, ECMA48_ATTR_BACKGROUND, 0, -1);
+      setpenattr_bool(e48, VTERM_ATTR_BOLD, 0);
+      setpenattr_int(e48, VTERM_ATTR_UNDERLINE, 0);
+      setpenattr_bool(e48, VTERM_ATTR_REVERSE, 0);
+      setpenattr_col(e48, VTERM_ATTR_FOREGROUND, 0, -1);
+      setpenattr_col(e48, VTERM_ATTR_BACKGROUND, 0, -1);
       break;
 
     case 1: // Bold on
-      setpenattr_bool(e48, ECMA48_ATTR_BOLD, 1);
+      setpenattr_bool(e48, VTERM_ATTR_BOLD, 1);
       break;
 
     case 4: // Underline single
-      setpenattr_int(e48, ECMA48_ATTR_UNDERLINE, 1);
+      setpenattr_int(e48, VTERM_ATTR_UNDERLINE, 1);
       break;
 
     case 7: // Reverse on
-      setpenattr_bool(e48, ECMA48_ATTR_REVERSE, 1);
+      setpenattr_bool(e48, VTERM_ATTR_REVERSE, 1);
       break;
 
     case 21: // Underline double
-      setpenattr_int(e48, ECMA48_ATTR_UNDERLINE, 2);
+      setpenattr_int(e48, VTERM_ATTR_UNDERLINE, 2);
       break;
 
     case 24: // Underline off
-      setpenattr_int(e48, ECMA48_ATTR_UNDERLINE, 0);
+      setpenattr_int(e48, VTERM_ATTR_UNDERLINE, 0);
       break;
 
     case 27: // Reverse off
-      setpenattr_bool(e48, ECMA48_ATTR_REVERSE, 0);
+      setpenattr_bool(e48, VTERM_ATTR_REVERSE, 0);
       break;
 
     case 30: case 31: case 32: case 33:
     case 34: case 35: case 36: case 37: // Foreground colour palette
-      setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, 0, args[argi] - 30);
+      setpenattr_col(e48, VTERM_ATTR_FOREGROUND, 0, args[argi] - 30);
       break;
 
     case 38: // Foreground colour alternative palette
       // Expect two more attributes
       if(argcount - argi >= 2) {
-        setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, args[argi+1], args[argi+2]);
+        setpenattr_col(e48, VTERM_ATTR_FOREGROUND, args[argi+1], args[argi+2]);
         argi += 2;
       }
       else {
@@ -102,18 +102,18 @@ void ecma48_state_setpen(ecma48_t *e48, const int args[], int argcount)
       break;
 
     case 39: // Foreground colour default
-      setpenattr_col(e48, ECMA48_ATTR_FOREGROUND, 0, -1);
+      setpenattr_col(e48, VTERM_ATTR_FOREGROUND, 0, -1);
       break;
 
     case 40: case 41: case 42: case 43:
     case 44: case 45: case 46: case 47: // Background colour palette
-      setpenattr_col(e48, ECMA48_ATTR_BACKGROUND, 0, args[argi] - 40);
+      setpenattr_col(e48, VTERM_ATTR_BACKGROUND, 0, args[argi] - 40);
       break;
 
     case 48: // Background colour alternative palette
       // Expect two more attributes
       if(argcount - argi >= 2) {
-        setpenattr_col(e48, ECMA48_ATTR_BACKGROUND, args[argi+1], args[argi+2]);
+        setpenattr_col(e48, VTERM_ATTR_BACKGROUND, args[argi+1], args[argi+2]);
         argi += 2;
       }
       else {
@@ -122,7 +122,7 @@ void ecma48_state_setpen(ecma48_t *e48, const int args[], int argcount)
       break;
 
     case 49: // Default background
-      setpenattr_col(e48, ECMA48_ATTR_BACKGROUND, 0, -1);
+      setpenattr_col(e48, VTERM_ATTR_BACKGROUND, 0, -1);
       break;
 
     default:

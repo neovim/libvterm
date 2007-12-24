@@ -85,38 +85,38 @@ ecma48_key convert_keyval(guint gdk_keyval)
 {
   switch(gdk_keyval) {
   case GDK_BackSpace:
-    return ECMA48_KEY_BACKSPACE;
+    return VTERM_KEY_BACKSPACE;
   case GDK_Tab:
-    return ECMA48_KEY_TAB;
+    return VTERM_KEY_TAB;
   case GDK_Return:
-    return ECMA48_KEY_ENTER;
+    return VTERM_KEY_ENTER;
   case GDK_Escape:
-    return ECMA48_KEY_ESCAPE;
+    return VTERM_KEY_ESCAPE;
 
   case GDK_Up:
-    return ECMA48_KEY_UP;
+    return VTERM_KEY_UP;
   case GDK_Down:
-    return ECMA48_KEY_DOWN;
+    return VTERM_KEY_DOWN;
   case GDK_Left:
-    return ECMA48_KEY_LEFT;
+    return VTERM_KEY_LEFT;
   case GDK_Right:
-    return ECMA48_KEY_RIGHT;
+    return VTERM_KEY_RIGHT;
 
   case GDK_Insert:
-    return ECMA48_KEY_INS;
+    return VTERM_KEY_INS;
   case GDK_Delete:
-    return ECMA48_KEY_DEL;
+    return VTERM_KEY_DEL;
   case GDK_Home:
-    return ECMA48_KEY_HOME;
+    return VTERM_KEY_HOME;
   case GDK_End:
-    return ECMA48_KEY_END;
+    return VTERM_KEY_END;
   case GDK_Page_Up:
-    return ECMA48_KEY_PAGEUP;
+    return VTERM_KEY_PAGEUP;
   case GDK_Page_Down:
-    return ECMA48_KEY_PAGEDOWN;
+    return VTERM_KEY_PAGEDOWN;
 
   default:
-    return ECMA48_KEY_NONE;
+    return VTERM_KEY_NONE;
   }
 }
 
@@ -163,13 +163,13 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->is_modifier)
     return FALSE;
 
-  ecma48_mod state = ECMA48_MOD_NONE;
+  ecma48_mod state = VTERM_MOD_NONE;
   if(event->state & GDK_SHIFT_MASK)
-    state |= ECMA48_MOD_SHIFT;
+    state |= VTERM_MOD_SHIFT;
   if(event->state & GDK_CONTROL_MASK)
-    state |= ECMA48_MOD_CTRL;
+    state |= VTERM_MOD_CTRL;
   if(event->state & GDK_MOD1_MASK)
-    state |= ECMA48_MOD_ALT;
+    state |= VTERM_MOD_ALT;
 
   ecma48_key keyval = convert_keyval(event->keyval);
 
@@ -463,25 +463,25 @@ int term_setpenattr(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void
   term_pen *pen = *penstore;
 
   switch(attr) {
-  case ECMA48_ATTR_BOLD:
+  case VTERM_ATTR_BOLD:
     ADDATTR(pango_attr_weight_new(val->boolean ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
     break;
 
-  case ECMA48_ATTR_UNDERLINE:
+  case VTERM_ATTR_UNDERLINE:
     ADDATTR(pango_attr_underline_new(val->value == 1 ? PANGO_UNDERLINE_SINGLE :
                                      val->value == 2 ? PANGO_UNDERLINE_DOUBLE :
                                                       PANGO_UNDERLINE_NONE));
     break;
 
-  case ECMA48_ATTR_REVERSE:
+  case VTERM_ATTR_REVERSE:
     pen->reverse = val->boolean;
     break;
 
-  case ECMA48_ATTR_FOREGROUND:
+  case VTERM_ATTR_FOREGROUND:
     lookup_colour(val->color.palette, val->color.index, default_fg, &pen->fg_col);
     break;
 
-  case ECMA48_ATTR_BACKGROUND:
+  case VTERM_ATTR_BACKGROUND:
     lookup_colour(val->color.palette, val->color.index, default_bg, &pen->bg_col);
     break;
 
@@ -495,12 +495,12 @@ int term_setpenattr(ecma48_t *e48, ecma48_attr attr, ecma48_attrvalue *val, void
 int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
 {
   switch(mode) {
-  case ECMA48_MODE_DEC_CURSORVISIBLE:
+  case VTERM_MODE_DEC_CURSORVISIBLE:
     cursor_visible = val;
     gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
     break;
 
-  case ECMA48_MODE_DEC_CURSORBLINK:
+  case VTERM_MODE_DEC_CURSORBLINK:
     if(val) {
       cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, NULL);
     }
@@ -509,7 +509,7 @@ int term_setmode(ecma48_t *e48, ecma48_mode mode, int val)
     }
     break;
 
-  case ECMA48_MODE_DEC_ALTSCREEN:
+  case VTERM_MODE_DEC_ALTSCREEN:
     {
       int rows, cols;
       ecma48_get_size(e48, &rows, &cols);

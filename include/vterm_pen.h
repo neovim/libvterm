@@ -11,12 +11,12 @@ typedef union {
 } ecma48_attrvalue;
 
 typedef enum {
-  ECMA48_ATTR_NONE,
-  ECMA48_ATTR_BOLD,       // bool:  1
-  ECMA48_ATTR_UNDERLINE,  // count: 4, 21, 24
-  ECMA48_ATTR_REVERSE,    // bool:  7, 27
-  ECMA48_ATTR_FOREGROUND, // color: 30-39
-  ECMA48_ATTR_BACKGROUND, // color: 40-49
+  VTERM_ATTR_NONE,
+  VTERM_ATTR_BOLD,       // bool:  1
+  VTERM_ATTR_UNDERLINE,  // count: 4, 21, 24
+  VTERM_ATTR_REVERSE,    // bool:  7, 27
+  VTERM_ATTR_FOREGROUND, // color: 30-39
+  VTERM_ATTR_BACKGROUND, // color: 40-49
 } ecma48_attr;
 
 #endif

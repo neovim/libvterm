@@ -4,7 +4,7 @@
 
 void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, const char *str, size_t len)
 {
-  ecma48_mod state_noshift = state & ~ECMA48_MOD_SHIFT;
+  ecma48_mod state_noshift = state & ~VTERM_MOD_SHIFT;
 
   if(state_noshift == 0)
     // Normal text - ignore just shift
@@ -12,10 +12,10 @@ void ecma48_input_push_str(ecma48_t *e48, ecma48_mod state, const char *str, siz
   else if(len == 1) {
     char c = str[0];
 
-    if(state & ECMA48_MOD_CTRL)
+    if(state & VTERM_MOD_CTRL)
       c &= 0x1f;
 
-    if(state & ECMA48_MOD_ALT) {
+    if(state & VTERM_MOD_ALT) {
       ecma48_push_output_sprintf(e48, "\e%c", c);
     }
     else {
@@ -61,7 +61,7 @@ keycodes_s keycodes[] = {
 
 void ecma48_input_push_key(ecma48_t *e48, ecma48_mod state, ecma48_key key)
 {
-  if(key == ECMA48_KEY_NONE || key >= ECMA48_KEY_MAX)
+  if(key == VTERM_KEY_NONE || key >= VTERM_KEY_MAX)
     return;
 
   keycodes_s k = keycodes[key];
