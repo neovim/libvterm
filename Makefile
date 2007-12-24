@@ -17,18 +17,18 @@ HFILES_INT=$(wildcard src/*.h) $(HFILES)
 TEST_CFILES=$(wildcard t/*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
 
-LIBPIECES=ecma48 parser state input pen mode
+LIBPIECES=vterm parser state input pen mode
 DEBUGS=debug-passthrough debug-pangoterm
 
 all: $(DEBUGS)
 
-debug-%: debug-%.c libecma48.so
+debug-%: debug-%.c libvterm.so
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS)
 
-debug-pangoterm: debug-pangoterm.c libecma48.so
+debug-pangoterm: debug-pangoterm.c libvterm.so
 	gcc -o $@ $^ $(CCFLAGS) $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
-libecma48.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
+libvterm.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
 	gcc -shared -o $@ $^ $(LDFLAGS)
 
 src/%.o: src/%.c $(HFILES_INT)
@@ -49,14 +49,14 @@ t/test.o: t/test.c t/extern.h t/suites.h
 t/extern.h: t
 	t/test.c.sh
 
-t/test: libecma48.so $(TEST_OFILES)
+t/test: libvterm.so $(TEST_OFILES)
 	t/test.c.sh
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS) -lcunit
 
 .PHONY: test
-test: libecma48.so t/test
+test: libvterm.so t/test
 	LD_LIBRARY_PATH=. t/test
 
 .PHONY: clean
 clean:
-	rm -f $(DEBUGS) $(OFILES) $(TEST_OFILES) $(TEST_CFILES:.c=.inc) libecma48.so
+	rm -f $(DEBUGS) $(OFILES) $(TEST_OFILES) $(TEST_CFILES:.c=.inc) libvterm.so

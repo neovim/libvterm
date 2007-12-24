@@ -1,4 +1,4 @@
-#include "ecma48_internal.h"
+#include "vterm_internal.h"
 
 #define UNICODE_INVALID 0xFFFD
 
