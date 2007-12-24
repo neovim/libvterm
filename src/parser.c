@@ -23,7 +23,7 @@ static void vterm_on_parser_text(vterm_t *vt, int codepoints[], int npoints)
     done = vterm_state_on_text(vt, codepoints, npoints);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled text (%d chars)", npoints);
+    fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
 }
 
 static void vterm_on_parser_control(vterm_t *vt, unsigned char control)
@@ -38,7 +38,7 @@ static void vterm_on_parser_control(vterm_t *vt, unsigned char control)
     done = vterm_state_on_control(vt, control);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled control 0x%02x\n", control);
+    fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
 
 static void vterm_on_parser_escape(vterm_t *vt, char escape)
@@ -53,7 +53,7 @@ static void vterm_on_parser_escape(vterm_t *vt, char escape)
     done = vterm_state_on_escape(vt, escape);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
+    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
 }
 
 static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, char command)
@@ -133,7 +133,7 @@ static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, ch
   }
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled CSI %.*s %c\n", arglen, args, command);
+    fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", arglen, args, command);
 }
 
 static void vterm_on_parser_osc(vterm_t *vt, const char *command, size_t cmdlen)
@@ -145,7 +145,7 @@ static void vterm_on_parser_osc(vterm_t *vt, const char *command, size_t cmdlen)
     done = (*vt->parser_callbacks->osc)(vt, command, cmdlen);
 
   if(!done)
-    fprintf(stderr, "libecma48: Unhandled OSC %.*s\n", cmdlen, command);
+    fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", cmdlen, command);
 }
 
 static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, size_t len)

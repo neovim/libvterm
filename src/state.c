@@ -203,7 +203,7 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
       done = (*state->callbacks->putchar)(vt, c, state->pos, state->pen);
 
     if(!done)
-      fprintf(stderr, "libecma48: Unhandled putchar U+%04x at (%d,%d)\n",
+      fprintf(stderr, "libvterm: Unhandled putchar U+%04x at (%d,%d)\n",
           c, state->pos.col, state->pos.row);
 
     state->pos.col++;
@@ -319,7 +319,7 @@ static void set_dec_mode(vterm_t *vt, int num, int val)
     break;
 
   default:
-    printf("libecma48: Unknown DEC mode %d\n", num);
+    printf("libvterm: Unknown DEC mode %d\n", num);
     return;
   }
 }
