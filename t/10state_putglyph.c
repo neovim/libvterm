@@ -109,4 +109,84 @@ static void test_uni_widechar(void)
   CU_ASSERT_EQUAL(column[1], 2);
 }
 
+static void test_uni_combining(void)
+{
+  this_cp = 0;
+  vterm_state_initialise(vt);
+
+  /* U+0301 = 0xCC 0x81  name: COMBINING ACUTE
+   */
+  vterm_push_bytes(vt, "e\xCC\x81Z", 4);
+
+  CU_ASSERT_EQUAL(this_cp, 3);
+
+  CU_ASSERT_EQUAL(codepoints[0], 'e');
+  CU_ASSERT_EQUAL(codepoints[1], 0x0301);
+  CU_ASSERT_EQUAL(width[0], 1);
+  CU_ASSERT_EQUAL(column[0], 0);
+
+  CU_ASSERT_EQUAL(codepoints[2], 'Z');
+  CU_ASSERT_EQUAL(width[2], 1);
+  CU_ASSERT_EQUAL(column[2], 1);
+
+  /* Now try it again, split across two buffers. Since the text implementation
+   * cannot know the second will be coming, it has to emit the bare 'e' first
+   */
+  this_cp = 0;
+  vterm_state_initialise(vt);
+
+  vterm_push_bytes(vt, "e", 1);
+
+  CU_ASSERT_EQUAL(this_cp, 1);
+
+  CU_ASSERT_EQUAL(codepoints[0], 'e');
+  CU_ASSERT_EQUAL(width[0], 1);
+  CU_ASSERT_EQUAL(column[0], 0);
+
+  vterm_push_bytes(vt, "\xCC\x81Z", 3);
+
+  CU_ASSERT_EQUAL(this_cp, 4);
+
+  CU_ASSERT_EQUAL(codepoints[1], 'e');
+  CU_ASSERT_EQUAL(codepoints[2], 0x0301);
+  CU_ASSERT_EQUAL(width[1], 1);
+  CU_ASSERT_EQUAL(column[1], 0);
+
+  CU_ASSERT_EQUAL(codepoints[3], 'Z');
+  CU_ASSERT_EQUAL(width[3], 1);
+  CU_ASSERT_EQUAL(column[3], 1);
+
+  /* Now try again with two combining chars, split across three buffers, to
+   * ensure the saving/combining logic both interact */
+  this_cp = 0;
+  vterm_state_initialise(vt);
+
+  vterm_push_bytes(vt, "e", 1);
+
+  CU_ASSERT_EQUAL(this_cp, 1);
+
+  CU_ASSERT_EQUAL(codepoints[0], 'e');
+  CU_ASSERT_EQUAL(width[0], 1);
+  CU_ASSERT_EQUAL(column[0], 0);
+
+  vterm_push_bytes(vt, "\xCC\x81", 2);
+
+  CU_ASSERT_EQUAL(this_cp, 3);
+
+  CU_ASSERT_EQUAL(codepoints[1], 'e');
+  CU_ASSERT_EQUAL(codepoints[2], 0x0301);
+  CU_ASSERT_EQUAL(width[1], 1);
+  CU_ASSERT_EQUAL(column[1], 0);
+
+  vterm_push_bytes(vt, "\xCC\x82", 2);
+
+  CU_ASSERT_EQUAL(this_cp, 6);
+
+  CU_ASSERT_EQUAL(codepoints[3], 'e');
+  CU_ASSERT_EQUAL(codepoints[4], 0x0301);
+  CU_ASSERT_EQUAL(codepoints[5], 0x0302);
+  CU_ASSERT_EQUAL(width[3], 1);
+  CU_ASSERT_EQUAL(column[3], 0);
+}
+
 #include "10state_putglyph.inc"

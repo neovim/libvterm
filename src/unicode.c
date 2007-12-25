@@ -325,3 +325,8 @@ int vterm_unicode_width(int codepoint)
 {
   return mk_wcwidth(codepoint);
 }
+
+int vterm_unicode_is_combining(int codepoint)
+{
+  return bisearch(codepoint, combining, sizeof(combining) / sizeof(struct interval) - 1);
+}

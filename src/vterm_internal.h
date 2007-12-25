@@ -23,6 +23,12 @@ typedef struct vterm_state_s
   /* Mouse state */
   int mouse_col, mouse_row;
   int mouse_buttons;
+
+  /* Last glyph output, for Unicode recombining purposes */
+  uint32_t *combine_chars;
+  size_t combine_chars_size;
+  int combine_width; // The width of the glyph above
+  vterm_position_t combine_pos;   // Position before movement
 } vterm_state_t;
 
 struct vterm_s
@@ -58,5 +64,6 @@ void vterm_state_initmodes(vterm_t *vt);
 void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val);
 
 int vterm_unicode_width(int codepoint);
+int vterm_unicode_is_combining(int codepoint);
 
 #endif
