@@ -46,14 +46,26 @@ typedef struct {
 
 term_cell **cells;
 
-const char *default_fg = "gray90";
-const char *default_bg = "black";
+static char *default_fg = "gray90";
+static char *default_bg = "black";
 
-const char *cursor_col = "white";
-const gint cursor_blink_interval = 500;
+static char *cursor_col = "white";
+static gint cursor_blink_interval = 500;
 
-const char *default_font = "Leonine Sans Mono";
-const int default_size = 9;
+static char *default_font = "Leonine Sans Mono";
+static int default_size = 9;
+
+static GOptionEntry option_entries[] = {
+  /* long_name, short_name, flags, arg, arg_data, description, arg_description */
+  { "foreground", 0,   0, G_OPTION_ARG_STRING, &default_fg, "Default foreground colour", "COL" },
+  { "background", 0,   0, G_OPTION_ARG_STRING, &default_bg, "Default background colour", "COL" },
+  { "cursor",     0,   0, G_OPTION_ARG_STRING, &cursor_col, "Cursor colour", "COL" },
+
+  { "font",       0,   0, G_OPTION_ARG_STRING, &default_font, "Font name", "FONT" },
+  { "size",       's', 0, G_OPTION_ARG_INT,    &default_size, "Font size", "INT" },
+
+  { NULL },
+};
 
 PangoFontDescription *fontdesc;
 
@@ -644,6 +656,17 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 
 int main(int argc, char *argv[])
 {
+  GError *args_error = NULL;
+  GOptionContext *args_context;
+
+  args_context = g_option_context_new("commandline...");
+  g_option_context_add_main_entries(args_context, option_entries, NULL);
+  g_option_context_add_group(args_context, gtk_get_option_group(TRUE));
+  if(!g_option_context_parse(args_context, &argc, &argv, &args_error)) {
+    fprintf(stderr, "Option parsing failed: %s\n", args_error->message);
+    exit (1);
+  }
+
   gtk_init(&argc, &argv);
 
   struct winsize size = { 25, 80, 0, 0 };
