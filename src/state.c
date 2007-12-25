@@ -3,12 +3,19 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef DEBUG
+# define DEBUG_GLYPH_COMBINE
+#endif
+
 static vterm_state_t *vterm_state_new(void)
 {
   vterm_state_t *state = g_new0(vterm_state_t, 1);
 
   state->pos.row = 0;
   state->pos.col = 0;
+
+  state->combine_chars_size = 16;
+  state->combine_chars = g_new0(uint32_t, state->combine_chars_size);
 
   return state;
 }
@@ -181,36 +188,140 @@ static void linefeed(vterm_t *vt)
     state->pos.row++;
 }
 
+static void grow_combine_buffer(vterm_state_t *state)
+{
+  state->combine_chars_size *= 2;
+  state->combine_chars = g_realloc(state->combine_chars, state->combine_chars_size * sizeof(state->combine_chars[0]));
+}
+
 int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
 {
   vterm_state_t *state = vt->state;
 
   vterm_position_t oldpos = state->pos;
 
-  int i;
-  for(i = 0; i < npoints; i++) {
-    int c = codepoints[i];
+  int i = 0;
 
+  /* This is a combining char. that needs to be merged with the previous
+   * glyph output */
+  if(vterm_unicode_is_combining(codepoints[i])) {
+    /* See if the cursor has moved since */
+    if(state->pos.row == state->combine_pos.row && state->pos.col == state->combine_pos.col + state->combine_width) {
+#ifdef DEBUG_GLYPH_COMBINE
+    int printpos;
+    printf("DEBUG: COMBINING SPLIT GLYPH of chars {");
+    for(printpos = 0; state->combine_chars[printpos]; printpos++)
+      printf("U+%04x ", state->combine_chars[printpos]);
+    printf("} + {");
+#endif
+
+      /* Find where we need to append these combining chars */
+      int saved_i = 0;
+      while(state->combine_chars[saved_i])
+        saved_i++;
+
+      /* Add extra ones */
+      while(i < npoints && vterm_unicode_is_combining(codepoints[i])) {
+        if(saved_i >= state->combine_chars_size)
+          grow_combine_buffer(state);
+        state->combine_chars[saved_i++] = codepoints[i++];
+      }
+      if(saved_i >= state->combine_chars_size)
+        grow_combine_buffer(state);
+      state->combine_chars[saved_i] = 0;
+
+#ifdef DEBUG_GLYPH_COMBINE
+      for(; state->combine_chars[printpos]; printpos++)
+        printf("U+%04x ", state->combine_chars[printpos]);
+      printf("}\n");
+#endif
+
+      /* Now render it */
+      int done = 0;
+
+      if(state->callbacks && state->callbacks->putglyph) {
+        done = (*state->callbacks->putglyph)(vt, state->combine_chars, state->combine_width, state->combine_pos, state->pen);
+      }
+
+      if(!done && state->callbacks && state->callbacks->putchar) {
+        done = (*state->callbacks->putchar)(vt, state->combine_chars[0], state->combine_width, state->combine_pos, state->pen);
+        // TODO: We have lost information here; namely, the combining chars.
+        // Anything we can do about this?
+      }
+
+      if(!done)
+        fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n",
+            state->combine_chars[0], state->pos.col, state->pos.row);
+    }
+    else {
+      fprintf(stderr, "libvterm: TODO: Skip over split char+combining\n");
+    }
+  }
+
+  for(; i < npoints; i++) {
     if(state->pos.col >= vt->cols) {
       linefeed(vt);
       state->pos.col = 0;
     }
 
-    int width = vterm_unicode_width(c);
+    // Try to find combining characters following this
+    int glyph_starts = i;
+    int glyph_ends;
+    for(glyph_ends = i + 1; glyph_ends < npoints; glyph_ends++)
+      if(!vterm_unicode_is_combining(codepoints[glyph_ends]))
+        break;
+
+    int width = 0;
+
+    uint32_t chars[glyph_ends - glyph_starts + 1];
+
+    for( ; i < glyph_ends; i++) {
+      chars[i - glyph_starts] = codepoints[i];
+      width += vterm_unicode_width(codepoints[i]);
+    }
+
+    chars[glyph_ends - glyph_starts] = 0;
+    i--;
+
+#ifdef DEBUG_GLYPH_COMBINE
+    int printpos;
+    printf("DEBUG: COMBINED GLYPH of %d chars {", glyph_ends - glyph_starts);
+    for(printpos = 0; printpos < glyph_ends - glyph_starts; printpos++)
+      printf("U+%04x ", chars[printpos]);
+    printf("}, onscreen width %d\n", width);
+#endif
 
     int done = 0;
 
     if(state->callbacks && state->callbacks->putglyph) {
-      uint32_t chars[] = { c, 0 };
       done = (*state->callbacks->putglyph)(vt, chars, width, state->pos, state->pen);
     }
 
-    if(!done && state->callbacks && state->callbacks->putchar)
-      done = (*state->callbacks->putchar)(vt, c, width, state->pos, state->pen);
+    if(!done && state->callbacks && state->callbacks->putchar) {
+      done = (*state->callbacks->putchar)(vt, chars[0], width, state->pos, state->pen);
+      // TODO: We have lost information here; namely, the combining chars.
+      // Anything we can do about this?
+    }
 
     if(!done)
       fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n",
-          c, state->pos.col, state->pos.row);
+          chars[0], state->pos.col, state->pos.row);
+
+    if(i == npoints - 1) {
+      /* End of the buffer. Save the chars in case we have to combine with
+       * more on the next call */
+      int save_i;
+      for(save_i = 0; chars[save_i]; save_i++) {
+        if(save_i >= state->combine_chars_size)
+          grow_combine_buffer(state);
+        state->combine_chars[save_i] = chars[save_i];
+      }
+      if(save_i >= state->combine_chars_size)
+        grow_combine_buffer(state);
+      state->combine_chars[save_i] = 0;
+      state->combine_width = width;
+      state->combine_pos = state->pos;
+    }
 
     state->pos.col += width;
   }
