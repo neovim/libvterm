@@ -287,8 +287,6 @@ int term_movecursor(vterm_t *vt, vterm_position_t pos, vterm_position_t oldpos, 
 
   cursor_area.x      = pos.col * cell_width;
   cursor_area.y      = pos.row * cell_height;
-  cursor_area.width  = cell_width;
-  cursor_area.height = cell_height;
 
   cursor_visible = visible;
 
@@ -697,7 +695,8 @@ int main(int argc, char *argv[])
   cell_width  = PANGO_PIXELS_CEIL(width);
   cell_height = PANGO_PIXELS_CEIL(height);
 
-  gtk_widget_show_all(window);
+  cursor_area.width  = cell_width;
+  cursor_area.height = cell_height;
 
   termbuffer_main = gdk_pixmap_new(window->window,
       size.ws_col * cell_width, size.ws_row * cell_height, -1);
@@ -728,6 +727,8 @@ int main(int argc, char *argv[])
 
   GIOChannel *gio_master = g_io_channel_unix_new(master);
   g_io_add_watch(gio_master, G_IO_IN|G_IO_HUP, master_readable, NULL);
+
+  gtk_widget_show_all(window);
 
   gtk_main();
 
