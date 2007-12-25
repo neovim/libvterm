@@ -677,6 +677,8 @@ int main(int argc, char *argv[])
   pango_font_description_set_family(fontdesc, default_font);
   pango_font_description_set_size(fontdesc, default_size * PANGO_SCALE);
 
+  pango_context_set_font_description(pctx, fontdesc);
+
   cells = g_new0(term_cell*, size.ws_row);
 
   int row;
@@ -693,7 +695,7 @@ int main(int argc, char *argv[])
   int height = pango_font_metrics_get_ascent(metrics) + pango_font_metrics_get_descent(metrics);
 
   cell_width  = PANGO_PIXELS_CEIL(width);
-  cell_height = PANGO_PIXELS_CEIL(height) + 1;
+  cell_height = PANGO_PIXELS_CEIL(height);
 
   gtk_widget_show_all(window);
 
