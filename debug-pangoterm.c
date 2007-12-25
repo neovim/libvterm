@@ -36,6 +36,7 @@ GdkPixmap *termbuffer_alternate;
 
 // This always points at one of the above
 GdkPixmap *termbuffer;
+GdkGC *termbuffer_gc;
 
 GdkGC *cursor_gc;
 
@@ -136,16 +137,12 @@ void repaint_area(GdkRectangle *area)
 {
   GdkWindow *win = termwin->window;
 
-  GdkGC *gc = gdk_gc_new(win);
-
-  gdk_gc_set_clip_rectangle(gc, area);
+  gdk_gc_set_clip_rectangle(termbuffer_gc, area);
 
   gdk_draw_drawable(win,
-      gc,
+      termbuffer_gc,
       termbuffer,
       0, 0, 0, 0, -1, -1);
-
-  g_object_unref(G_OBJECT(gc));
 }
 
 gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_data)
@@ -250,9 +247,7 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
   GdkColor fg = cells[pos.row][pos.col].fg_col = pen->reverse ? pen->bg_col : pen->fg_col;
   GdkColor bg = cells[pos.row][pos.col].bg_col = pen->reverse ? pen->fg_col : pen->bg_col;
 
-  GdkGC *gc = gdk_gc_new(termbuffer);
-
-  gdk_gc_set_rgb_fg_color(gc, &bg);
+  gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
 
   GdkRectangle destarea = {
     .x      = pos.col * cell_width,
@@ -261,8 +256,10 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
     .height = cell_height
   };
 
+  gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
+
   gdk_draw_rectangle(termbuffer,
-      gc,
+      termbuffer_gc,
       TRUE,
       destarea.x,
       destarea.y,
@@ -271,15 +268,13 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
 
   if(layout) {
     gdk_draw_layout_with_colors(termbuffer,
-        gc,
+        termbuffer_gc,
         destarea.x,
         destarea.y,
         layout,
         &fg,
         NULL);
   }
-
-  g_object_unref(G_OBJECT(gc));
 
   gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
 
@@ -332,8 +327,6 @@ gboolean cursor_blink(gpointer data)
 
 int term_scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward)
 {
-  GdkGC *gc = gdk_gc_new(termbuffer);
-
   int rows = rect.end_row - rect.start_row - downward;
   int cols = rect.end_col - rect.start_col - rightward;
 
@@ -344,8 +337,10 @@ int term_scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward
     .height = rows * cell_height
   };
 
+  gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
+
   gdk_draw_drawable(termbuffer,
-      gc,
+      termbuffer_gc,
       termbuffer,
       (rect.start_col + rightward) * cell_width,
       (rect.start_row + downward ) * cell_height,
@@ -371,10 +366,8 @@ int term_erase(vterm_t *vt, vterm_rectangle_t rect, void *pen_p)
 {
   term_pen *pen = pen_p;
 
-  GdkGC *gc = gdk_gc_new(termbuffer);
-
   GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
-  gdk_gc_set_rgb_fg_color(gc, &bg);
+  gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
 
   int row, col;
   for(row = rect.start_row; row < rect.end_row; row++)
@@ -389,15 +382,15 @@ int term_erase(vterm_t *vt, vterm_rectangle_t rect, void *pen_p)
     .height = (rect.end_row - rect.start_row) * cell_height,
   };
 
+  gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
+
   gdk_draw_rectangle(termbuffer,
-      gc,
+      termbuffer_gc,
       TRUE,
       destarea.x,
       destarea.y,
       destarea.width,
       destarea.height);
-
-  g_object_unref(G_OBJECT(gc));
 
   gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
 
@@ -532,6 +525,12 @@ int term_setmode(vterm_t *vt, vterm_mode mode, int val)
       };
 
       termbuffer = val ? termbuffer_alternate : termbuffer_main;
+      if(termbuffer_gc) {
+        g_object_unref(termbuffer_gc);
+        termbuffer_gc = NULL;
+      }
+      if(termbuffer)
+        termbuffer_gc = gdk_gc_new(termbuffer);
 
       gdk_rectangle_union(&rect, &invalid_area, &invalid_area);
     }
@@ -727,6 +726,7 @@ int main(int argc, char *argv[])
       size.ws_col * cell_width, size.ws_row * cell_height, -1);
 
   termbuffer = termbuffer_main;
+  termbuffer_gc = gdk_gc_new(termbuffer);
 
   gtk_window_resize(GTK_WINDOW(window), 
       size.ws_col * cell_width, size.ws_row * cell_height);
