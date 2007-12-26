@@ -470,7 +470,7 @@ int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **p
   do { \
     PangoAttribute *newattr = (a); \
     newattr->start_index = 0; \
-    newattr->end_index = 100; /* can't really know for sure */ \
+    newattr->end_index = -1; \
     pango_attr_list_change(pen->attrs, newattr); \
   } while(0)
 
