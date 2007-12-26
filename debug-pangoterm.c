@@ -19,6 +19,7 @@
 int master;
 vterm_t *vt;
 
+int cell_width_pango;
 int cell_width;
 int cell_height;
 
@@ -94,6 +95,11 @@ typedef struct {
   PangoLayout *layout;
 } term_pen;
 
+GString *glyphs = NULL;
+GArray *glyph_widths = NULL;
+GdkRectangle glyph_area;
+term_pen *glyph_pen;
+
 vterm_key convert_keyval(guint gdk_keyval)
 {
   switch(gdk_keyval) {
@@ -142,6 +148,77 @@ static void update_termbuffer(void)
 
   if(termbuffer)
     termbuffer_gc = gdk_gc_new(termbuffer);
+}
+
+static void add_glyph(const uint32_t chars[], int width)
+{
+  char *chars_str = g_ucs4_to_utf8(chars, -1, NULL, NULL, NULL);
+
+  g_array_set_size(glyph_widths, glyphs->len + 1);
+  g_array_index(glyph_widths, int, glyphs->len) = width;
+
+  g_string_append(glyphs, chars_str);
+
+  g_free(chars_str);
+
+  return;
+}
+
+static void flush_glyphs(void)
+{
+  if(!glyphs->len) {
+    glyph_area.width = 0;
+    glyph_area.height = 0;
+    return;
+  }
+
+  gdk_gc_set_clip_rectangle(termbuffer_gc, &glyph_area);
+
+  PangoLayout *layout = glyph_pen->layout;
+
+  pango_layout_set_text(layout, glyphs->str, glyphs->len);
+
+  if(glyph_pen->attrs)
+    pango_layout_set_attributes(layout, glyph_pen->attrs);
+
+  // Now adjust all the widths
+  PangoLayoutIter *iter = pango_layout_get_iter(layout);
+  do {
+    PangoLayoutRun *run = pango_layout_iter_get_run(iter);
+    if(!run)
+      continue;
+
+    PangoGlyphString *glyph_str = run->glyphs;
+    int i;
+    for(i = 0; i < glyph_str->num_glyphs; i++) {
+      PangoGlyphInfo *glyph = &glyph_str->glyphs[i];
+      int str_index = run->item->offset + glyph_str->log_clusters[i];
+      int char_width = g_array_index(glyph_widths, int, str_index);
+      if(glyph->geometry.width && glyph->geometry.width != char_width * cell_width_pango) {
+        /* Adjust its x_offset to match the width change, to ensure it still
+         * remains centered in the cell */
+        glyph->geometry.x_offset -= (glyph->geometry.width - char_width * cell_width_pango) / 2;
+        glyph->geometry.width = char_width * cell_width_pango;
+      }
+    }
+  } while(pango_layout_iter_next_run(iter));
+
+  pango_layout_iter_free(iter);
+
+  gdk_draw_layout_with_colors(termbuffer,
+      termbuffer_gc,
+      glyph_area.x,
+      glyph_area.y,
+      layout,
+      glyph_pen->reverse ? &glyph_pen->bg_col : &glyph_pen->fg_col,
+      NULL);
+
+  gdk_rectangle_union(&glyph_area, &invalid_area, &invalid_area);
+
+  glyph_area.width = 0;
+  glyph_area.height = 0;
+
+  g_string_truncate(glyphs, 0);
 }
 
 void repaint_area(GdkRectangle *area)
@@ -245,17 +322,7 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
 {
   term_pen *pen = pen_p;
 
-  char *s = g_ucs4_to_utf8(chars, -1, NULL, NULL, NULL);
-  PangoLayout *layout = pen->layout;
-
-  pango_layout_set_text(layout, s, -1);
-
-  g_free(s);
-
-  if(pen->attrs)
-    pango_layout_set_attributes(layout, pen->attrs);
-
-  GdkColor fg = cells[pos.row][pos.col].fg_col = pen->reverse ? pen->bg_col : pen->fg_col;
+  cells[pos.row][pos.col].fg_col = pen->reverse ? pen->bg_col : pen->fg_col;
   GdkColor bg = cells[pos.row][pos.col].bg_col = pen->reverse ? pen->fg_col : pen->bg_col;
 
   gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
@@ -267,6 +334,9 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
     .height = cell_height
   };
 
+  if(destarea.y != glyph_area.y || destarea.x != glyph_area.x + glyph_area.width)
+    flush_glyphs();
+
   gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
 
   gdk_draw_rectangle(termbuffer,
@@ -277,17 +347,13 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
       destarea.width,
       destarea.height);
 
-  if(layout) {
-    gdk_draw_layout_with_colors(termbuffer,
-        termbuffer_gc,
-        destarea.x,
-        destarea.y,
-        layout,
-        &fg,
-        NULL);
-  }
+  add_glyph(chars, width);
+  glyph_pen = pen;
 
-  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
+  if(glyph_area.width && glyph_area.height)
+    gdk_rectangle_union(&destarea, &glyph_area, &glyph_area);
+  else
+    glyph_area = destarea;
 
   return 1;
 }
@@ -338,6 +404,8 @@ gboolean cursor_blink(gpointer data)
 
 int term_scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward)
 {
+  flush_glyphs();
+
   int rows = rect.end_row - rect.start_row - downward;
   int cols = rect.end_col - rect.start_col - rightward;
 
@@ -375,6 +443,8 @@ int term_copycell(vterm_t *vt, vterm_position_t destpos, vterm_position_t srcpos
 
 int term_erase(vterm_t *vt, vterm_rectangle_t rect, void *pen_p)
 {
+  flush_glyphs();
+
   term_pen *pen = pen_p;
 
   GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
@@ -466,6 +536,8 @@ static void lookup_colour(int palette, int index, const char *def, GdkColor *col
 
 int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **penstore)
 {
+  flush_glyphs();
+
 #define ADDATTR(a) \
   do { \
     PangoAttribute *newattr = (a); \
@@ -644,6 +716,8 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 
   vterm_push_bytes(vt, buffer, bytes);
 
+  flush_glyphs();
+
   if(invalid_area.width && invalid_area.height)
     repaint_area(&invalid_area);
 
@@ -681,6 +755,9 @@ int main(int argc, char *argv[])
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   termwin = window;
+
+  glyphs = g_string_sized_new(128);
+  glyph_widths = g_array_new(FALSE, FALSE, sizeof(int));
 
   gtk_widget_realize(window);
 
@@ -720,6 +797,7 @@ int main(int argc, char *argv[])
 
   int height = pango_font_metrics_get_ascent(metrics) + pango_font_metrics_get_descent(metrics);
 
+  cell_width_pango = width;
   cell_width  = PANGO_PIXELS_CEIL(width);
   cell_height = PANGO_PIXELS_CEIL(height);
 
