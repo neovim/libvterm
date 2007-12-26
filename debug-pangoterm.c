@@ -133,6 +133,17 @@ vterm_key convert_keyval(guint gdk_keyval)
   }
 }
 
+static void update_termbuffer(void)
+{
+  if(termbuffer_gc) {
+    g_object_unref(termbuffer_gc);
+    termbuffer_gc = NULL;
+  }
+
+  if(termbuffer)
+    termbuffer_gc = gdk_gc_new(termbuffer);
+}
+
 void repaint_area(GdkRectangle *area)
 {
   GdkWindow *win = termwin->window;
@@ -525,12 +536,7 @@ int term_setmode(vterm_t *vt, vterm_mode mode, int val)
       };
 
       termbuffer = val ? termbuffer_alternate : termbuffer_main;
-      if(termbuffer_gc) {
-        g_object_unref(termbuffer_gc);
-        termbuffer_gc = NULL;
-      }
-      if(termbuffer)
-        termbuffer_gc = gdk_gc_new(termbuffer);
+      update_termbuffer();
 
       gdk_rectangle_union(&rect, &invalid_area, &invalid_area);
     }
@@ -726,7 +732,7 @@ int main(int argc, char *argv[])
       size.ws_col * cell_width, size.ws_row * cell_height, -1);
 
   termbuffer = termbuffer_main;
-  termbuffer_gc = gdk_gc_new(termbuffer);
+  update_termbuffer();
 
   gtk_window_resize(GTK_WINDOW(window), 
       size.ws_col * cell_width, size.ws_row * cell_height);
