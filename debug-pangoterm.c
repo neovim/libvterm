@@ -54,7 +54,7 @@ static char *default_bg = "black";
 static char *cursor_col = "white";
 static gint cursor_blink_interval = 500;
 
-static char *default_font = "Leonine Sans Mono";
+static char *default_font = "DejaVu Sans Mono";
 static int default_size = 9;
 
 static GOptionEntry option_entries[] = {
