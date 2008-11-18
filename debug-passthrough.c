@@ -60,7 +60,7 @@ int csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char 
 
 int osc(vterm_t *vt, const char *command, size_t cmdlen)
 {
-  printf("Operating System Command: %.*s\n", cmdlen, command);
+  printf("Operating System Command: %.*s\n", (int)cmdlen, command);
   return 1;
 }
 
