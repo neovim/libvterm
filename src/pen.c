@@ -56,6 +56,7 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
     case 0: // Reset
       setpenattr_bool(vt, VTERM_ATTR_BOLD, 0);
       setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 0);
+      setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
       setpenattr_bool(vt, VTERM_ATTR_REVERSE, 0);
       setpenattr_col(vt, VTERM_ATTR_FOREGROUND, 0, -1);
       setpenattr_col(vt, VTERM_ATTR_BACKGROUND, 0, -1);
@@ -63,6 +64,10 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
 
     case 1: // Bold on
       setpenattr_bool(vt, VTERM_ATTR_BOLD, 1);
+      break;
+
+    case 3: // Italic on
+      setpenattr_bool(vt, VTERM_ATTR_ITALIC, 1);
       break;
 
     case 4: // Underline single
@@ -75,6 +80,10 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
 
     case 21: // Underline double
       setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 2);
+      break;
+
+    case 23: // Italic and Gothic (currently unsupported) off
+      setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
       break;
 
     case 24: // Underline off
