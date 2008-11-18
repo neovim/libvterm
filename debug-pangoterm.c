@@ -642,6 +642,12 @@ int term_setmousefunc(vterm_t *vt, vterm_mousefunc func, void *data)
   return 1;
 }
 
+int term_bell(vterm_t *vt)
+{
+  gtk_widget_error_bell(GTK_WIDGET(termwin));
+  return 1;
+}
+
 static vterm_state_callbacks_t cb = {
   .putglyph     = term_putglyph,
   .movecursor   = term_movecursor,
@@ -652,6 +658,7 @@ static vterm_state_callbacks_t cb = {
   .setpenattr   = term_setpenattr,
   .setmode      = term_setmode,
   .setmousefunc = term_setmousefunc,
+  .bell         = term_bell,
 };
 
 int term_osc(vterm_t *vt, const char *command, size_t cmdlen)
