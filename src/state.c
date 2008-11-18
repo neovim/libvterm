@@ -338,6 +338,12 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
   vterm_position_t oldpos = state->pos;
 
   switch(control) {
+  case 0x07: // BEL - ECMA-48 8.3.3
+    if(state->callbacks &&
+       state->callbacks->bell)
+      (*state->callbacks->bell)(vt);
+    break;
+
   case 0x08: // BS - ECMA-48 8.3.5
     if(state->pos.col > 0)
       state->pos.col--;
