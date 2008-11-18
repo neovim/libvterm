@@ -44,6 +44,7 @@ typedef struct {
   int (*setpenattr)(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **penstore);
   int (*setmode)(vterm_t *vt, vterm_mode mode, int val);
   int (*setmousefunc)(vterm_t *vt, vterm_mousefunc func, void *data);
+  int (*bell)(vterm_t *vt);
 } vterm_state_callbacks_t;
 
 vterm_t *vterm_new(int rows, int cols);
