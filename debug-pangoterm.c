@@ -559,6 +559,10 @@ int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **p
                                                       PANGO_UNDERLINE_NONE));
     break;
 
+  case VTERM_ATTR_ITALIC:
+    ADDATTR(pango_attr_style_new(val->boolean ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
+    break;
+
   case VTERM_ATTR_REVERSE:
     pen->reverse = val->boolean;
     break;
