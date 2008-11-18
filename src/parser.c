@@ -133,7 +133,7 @@ static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, ch
   }
 
   if(!done)
-    fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", arglen, args, command);
+    fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
 
 static void vterm_on_parser_osc(vterm_t *vt, const char *command, size_t cmdlen)
@@ -145,7 +145,7 @@ static void vterm_on_parser_osc(vterm_t *vt, const char *command, size_t cmdlen)
     done = (*vt->parser_callbacks->osc)(vt, command, cmdlen);
 
   if(!done)
-    fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", cmdlen, command);
+    fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
 }
 
 static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
