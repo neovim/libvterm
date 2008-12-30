@@ -447,17 +447,17 @@ static void set_dec_mode(vterm_t *vt, int num, int val)
   }
 }
 
-static int vterm_state_on_csi_qmark(vterm_t *vt, const int *args, int argcount, char command)
+static int vterm_state_on_csi_qmark(vterm_t *vt, const long *args, int argcount, char command)
 {
   switch(command) {
   case 0x68: // DEC private mode set
-    if(args[0] != -1)
-      set_dec_mode(vt, args[0], 1);
+    if(!CSI_ARG_IS_MISSING(args[0]))
+      set_dec_mode(vt, CSI_ARG(args[0]), 1);
     break;
 
   case 0x6c: // DEC private mode reset
-    if(args[0] != -1)
-      set_dec_mode(vt, args[0], 0);
+    if(!CSI_ARG_IS_MISSING(args[0]))
+      set_dec_mode(vt, CSI_ARG(args[0]), 0);
     break;
 
   default:
@@ -467,7 +467,7 @@ static int vterm_state_on_csi_qmark(vterm_t *vt, const int *args, int argcount, 
   return 1;
 }
 
-int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char command)
+int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int argcount, char command)
 {
   if(intermed) {
     if(strcmp(intermed, "?") == 0)
@@ -490,7 +490,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
 
   switch(command) {
   case 0x40: // ICH - ECMA-48 8.3.64
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -502,32 +502,32 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     break;
 
   case 0x41: // CUU - ECMA-48 8.3.22
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
     state->pos.row -= count;
     LBOUND(state->pos.row, 0);
     break;
 
   case 0x42: // CUD - ECMA-48 8.3.19
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
     state->pos.row += count;
     UBOUND(state->pos.row, vt->rows-1);
     break;
 
   case 0x43: // CUF - ECMA-48 8.3.20
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
     state->pos.col += count;
     UBOUND(state->pos.col, vt->cols-1);
     break;
 
   case 0x44: // CUB - ECMA-48 8.3.18
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
     state->pos.col -= count;
     LBOUND(state->pos.col, 0);
     break;
 
   case 0x48: // CUP - ECMA-48 8.3.21
-    row = args[0] == -1                 ? 1 : args[0];
-    col = argcount < 2 || args[1] == -1 ? 1 : args[1];
+    row = CSI_ARG_OR(args[0], 1);
+    col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
     // zero-based
     state->pos.row = row-1;
     UBOUND(state->pos.row, vt->rows-1);
@@ -539,8 +539,8 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     if(!state->callbacks || !state->callbacks->erase)
       return 1;
 
-    switch(args[0]) {
-    case -1:
+    switch(CSI_ARG(args[0])) {
+    case CSI_ARG_MISSING:
     case 0:
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
       rect.start_col = state->pos.col; rect.end_col = vt->cols;
@@ -570,8 +570,8 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
 
-    switch(args[0]) {
-    case -1:
+    switch(CSI_ARG(args[0])) {
+    case CSI_ARG_MISSING:
     case 0:
       rect.start_col = state->pos.col; rect.end_col = vt->cols; break;
     case 1:
@@ -588,7 +588,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     break;
 
   case 0x4c: // IL - ECMA-48 8.3.67
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->scrollregion_end;
@@ -600,7 +600,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     break;
 
   case 0x4d: // DL - ECMA-48 8.3.32
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->scrollregion_end;
@@ -612,7 +612,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     break;
 
   case 0x50: // DCH - ECMA-48 8.3.26
-    count = args[0] == -1 ? 1 : args[0];
+    count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -628,8 +628,8 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int 
     break;
 
   case 0x72: // DECSTBM - DEC custom
-    state->scrollregion_start = args[0] == -1 ? 0 : args[0]-1;
-    state->scrollregion_end = argcount < 2 || args[1] == -1 ? vt->rows : args[1];
+    state->scrollregion_start = CSI_ARG_OR(args[0], 1);
+    state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? vt->rows : CSI_ARG(args[1]);
     break;
 
   default:

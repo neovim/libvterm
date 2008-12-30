@@ -30,14 +30,14 @@ static void setpenattr_col(vterm_t *vt, vterm_attr attr, int palette, int index)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
 }
 
-void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
+void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
   vterm_state_t *state = vt->state;
 
-  int argi;
+  int argi = 0;
 
-  for(argi = 0; argi < argcount; argi++) {
+  while(argi < argcount) {
     int done = 0;
 
     if(state->callbacks &&
@@ -45,14 +45,15 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
       done = (*state->callbacks->setpen)(vt, args[argi], &state->pen);
 
     if(done)
-      continue;
+      goto next;
 
     // This logic is easier to do 'done' backwards; set it true, and make it
     // false again in the 'default' case
     done = 1;
 
-    switch(args[argi]) {
-    case -1:
+    long arg;
+    switch(arg = CSI_ARG(args[argi])) {
+    case CSI_ARG_MISSING:
     case 0: // Reset
       setpenattr_bool(vt, VTERM_ATTR_BOLD, 0);
       setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 0);
@@ -96,17 +97,14 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
 
     case 30: case 31: case 32: case 33:
     case 34: case 35: case 36: case 37: // Foreground colour palette
-      setpenattr_col(vt, VTERM_ATTR_FOREGROUND, 0, args[argi] - 30);
+      setpenattr_col(vt, VTERM_ATTR_FOREGROUND, 0, arg - 30);
       break;
 
     case 38: // Foreground colour alternative palette
       // Expect two more attributes
       if(argcount - argi >= 2) {
-        setpenattr_col(vt, VTERM_ATTR_FOREGROUND, args[argi+1], args[argi+2]);
-        argi += 2;
-      }
-      else {
-        argi = argcount-1;
+        // TODO: Check MORE bit
+        setpenattr_col(vt, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi+1]), CSI_ARG(args[argi+2]));
       }
       break;
 
@@ -116,17 +114,14 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
 
     case 40: case 41: case 42: case 43:
     case 44: case 45: case 46: case 47: // Background colour palette
-      setpenattr_col(vt, VTERM_ATTR_BACKGROUND, 0, args[argi] - 40);
+      setpenattr_col(vt, VTERM_ATTR_BACKGROUND, 0, arg - 40);
       break;
 
     case 48: // Background colour alternative palette
       // Expect two more attributes
       if(argcount - argi >= 2) {
-        setpenattr_col(vt, VTERM_ATTR_BACKGROUND, args[argi+1], args[argi+2]);
-        argi += 2;
-      }
-      else {
-        argi = argcount-1;
+        // TODO: Check MORE bit
+        setpenattr_col(vt, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi+1]), CSI_ARG(args[argi+2]));
       }
       break;
 
@@ -140,6 +135,9 @@ void vterm_state_setpen(vterm_t *vt, const int args[], int argcount)
     }
 
     if(!done)
-      fprintf(stderr, "libvterm: Unhandled CSI SGR %d\n", args[argi]);
+      fprintf(stderr, "libvterm: Unhandled CSI SGR %lu\n", arg);
+
+next:
+    while(CSI_ARG_HAS_MORE(args[argi++]));
   }
 }
