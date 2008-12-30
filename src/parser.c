@@ -80,16 +80,14 @@ static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, ch
     int argcount = 1; // Always at least 1 arg
 
     for( ; i < arglen; i++)
-      if(args[i] == 0x3b)
+      if(args[i] == 0x3b || args[i] == 0x3a) // ; or :
         argcount++;
 
-    // TODO: ECMA-48 allows 123:456 as an argument, but we'll ignore .
-    // and trailing digits
-    int *csi_args = g_alloca(argcount * sizeof(int));
+    long *csi_args = g_alloca(argcount * sizeof(long));
 
     int argi;
     for(argi = 0; argi < argcount; argi++)
-      csi_args[argi] = -1;
+      csi_args[argi] = CSI_ARG_MISSING;
 
     argi = 0;
     int pos;
@@ -97,11 +95,14 @@ static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, ch
       switch(args[pos]) {
       case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
       case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
-        if(csi_args[argi] == -1)
+        if(csi_args[argi] == CSI_ARG_MISSING)
           csi_args[argi] = 0;
         csi_args[argi] *= 10;
         csi_args[argi] += args[pos] - '0';
         break;
+      case 0x3a:
+        csi_args[argi] |= CSI_ARG_FLAG_MORE;
+        /* FALLTHROUGH */
       case 0x3b:
         argi++;
         break;
@@ -120,9 +121,11 @@ static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, ch
 
     //printf("Parsed CSI args %.*s as:\n", arglen, args);
     //printf(" intermed: %s\n", intermed);
-    //for(argi = 0; argi < argcount; argi++)
-    //  printf(" %d", csi_args[argi]);
-    //printf("\n");
+    //for(argi = 0; argi < argcount; argi++) {
+    //  printf(" %lu", CSI_ARG(csi_args[argi]));
+    //  if(!CSI_ARG_HAS_MORE(csi_args[argi]))
+    //    printf("\n");
+    //}
 
     if(vt->parser_callbacks &&
       vt->parser_callbacks->csi)

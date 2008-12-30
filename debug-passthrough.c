@@ -39,7 +39,7 @@ int escape(vterm_t *vt, char escape)
   return 1;
 }
 
-int csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char command)
+int csi(vterm_t *vt, const char *intermed, const long args[], int argcount, char command)
 {
   printf("CSI ");
 
@@ -51,7 +51,7 @@ int csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char 
     if(args[argi] == -1)
       printf("[def] ");
     else 
-      printf("%d ", args[argi]);
+      printf("%lu%c", CSI_ARG(args[argi]), CSI_ARG_HAS_MORE(args[argi]) ? ':' : ' ');
 
   printf("%c\n", command);
 
