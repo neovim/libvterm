@@ -194,6 +194,25 @@ static void grow_combine_buffer(vterm_state_t *state)
   state->combine_chars = g_realloc(state->combine_chars, state->combine_chars_size * sizeof(state->combine_chars[0]));
 }
 
+static int is_col_tabstop(vterm_state_t *state, int col)
+{
+  // TODO: Implement variable tabstops
+  return (col % 8) == 0;
+}
+
+static void tab(vterm_t *vt, int count, int direction)
+{
+  vterm_state_t *state = vt->state;
+
+  while(count--)
+    while(state->pos.col >= 0 && state->pos.col <= vt->cols-1) {
+      state->pos.col += direction;
+
+      if(is_col_tabstop(state, state->pos.col))
+        break;
+    }
+}
+
 int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
 {
   vterm_state_t *state = vt->state;
@@ -350,12 +369,7 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
     break;
 
   case 0x09: // HT - ECMA-48 8.3.60
-    // TODO: Implement variable tabstops
-    if(state->pos.col == vt->cols - 1)
-      break;
-    do {
-      state->pos.col++;
-    } while(state->pos.col % 8 && state->pos.col < (vt->cols-1));
+    tab(vt, 1, +1);
     break;
 
   case 0x0a: // LF - ECMA-48 8.3.74
@@ -539,7 +553,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     LBOUND(state->pos.row, 0);
     break;
 
-  case 0x47: // CHA - ECMA-48 8.3.10
+  case 0x47: // CHA - ECMA-48 8.3.9
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col = count-1;
     UBOUND(state->pos.col, vt->cols-1);
@@ -553,6 +567,11 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     UBOUND(state->pos.row, vt->rows-1);
     state->pos.col = col-1;
     UBOUND(state->pos.col, vt->cols-1);
+    break;
+
+  case 0x49: // CHT - ECMA-48 8.3.10
+    count = CSI_ARG_OR(args[0], 1);
+    tab(vt, count, +1);
     break;
 
   case 0x4a: // ED - ECMA-48 8.3.39
@@ -641,6 +660,11 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
 
     scroll(vt, rect, 0, count);
 
+    break;
+
+  case 0x5a: // CBT - ECMA-48 8.3.7
+    count = CSI_ARG_OR(args[0], 1);
+    tab(vt, count, -1);
     break;
 
   case 0x6d: // SGR - ECMA-48 8.3.117
