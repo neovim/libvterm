@@ -22,12 +22,32 @@ typedef struct {
   int end_col;
 } vterm_rectangle_t;
 
+/* Flag to indicate non-final subparameters in a single CSI parameter.
+ * Consider
+ *   CSI 1;2:3:4;5a
+ * 1 4 and 5 are final.
+ * 2 and 3 are non-final and will have this bit set
+ *
+ * Don't confuse this with the final byte of the CSI escape; 'a' in this case.
+ */
+#define CSI_ARG_FLAG_MORE (1<<31)
+#define CSI_ARG_MASK      (~(1<<31))
+
+#define CSI_ARG_HAS_MORE(a) ((a) & CSI_ARG_FLAG_MORE)
+#define CSI_ARG(a)          ((a) & CSI_ARG_MASK)
+
+/* Can't use -1 to indicate a missing argument; use this instead */
+#define CSI_ARG_MISSING ((1UL<<31)-1)
+
+#define CSI_ARG_IS_MISSING(a) (CSI_ARG(a) == CSI_ARG_MISSING)
+#define CSI_ARG_OR(a,def)     (CSI_ARG(a) == CSI_ARG_MISSING ? (def) : CSI_ARG(a))
+
 typedef struct {
   int (*text)(vterm_t *vt, const int codepoints[], int npoints);
   int (*control)(vterm_t *vt, char control);
   int (*escape)(vterm_t *vt, char escape);
   int (*csi_raw)(vterm_t *vt, const char *args, size_t arglen, char command);
-  int (*csi)(vterm_t *vt, const char *intermed, const int args[], int argcount, char command);
+  int (*csi)(vterm_t *vt, const char *intermed, const long args[], int argcount, char command);
   int (*osc)(vterm_t *vt, const char *command, size_t cmdlen);
 } vterm_parser_callbacks_t;
 

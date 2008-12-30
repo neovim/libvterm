@@ -22,7 +22,7 @@ typedef struct {
     unsigned char control;
     char escape;
     struct { char *args; size_t arglen; char command; } csi_raw;
-    struct { char *intermed; int *args; int argcount; char command; } csi;
+    struct { char *intermed; long *args; int argcount; char command; } csi;
     struct { char *command; size_t cmdlen; } osc;
   } val;
 } cb;
@@ -88,7 +88,7 @@ static int cb_csi_raw(vterm_t *_vt, const char *args, size_t arglen, char comman
   return 1;
 }
 
-static int cb_csi(vterm_t *_vt, const char *intermed, const int args[], int argcount, char command)
+static int cb_csi(vterm_t *_vt, const char *intermed, const long args[], int argcount, char command)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -96,7 +96,7 @@ static int cb_csi(vterm_t *_vt, const char *intermed, const int args[], int argc
   c->type = CB_CSI;
   c->val.csi.intermed = g_strdup(intermed);
   c->val.csi.argcount = argcount;
-  c->val.csi.args = g_new0(int, argcount);
+  c->val.csi.args = g_new0(long, argcount);
   memcpy(c->val.csi.args, args, argcount * sizeof(args[0]));
   c->val.csi.command = command;
 
@@ -357,7 +357,7 @@ static void test_csi_0arg(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'a');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], -1);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), CSI_ARG_MISSING);
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
@@ -375,7 +375,8 @@ static void test_csi_1arg(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'b');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 9);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 9);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
@@ -393,8 +394,31 @@ static void test_csi_2arg(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'c');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 2);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 3);
-  CU_ASSERT_EQUAL(c->val.csi.args[1], 4);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 3);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[1]), 4);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[1]));
+  CU_ASSERT_PTR_NULL(c->val.csi.intermed);
+
+  free_cbs();
+}
+
+static void test_csi_1arg1sub(void)
+{
+  capture_csi_raw = 0;
+
+  vterm_push_bytes(vt, "\e[1:2c", 6);
+
+  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
+
+  cb *c = cbs->data;
+  CU_ASSERT_EQUAL(c->type, CB_CSI);
+  CU_ASSERT_EQUAL(c->val.csi.command, 'c');
+  CU_ASSERT_EQUAL(c->val.csi.argcount, 2);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 1);
+  CU_ASSERT_TRUE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[1]), 2);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[1]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
@@ -412,7 +436,8 @@ static void test_csi_manydigits(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'd');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 678);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 678);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
@@ -428,7 +453,8 @@ static void test_csi_leadingzero(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'e');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 7);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 7);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
@@ -444,8 +470,10 @@ static void test_csi_qmark(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'f');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 2);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 2);
-  CU_ASSERT_EQUAL(c->val.csi.args[1], 7);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 2);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[1]), 7);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[1]));
   CU_ASSERT_PTR_NOT_NULL(c->val.csi.intermed);
   CU_ASSERT_STRING_EQUAL(c->val.csi.intermed, "?");
 
@@ -469,7 +497,8 @@ static void test_mixedcsi(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'm');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 8);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 8);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   c = cbs->next->next->data;
@@ -496,7 +525,8 @@ static void test_splitwrite(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'a');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], -1);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), CSI_ARG_MISSING);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();
@@ -522,7 +552,8 @@ static void test_splitwrite(void)
   CU_ASSERT_EQUAL(c->type, CB_CSI);
   CU_ASSERT_EQUAL(c->val.csi.command, 'b');
   CU_ASSERT_EQUAL(c->val.csi.argcount, 1);
-  CU_ASSERT_EQUAL(c->val.csi.args[0], 4);
+  CU_ASSERT_EQUAL(CSI_ARG(c->val.csi.args[0]), 4);
+  CU_ASSERT_FALSE(CSI_ARG_HAS_MORE(c->val.csi.args[0]));
   CU_ASSERT_PTR_NULL(c->val.csi.intermed);
 
   free_cbs();

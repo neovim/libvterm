@@ -56,9 +56,9 @@ void vterm_push_output_sprintf(vterm_t *vt, const char *format, ...);
 int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints);
 int vterm_state_on_control(vterm_t *vt, unsigned char control);
 int vterm_state_on_escape(vterm_t *vt, char escape);
-int vterm_state_on_csi(vterm_t *vt, const char *intermed, const int args[], int argcount, char command);
+int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int argcount, char command);
 
-void vterm_state_setpen(vterm_t *vt, const int args[], int argcount);
+void vterm_state_setpen(vterm_t *vt, const long args[], int argcount);
 
 void vterm_state_initmodes(vterm_t *vt);
 void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val);
