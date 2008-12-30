@@ -13,7 +13,6 @@ static int cb_putglyph(vterm_t *_vt, const uint32_t chars[], int _width, vterm_p
   return 1;
 }
 
-#include <stdio.h>
 static int cb_movecursor(vterm_t *_vt, vterm_position_t pos, vterm_position_t oldpos, int visible)
 {
   cursor = pos;
