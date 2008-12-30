@@ -36,7 +36,7 @@ static vterm_state_callbacks_t state_cbs = {
 
 int state_putglyph_init(void)
 {
-  vt = vterm_new(80, 25);
+  vt = vterm_new(25, 80);
   if(!vt)
     return 1;
 
