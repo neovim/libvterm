@@ -226,4 +226,53 @@ static void test_cu_bounds(void)
   CU_ASSERT_EQUAL(cursor.col, 79);
 }
 
+static void test_tabs(void)
+{
+  vterm_state_initialise(vt);
+  vterm_state_get_cursorpos(vt, &cursor);
+
+  vterm_push_bytes(vt, "\t", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 8);
+
+  vterm_push_bytes(vt, "   ", 3);
+  vterm_push_bytes(vt, "\t", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 16);
+
+  vterm_push_bytes(vt, "       ", 7);
+  vterm_push_bytes(vt, "\t", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 24);
+
+  vterm_push_bytes(vt, "        ", 8);
+  vterm_push_bytes(vt, "\t", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 40);
+
+  vterm_push_bytes(vt, "\e[I", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 48);
+
+  vterm_push_bytes(vt, "\e[2I", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 64);
+
+  vterm_push_bytes(vt, "\e[Z", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 56);
+
+  vterm_push_bytes(vt, "\e[2Z", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 40);
+}
+
 #include "11state_movecursor.inc"
