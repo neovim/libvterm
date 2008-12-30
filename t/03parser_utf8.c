@@ -25,7 +25,7 @@ static vterm_parser_callbacks_t parser_cbs = {
 
 int parser_utf8_init(void)
 {
-  vt = vterm_new(80, 25);
+  vt = vterm_new(25, 80);
   if(!vt)
     return 1;
 
