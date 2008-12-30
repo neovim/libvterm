@@ -122,10 +122,56 @@ static void test_cu_basic(void)
   CU_ASSERT_EQUAL(cursor.row, 0);
   CU_ASSERT_EQUAL(cursor.col, 0);
 
+  vterm_push_bytes(vt, "   ", 3);
+  vterm_push_bytes(vt, "\e[E", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "   ", 3);
+  vterm_push_bytes(vt, "\e[2E", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 3);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "   ", 3);
+  vterm_push_bytes(vt, "\e[F", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 2);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "   ", 3);
+  vterm_push_bytes(vt, "\e[2F", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "\n", 1);
+  vterm_push_bytes(vt, "\e[20G", 5);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 19);
+
+  vterm_push_bytes(vt, "\e[G", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
   vterm_push_bytes(vt, "\e[10;5H", 7);
 
   CU_ASSERT_EQUAL(cursor.row, 9);
   CU_ASSERT_EQUAL(cursor.col, 4);
+
+  vterm_push_bytes(vt, "\e[8H", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 7);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "\n", 1);
+  vterm_push_bytes(vt, "\e[H", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 0);
 }
 
 static void test_cu_bounds(void)
@@ -154,6 +200,27 @@ static void test_cu_bounds(void)
   CU_ASSERT_EQUAL(cursor.col, 79);
 
   vterm_push_bytes(vt, "\e[C", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 24);
+  CU_ASSERT_EQUAL(cursor.col, 79);
+
+  vterm_push_bytes(vt, "\e[E", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 24);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "\e[H", 3);
+  vterm_push_bytes(vt, "\e[F", 3);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "\e[999G", 6);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 79);
+
+  vterm_push_bytes(vt, "\e[99;99H", 8);
 
   CU_ASSERT_EQUAL(cursor.row, 24);
   CU_ASSERT_EQUAL(cursor.col, 79);

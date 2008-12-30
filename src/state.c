@@ -525,6 +525,26 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     LBOUND(state->pos.col, 0);
     break;
 
+  case 0x45: // CNL - ECMA-48 8.3.12
+    count = CSI_ARG_OR(args[0], 1);
+    state->pos.col = 0;
+    state->pos.row += count;
+    UBOUND(state->pos.row, vt->rows-1);
+    break;
+
+  case 0x46: // CPL - ECMA-48 8.3.13
+    count = CSI_ARG_OR(args[0], 1);
+    state->pos.col = 0;
+    state->pos.row -= count;
+    LBOUND(state->pos.row, 0);
+    break;
+
+  case 0x47: // CHA - ECMA-48 8.3.10
+    count = CSI_ARG_OR(args[0], 1);
+    state->pos.col = count-1;
+    UBOUND(state->pos.col, vt->cols-1);
+    break;
+
   case 0x48: // CUP - ECMA-48 8.3.21
     row = CSI_ARG_OR(args[0], 1);
     col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
