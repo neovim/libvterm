@@ -662,6 +662,19 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
 
     break;
 
+  case 0x58: // ECH - ECMA-48 8.3.38
+    count = CSI_ARG_OR(args[0], 1);
+
+    rect.start_row = state->pos.row;
+    rect.end_row   = state->pos.row + 1;
+    rect.start_col = state->pos.col;
+    rect.end_col   = state->pos.col + count;
+
+    if(state->callbacks && state->callbacks->erase)
+      (*state->callbacks->erase)(vt, rect, state->pen);
+
+    break;
+
   case 0x5a: // CBT - ECMA-48 8.3.7
     count = CSI_ARG_OR(args[0], 1);
     tab(vt, count, -1);
