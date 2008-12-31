@@ -672,7 +672,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     break;
 
   case 0x72: // DECSTBM - DEC custom
-    state->scrollregion_start = CSI_ARG_OR(args[0], 1);
+    state->scrollregion_start = CSI_ARG_OR(args[0], 1) - 1;
     state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? vt->rows : CSI_ARG(args[1]);
     break;
 
