@@ -680,6 +680,34 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     tab(vt, count, -1);
     break;
 
+  case 0x60: // HPA - ECMA-48 8.3.57
+    col = CSI_ARG_OR(args[0], 1);
+    state->pos.col = col-1;
+    UBOUND(state->pos.col, vt->cols-1);
+    break;
+
+  case 0x61: // HPR - ECMA-48 8.3.59
+    count = CSI_ARG_OR(args[0], 1);
+    state->pos.col += count;
+    UBOUND(state->pos.col, vt->cols-1);
+    break;
+
+  case 0x66: // HVP - ECMA-48 8.3.63
+    row = CSI_ARG_OR(args[0], 1);
+    col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
+    // zero-based
+    state->pos.row = row-1;
+    UBOUND(state->pos.row, vt->rows-1);
+    state->pos.col = col-1;
+    UBOUND(state->pos.col, vt->cols-1);
+    break;
+
+  case 0x6a: // HPB - ECMA-48 8.3.58
+    count = CSI_ARG_OR(args[0], 1);
+    state->pos.col -= count;
+    LBOUND(state->pos.col, 0);
+    break;
+
   case 0x6d: // SGR - ECMA-48 8.3.117
     vterm_state_setpen(vt, args, argcount);
     break;
