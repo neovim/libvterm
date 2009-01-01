@@ -76,6 +76,28 @@ static void test_c0(void)
   CU_ASSERT_EQUAL(cursor.col, 0);
 }
 
+static void test_c1(void)
+{
+  vterm_state_initialise(vt);
+  vterm_state_get_cursorpos(vt, &cursor);
+
+  vterm_push_bytes(vt, "ABC", 3);
+  vterm_push_bytes(vt, "\eD", 2);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 3);
+
+  vterm_push_bytes(vt, "\eM", 2);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 3);
+
+  vterm_push_bytes(vt, "\eE", 2);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+}
+
 static void test_cu_basic(void)
 {
   vterm_state_initialise(vt);
