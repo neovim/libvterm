@@ -380,6 +380,15 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
     state->pos.col = 0;
     break;
 
+  case 0x84: // IND - DEPRECATED but implemented for completeness
+    linefeed(vt);
+    break;
+
+  case 0x85: // NEL - ECMA-48 8.3.86
+    linefeed(vt);
+    state->pos.col = 0;
+    break;
+
   case 0x8d: // RI - ECMA-48 8.3.104
     if(state->pos.row == state->scrollregion_start) {
       vterm_rectangle_t rect = {
