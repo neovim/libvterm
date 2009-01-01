@@ -271,6 +271,21 @@ static void test_hvp_basic(void)
 
   CU_ASSERT_EQUAL(cursor.row, 2);
   CU_ASSERT_EQUAL(cursor.col, 2);
+
+  vterm_push_bytes(vt, "\e[5d", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 4);
+  CU_ASSERT_EQUAL(cursor.col, 2);
+
+  vterm_push_bytes(vt, "\e[2e", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 6);
+  CU_ASSERT_EQUAL(cursor.col, 2);
+
+  vterm_push_bytes(vt, "\e[2k", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 4);
+  CU_ASSERT_EQUAL(cursor.col, 2);
 }
 
 static void test_tabs(void)
