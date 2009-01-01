@@ -225,6 +225,32 @@ static void test_cu_bounds(void)
   CU_ASSERT_EQUAL(cursor.col, 79);
 }
 
+static void test_hvp_basic(void)
+{
+  vterm_state_initialise(vt);
+  vterm_state_get_cursorpos(vt, &cursor);
+
+  vterm_push_bytes(vt, "\e[5`", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 4);
+
+  vterm_push_bytes(vt, "\e[3a", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 7);
+
+  vterm_push_bytes(vt, "\e[3j", 4);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 4);
+
+  vterm_push_bytes(vt, "\e[3;3f", 6);
+
+  CU_ASSERT_EQUAL(cursor.row, 2);
+  CU_ASSERT_EQUAL(cursor.col, 2);
+}
+
 static void test_tabs(void)
 {
   vterm_state_initialise(vt);
