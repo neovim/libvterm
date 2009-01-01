@@ -172,6 +172,20 @@ static void test_region(void)
   CU_ASSERT_EQUAL(rect.end_col,   80);
 
   CU_ASSERT_EQUAL(cursor.row, 8);
+
+  vterm_push_bytes(vt, "\e[25H", 5);
+
+  down = 0;
+  right = 0;
+
+  CU_ASSERT_EQUAL(cursor.row, 24);
+
+  vterm_push_bytes(vt, "\n", 1);
+
+  CU_ASSERT_EQUAL(down,  0);
+  CU_ASSERT_EQUAL(right, 0);
+
+  CU_ASSERT_EQUAL(cursor.row, 24);
 }
 
 #include "12state_scroll.inc"
