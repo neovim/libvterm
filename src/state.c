@@ -184,7 +184,7 @@ static void linefeed(vterm_t *vt)
 
     scroll(vt, rect, 1, 0);
   }
-  else
+  else if(state->pos.row < vt->rows-1)
     state->pos.row++;
 }
 
@@ -400,8 +400,7 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
 
       scroll(vt, rect, -1, 0);
     }
-    else
-      if(state->pos.row)
+    else if(state->pos.row > 0)
         state->pos.row--;
     break;
 
