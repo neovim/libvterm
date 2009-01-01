@@ -75,12 +75,29 @@ static void test_linefeed(void)
   CU_ASSERT_EQUAL(cursor.row, 24);
 }
 
-static void test_ri(void)
+static void test_ind(void)
 {
   vterm_state_initialise(vt);
   vterm_state_get_cursorpos(vt, &cursor);
 
-  CU_ASSERT_EQUAL(cursor.row, 0);
+  down = 0;
+  right = 0;
+
+  vterm_push_bytes(vt, "\e[25H", 5);
+  vterm_push_bytes(vt, "\eD", 2);
+
+  CU_ASSERT_EQUAL(down,  1);
+  CU_ASSERT_EQUAL(right, 0);
+  CU_ASSERT_EQUAL(rect.start_row,  0);
+  CU_ASSERT_EQUAL(rect.end_row,   25);
+  CU_ASSERT_EQUAL(rect.start_col,  0);
+  CU_ASSERT_EQUAL(rect.end_col,   80);
+}
+
+static void test_ri(void)
+{
+  vterm_state_initialise(vt);
+  vterm_state_get_cursorpos(vt, &cursor);
 
   down = 0;
   right = 0;
