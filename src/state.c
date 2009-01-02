@@ -591,19 +591,25 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     case 0:
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
       rect.start_col = state->pos.col; rect.end_col = vt->cols;
-      (*state->callbacks->erase)(vt, rect, state->pen);
+      if(rect.end_col > rect.start_col)
+        (*state->callbacks->erase)(vt, rect, state->pen);
+
       rect.start_row = state->pos.row + 1; rect.end_row = vt->rows;
       rect.start_col = 0;
-      (*state->callbacks->erase)(vt, rect, state->pen);
+      if(rect.end_row > rect.start_row)
+        (*state->callbacks->erase)(vt, rect, state->pen);
       break;
 
     case 1:
       rect.start_row = 0; rect.end_row = state->pos.row;
       rect.start_col = 0; rect.end_col = vt->cols;
-      (*state->callbacks->erase)(vt, rect, state->pen);
+      if(rect.end_col > rect.start_col)
+        (*state->callbacks->erase)(vt, rect, state->pen);
+
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
                           rect.end_col = state->pos.col + 1;
-      (*state->callbacks->erase)(vt, rect, state->pen);
+      if(rect.end_row > rect.start_row)
+        (*state->callbacks->erase)(vt, rect, state->pen);
       break;
 
     case 2:
@@ -630,7 +636,8 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     }
 
     if(state->callbacks && state->callbacks->erase)
-      (*state->callbacks->erase)(vt, rect, state->pen);
+      if(rect.end_col > rect.start_col)
+        (*state->callbacks->erase)(vt, rect, state->pen);
 
     break;
 
