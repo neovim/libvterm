@@ -28,7 +28,12 @@ typedef enum {
   VTERM_KEY_PAGEUP,
   VTERM_KEY_PAGEDOWN,
 
+  VTERM_KEY_FUNCTION_0,
+  VTERM_KEY_FUNCTION_MAX = VTERM_KEY_FUNCTION_0 + 255,
+
   VTERM_KEY_MAX, // Must be last
 } vterm_key;
+
+#define VTERM_KEY_FUNCTION(n) (VTERM_KEY_FUNCTION_0+(n))
 
 #endif
