@@ -41,7 +41,7 @@ typedef struct {
 keycodes_s keycodes[] = {
   { 0 }, // NONE
 
-  { KEYCODE_LITERAL, '\n' },
+  { KEYCODE_LITERAL, '\r' },
   { KEYCODE_LITERAL, '\t' },
   { KEYCODE_LITERAL, '\b' },
   { KEYCODE_LITERAL, '\e' },
