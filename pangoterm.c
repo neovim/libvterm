@@ -102,6 +102,9 @@ term_pen *glyph_pen;
 
 vterm_key convert_keyval(guint gdk_keyval)
 {
+  if(gdk_keyval >= GDK_F1 && gdk_keyval <= GDK_F35)
+    return VTERM_KEY_FUNCTION(gdk_keyval - GDK_F1 + 1);
+
   switch(gdk_keyval) {
   case GDK_BackSpace:
     return VTERM_KEY_BACKSPACE;
