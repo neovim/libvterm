@@ -23,14 +23,10 @@ TEST_CFILES=$(wildcard t/*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
 
 LIBPIECES=vterm parser state input pen mode unicode
-DEBUGS=debug-passthrough debug-pangoterm
 
-all: $(DEBUGS)
+all: pangoterm
 
-debug-%: debug-%.c libvterm.so
-	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS)
-
-debug-pangoterm: debug-pangoterm.c libvterm.so
+pangoterm: pangoterm.c libvterm.so
 	gcc -o $@ $^ $(CCFLAGS) $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
 libvterm.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
