@@ -29,6 +29,7 @@ void vterm_input_push_str(vterm_t *vt, vterm_mod state, const char *str, size_t 
 
 typedef struct {
   enum {
+    KEYCODE_NONE,
     KEYCODE_LITERAL,
     KEYCODE_CSI,
     KEYCODE_CSI_CURSOR,
@@ -39,26 +40,26 @@ typedef struct {
 } keycodes_s;
 
 keycodes_s keycodes[] = {
-  { 0 }, // NONE
+  { KEYCODE_NONE }, // NONE
 
-  { KEYCODE_LITERAL, '\r' },
-  { KEYCODE_LITERAL, '\t' },
-  { KEYCODE_LITERAL, '\b' },
-  { KEYCODE_LITERAL, '\e' },
+  { KEYCODE_LITERAL, '\r' }, // ENTER
+  { KEYCODE_LITERAL, '\t' }, // TAB
+  { KEYCODE_LITERAL, '\b' }, // BACKSPACE
+  { KEYCODE_LITERAL, '\e' }, // ESCAPE
 
   { KEYCODE_CSI_CURSOR, 'A' }, // UP
   { KEYCODE_CSI_CURSOR, 'B' }, // DOWN
   { KEYCODE_CSI_CURSOR, 'D' }, // LEFT
   { KEYCODE_CSI_CURSOR, 'C' }, // RIGHT
 
-  { KEYCODE_CSINUM, '~', 2 }, // INS
-  { KEYCODE_CSINUM, '~', 3 }, // DEL
+  { KEYCODE_CSINUM, '~', 2 },  // INS
+  { KEYCODE_CSINUM, '~', 3 },  // DEL
   { KEYCODE_CSI_CURSOR, 'H' }, // HOME
   { KEYCODE_CSI_CURSOR, 'F' }, // END
-  { KEYCODE_CSINUM, '~', 5 }, // PAGEUP
-  { KEYCODE_CSINUM, '~', 6 }, // PAGEDOWN
+  { KEYCODE_CSINUM, '~', 5 },  // PAGEUP
+  { KEYCODE_CSINUM, '~', 6 },  // PAGEDOWN
 
-  { KEYCODE_CSI_CURSOR, '\0' }, // F0 - shouldn't happen
+  { KEYCODE_NONE },            // F0 - shouldn't happen
   { KEYCODE_CSI_CURSOR, 'P' }, // F1
   { KEYCODE_CSI_CURSOR, 'Q' }, // F2
   { KEYCODE_CSI_CURSOR, 'R' }, // F3
@@ -84,6 +85,9 @@ void vterm_input_push_key(vterm_t *vt, vterm_mod state, vterm_key key)
   keycodes_s k = keycodes[key];
 
   switch(k.type) {
+  case KEYCODE_NONE:
+    break;
+
   case KEYCODE_LITERAL:
     vterm_push_output_bytes(vt, &k.literal, 1);
     break;
