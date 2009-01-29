@@ -496,44 +496,6 @@ int term_setpen(vterm_t *vt, int sgrcmd, void **penstore)
   return 0;
 }
 
-static void lookup_colour(int palette, int index, const char *def, GdkColor *col)
-{
-  switch(palette) {
-  case 0:
-    if(index == -1)
-      gdk_color_parse(def,col);
-    else if(index >= 0 && index < 8)
-      gdk_color_parse(col_spec[index], col);
-    break;
-
-  case 5: // XTerm 256-colour mode
-    if(index >= 0 && index < 16)
-      // Normal 16 colours
-      // TODO: support low/high intensities
-      gdk_color_parse(col_spec[index % 8], col);
-    else if(index >= 16 && index < 232) {
-      // 216-colour cube
-      index -= 16;
-
-      col->blue  = (index     % 6) * (0xffff/6);
-      col->green = (index/6   % 6) * (0xffff/6);
-      col->red   = (index/6/6 % 6) * (0xffff/6);
-    }
-    else if(index >= 232 && index < 256) {
-      // 24 greyscales
-      index -= 232;
-
-      col->blue  = index * 0xffff / 24;
-      col->green = index * 0xffff / 24;
-      col->red   = index * 0xffff / 24;
-    }
-    break;
-
-  default:
-    printf("Unrecognised colour palette %d\n", palette);
-  }
-}
-
 int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **penstore)
 {
   flush_glyphs();
@@ -568,11 +530,17 @@ int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **p
     break;
 
   case VTERM_ATTR_FOREGROUND:
-    lookup_colour(val->color.palette, val->color.index, default_fg, &pen->fg_col);
+    // Upscale 8->16bit
+    pen->fg_col.red   = 257 * val->color.red;
+    pen->fg_col.green = 257 * val->color.green;
+    pen->fg_col.blue  = 257 * val->color.blue;
     break;
 
   case VTERM_ATTR_BACKGROUND:
-    lookup_colour(val->color.palette, val->color.index, default_bg, &pen->bg_col);
+    // Upscale 8->16bit
+    pen->bg_col.red   = 257 * val->color.red;
+    pen->bg_col.green = 257 * val->color.green;
+    pen->bg_col.blue  = 257 * val->color.blue;
     break;
 
   default:
