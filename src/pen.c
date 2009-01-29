@@ -103,8 +103,11 @@ void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
     case 38: // Foreground colour alternative palette
       // Expect two more attributes
       if(argcount - argi >= 2) {
-        // TODO: Check MORE bit
         setpenattr_col(vt, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi+1]), CSI_ARG(args[argi+2]));
+
+        // Legacy handling of broken-but-common SGR 38;5;n
+        if(!CSI_ARG_HAS_MORE(args[argi+1]) && !CSI_ARG_HAS_MORE(args[argi+2]))
+          argi += 2;
       }
       break;
 
@@ -120,8 +123,11 @@ void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
     case 48: // Background colour alternative palette
       // Expect two more attributes
       if(argcount - argi >= 2) {
-        // TODO: Check MORE bit
         setpenattr_col(vt, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi+1]), CSI_ARG(args[argi+2]));
+
+        // Legacy handling of broken-but-common SGR 48;5;n
+        if(!CSI_ARG_HAS_MORE(args[argi+1]) && !CSI_ARG_HAS_MORE(args[argi+2]))
+          argi += 2;
       }
       break;
 
