@@ -677,7 +677,7 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
   }
 
 #ifdef DEBUG_PRINT_INPUT
-  printf("Read %d bytes from master:\n", bytes);
+  printf("Read %zd bytes from master:\n", bytes);
   int i;
   for(i = 0; i < bytes; i++) {
     printf(i % 16 == 0 ? " |  %02x" : " %02x", buffer[i]);

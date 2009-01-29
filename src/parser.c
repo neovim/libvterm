@@ -165,7 +165,7 @@ static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, s
     unsigned char c = bytes[*pos];
 
 #ifdef DEBUG_PRINT_UTF8
-    printf(" pos=%d c=%02x rem=%d\n", *pos, c, bytes_remaining);
+    printf(" pos=%zd c=%02x rem=%d\n", *pos, c, bytes_remaining);
 #endif
 
     if(c < 0x20)
