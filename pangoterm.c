@@ -292,6 +292,9 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
 
 gboolean term_mousepress(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
+  if(!mousefunc)
+    return FALSE;
+
   (*mousefunc)(event->x / cell_width, event->y / cell_height, event->button, event->type == GDK_BUTTON_PRESS, mousedata);
 
   size_t bufflen = vterm_output_bufferlen(vt);
