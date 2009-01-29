@@ -838,8 +838,15 @@ int main(int argc, char *argv[])
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {
-    execvp(argv[1], argv + 1);
-    fprintf(stderr, "Cannot exec(%s) - %s\n", argv[1], strerror(errno));
+    if(argc > 1) {
+      execvp(argv[1], argv + 1);
+      fprintf(stderr, "Cannot exec(%s) - %s\n", argv[1], strerror(errno));
+    }
+    else {
+      char *shell = getenv("SHELL");
+      execvp(shell, NULL);
+      fprintf(stderr, "Cannot exec(%s) - %s\n", shell, strerror(errno));
+    }
     _exit(1);
   }
 
