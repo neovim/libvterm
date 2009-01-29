@@ -2,6 +2,77 @@
 
 #include <stdio.h>
 
+static void lookup_colour_ansi(long index, char is_bg, vterm_attrvalue_color *col)
+{
+  if(index == -1) {
+    if(is_bg)
+      col->red = col->green = col->blue = 0;
+    else
+      // 90% grey so that pure white is brighter
+      col->red = col->green = col->blue = 240;
+  }
+  else if(index >= 0 && index < 8) {
+    col->red   = (index & 1) ? 0xff : 0;
+    col->green = (index & 2) ? 0xff : 0;
+    col->blue  = (index & 4) ? 0xff : 0;
+  }
+}
+
+static int lookup_colour(int palette, const long args[], int argcount, char is_bg, vterm_attrvalue_color *col)
+{
+  long index;
+
+  switch(palette) {
+  case 2: // RGB mode - 3 args contain colour values directly
+    if(argcount < 3)
+      return argcount;
+
+    col->red   = CSI_ARG(args[0]);
+    col->green = CSI_ARG(args[1]);
+    col->blue  = CSI_ARG(args[2]);
+
+    return 3;
+
+  case 5: // XTerm 256-colour mode
+    index = argcount ? CSI_ARG_OR(args[0], -1) : -1;
+
+    if(index >= 0 && index < 8)
+      // Normal 8 colours - parse as palette 0
+      lookup_colour_ansi(index, is_bg, col);
+    else if(index >= 8 && index < 16) {
+      // High intensity - bump up the 0s
+      index -= 8;
+
+      lookup_colour_ansi(index, is_bg, col);
+      (col->red   == 0) && (col->red   = 0x7f);
+      (col->green == 0) && (col->green = 0x7f);
+      (col->blue  == 0) && (col->blue  = 0x7f);
+    }
+    else if(index >= 16 && index < 232) {
+      // 216-colour cube
+      index -= 16;
+
+      col->blue  = (index     % 6) * (0xff/6);
+      col->green = (index/6   % 6) * (0xff/6);
+      col->red   = (index/6/6 % 6) * (0xff/6);
+    }
+    else if(index >= 232 && index < 256) {
+      // 24 greyscales
+      index -= 232;
+
+      col->blue  = index * 0xff / 24;
+      col->green = index * 0xff / 24;
+      col->red   = index * 0xff / 24;
+    }
+
+    return argcount ? 1 : 0;
+
+  default:
+    fprintf(stderr, "Unrecognised colour palette %d\n", palette);
+    return 0;
+  }
+}
+
 // Some conveniences
 static void setpenattr_bool(vterm_t *vt, vterm_attr attr, int boolean)
 {
@@ -21,13 +92,31 @@ static void setpenattr_int(vterm_t *vt, vterm_attr attr, int value)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
 }
 
-static void setpenattr_col(vterm_t *vt, vterm_attr attr, int palette, int index)
+static void setpenattr_col_ansi(vterm_t *vt, vterm_attr attr, long col)
 {
   vterm_state_t *state = vt->state;
-  vterm_attrvalue val = { .color.palette = palette, .color.index = index };
+  vterm_attrvalue val;
+
+  lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
+}
+
+static int setpenattr_col_palette(vterm_t *vt, vterm_attr attr, const long args[], int argcount)
+{
+  vterm_state_t *state = vt->state;
+  vterm_attrvalue val;
+
+  if(!argcount)
+    return 0;
+
+  int eaten = lookup_colour(CSI_ARG(args[0]), args + 1, argcount - 1, attr == VTERM_ATTR_BACKGROUND, &val.color);
+
+  if(state->callbacks && state->callbacks->setpenattr)
+    (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
+
+  return eaten + 1; // we ate palette
 }
 
 void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
@@ -59,8 +148,8 @@ void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
       setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 0);
       setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
       setpenattr_bool(vt, VTERM_ATTR_REVERSE, 0);
-      setpenattr_col(vt, VTERM_ATTR_FOREGROUND, 0, -1);
-      setpenattr_col(vt, VTERM_ATTR_BACKGROUND, 0, -1);
+      setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, -1);
+      setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, -1);
       break;
 
     case 1: // Bold on
@@ -97,42 +186,28 @@ void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
 
     case 30: case 31: case 32: case 33:
     case 34: case 35: case 36: case 37: // Foreground colour palette
-      setpenattr_col(vt, VTERM_ATTR_FOREGROUND, 0, arg - 30);
+      setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 30);
       break;
 
     case 38: // Foreground colour alternative palette
-      // Expect two more attributes
-      if(argcount - argi >= 2) {
-        setpenattr_col(vt, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi+1]), CSI_ARG(args[argi+2]));
-
-        // Legacy handling of broken-but-common SGR 38;5;n
-        if(!CSI_ARG_HAS_MORE(args[argi+1]) && !CSI_ARG_HAS_MORE(args[argi+2]))
-          argi += 2;
-      }
+      argi += setpenattr_col_palette(vt, VTERM_ATTR_FOREGROUND, args + argi + 1, argcount - argi - 1);
       break;
 
     case 39: // Foreground colour default
-      setpenattr_col(vt, VTERM_ATTR_FOREGROUND, 0, -1);
+      setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, -1);
       break;
 
     case 40: case 41: case 42: case 43:
     case 44: case 45: case 46: case 47: // Background colour palette
-      setpenattr_col(vt, VTERM_ATTR_BACKGROUND, 0, arg - 40);
+      setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 40);
       break;
 
     case 48: // Background colour alternative palette
-      // Expect two more attributes
-      if(argcount - argi >= 2) {
-        setpenattr_col(vt, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi+1]), CSI_ARG(args[argi+2]));
-
-        // Legacy handling of broken-but-common SGR 48;5;n
-        if(!CSI_ARG_HAS_MORE(args[argi+1]) && !CSI_ARG_HAS_MORE(args[argi+2]))
-          argi += 2;
-      }
+      argi += setpenattr_col_palette(vt, VTERM_ATTR_BACKGROUND, args + argi + 1, argcount - argi - 1);
       break;
 
     case 49: // Default background
-      setpenattr_col(vt, VTERM_ATTR_BACKGROUND, 0, -1);
+      setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, -1);
       break;
 
     default:
