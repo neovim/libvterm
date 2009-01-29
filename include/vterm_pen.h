@@ -1,13 +1,14 @@
 #ifndef __VTERM_PEN_H__
 #define __VTERM_PEN_H__
 
+typedef struct {
+  uint8_t red, green, blue;
+} vterm_attrvalue_color;
+
 typedef union {
   int boolean;
   int value;
-  struct {
-    int palette;
-    int index;
-  } color;
+  vterm_attrvalue_color color;
 } vterm_attrvalue;
 
 typedef enum {
