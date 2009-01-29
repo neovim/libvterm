@@ -57,11 +57,28 @@ keycodes_s keycodes[] = {
   { KEYCODE_CSI_CURSOR, 'F' }, // END
   { KEYCODE_CSINUM, '~', 5 }, // PAGEUP
   { KEYCODE_CSINUM, '~', 6 }, // PAGEDOWN
+
+  { KEYCODE_CSI_CURSOR, '\0' }, // F0 - shouldn't happen
+  { KEYCODE_CSI_CURSOR, 'P' }, // F1
+  { KEYCODE_CSI_CURSOR, 'Q' }, // F2
+  { KEYCODE_CSI_CURSOR, 'R' }, // F3
+  { KEYCODE_CSI_CURSOR, 'S' }, // F4
+  { KEYCODE_CSINUM, '~', 15 }, // F5
+  { KEYCODE_CSINUM, '~', 17 }, // F6
+  { KEYCODE_CSINUM, '~', 18 }, // F7
+  { KEYCODE_CSINUM, '~', 19 }, // F8
+  { KEYCODE_CSINUM, '~', 20 }, // F9
+  { KEYCODE_CSINUM, '~', 21 }, // F10
+  { KEYCODE_CSINUM, '~', 23 }, // F11
+  { KEYCODE_CSINUM, '~', 24 }, // F12
 };
 
 void vterm_input_push_key(vterm_t *vt, vterm_mod state, vterm_key key)
 {
   if(key == VTERM_KEY_NONE || key >= VTERM_KEY_MAX)
+    return;
+
+  if(key >= sizeof(keycodes)/sizeof(keycodes[0]))
     return;
 
   keycodes_s k = keycodes[key];
