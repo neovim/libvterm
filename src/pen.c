@@ -2,6 +2,17 @@
 
 #include <stdio.h>
 
+/* Attempt at some gamma ramps */
+static int gamma6[] = {
+  0, 105, 149, 182, 209, 233, 255
+};
+
+static int gamma24[] = {
+  0, 49, 72, 90, 105, 117, 129, 139, 149,
+  158, 166, 174, 182, 189, 196, 203, 209,
+  215, 222, 227, 233, 239, 244, 249, 255,
+};
+
 static void lookup_colour_ansi(long index, char is_bg, vterm_attrvalue_color *col)
 {
   if(index == -1) {
@@ -52,17 +63,17 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
       // 216-colour cube
       index -= 16;
 
-      col->blue  = (index     % 6) * (0xff/6);
-      col->green = (index/6   % 6) * (0xff/6);
-      col->red   = (index/6/6 % 6) * (0xff/6);
+      col->blue  = gamma6[index     % 6];
+      col->green = gamma6[index/6   % 6];
+      col->red   = gamma6[index/6/6 % 6];
     }
     else if(index >= 232 && index < 256) {
       // 24 greyscales
       index -= 232;
 
-      col->blue  = index * 0xff / 24;
-      col->green = index * 0xff / 24;
-      col->red   = index * 0xff / 24;
+      col->red   = gamma24[index];
+      col->green = gamma24[index];
+      col->blue  = gamma24[index];
     }
 
     return argcount ? 1 : 0;
