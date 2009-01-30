@@ -94,10 +94,10 @@ static void setpenattr_bool(vterm_t *vt, vterm_attr attr, int boolean)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
 }
 
-static void setpenattr_int(vterm_t *vt, vterm_attr attr, int value)
+static void setpenattr_int(vterm_t *vt, vterm_attr attr, int number)
 {
   vterm_state_t *state = vt->state;
-  vterm_attrvalue val = { .value = value };
+  vterm_attrvalue val = { .number = number };
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);

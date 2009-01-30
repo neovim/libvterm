@@ -7,7 +7,7 @@ typedef struct {
 
 typedef union {
   int boolean;
-  int value;
+  int number;
   vterm_attrvalue_color color;
 } vterm_attrvalue;
 
