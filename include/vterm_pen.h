@@ -13,12 +13,13 @@ typedef union {
 
 typedef enum {
   VTERM_ATTR_NONE,
-  VTERM_ATTR_BOLD,       // bool:  1
-  VTERM_ATTR_UNDERLINE,  // count: 4, 21, 24
-  VTERM_ATTR_ITALIC,     // bool:  3, 23
-  VTERM_ATTR_REVERSE,    // bool:  7, 27
-  VTERM_ATTR_FOREGROUND, // color: 30-39
-  VTERM_ATTR_BACKGROUND, // color: 40-49
+  VTERM_ATTR_BOLD,       // bool:   1
+  VTERM_ATTR_UNDERLINE,  // number: 4, 21, 24
+  VTERM_ATTR_ITALIC,     // bool:   3, 23
+  VTERM_ATTR_REVERSE,    // bool:   7, 27
+  VTERM_ATTR_FONT,       // number: 10-19
+  VTERM_ATTR_FOREGROUND, // color:  30-39
+  VTERM_ATTR_BACKGROUND, // color:  40-49
 } vterm_attr;
 
 #endif
