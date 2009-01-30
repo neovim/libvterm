@@ -57,6 +57,10 @@ static gint cursor_blink_interval = 500;
 static char *default_font = "DejaVu Sans Mono";
 static int default_size = 9;
 
+static char *alt_fonts[] = {
+  "Courier 10 Pitch",
+};
+
 static GOptionEntry option_entries[] = {
   /* long_name, short_name, flags, arg, arg_data, description, arg_description */
   { "foreground", 0,   0, G_OPTION_ARG_STRING, &default_fg, "Default foreground colour", "COL" },
@@ -522,6 +526,13 @@ int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **p
 
   case VTERM_ATTR_REVERSE:
     pen->reverse = val->boolean;
+    break;
+
+  case VTERM_ATTR_FONT:
+    if(val->number == 0 || val->number > sizeof(alt_fonts)/sizeof(alt_fonts[0]))
+      ADDATTR(pango_attr_family_new(default_font));
+    else
+      ADDATTR(pango_attr_family_new(alt_fonts[val->number - 1]));
     break;
 
   case VTERM_ATTR_FOREGROUND:
