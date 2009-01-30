@@ -76,17 +76,6 @@ GtkIMContext *im_context;
 vterm_mousefunc mousefunc;
 void *mousedata;
 
-const char *col_spec[] = {
-  "black",
-  "red",
-  "green",
-  "yellow",
-  "blue",
-  "magenta",
-  "cyan",
-  "white"
-};
-
 typedef struct {
   GdkColor fg_col;
   GdkColor bg_col;
