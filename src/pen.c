@@ -159,6 +159,7 @@ void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
       setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 0);
       setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
       setpenattr_bool(vt, VTERM_ATTR_REVERSE, 0);
+      setpenattr_int(vt, VTERM_ATTR_FONT, 0);
       setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, -1);
       setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, -1);
       break;
@@ -177,6 +178,11 @@ void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
 
     case 7: // Reverse on
       setpenattr_bool(vt, VTERM_ATTR_REVERSE, 1);
+      break;
+
+    case 10: case 11: case 12: case 13: case 14:
+    case 15: case 16: case 17: case 18: case 19: // Select font
+      setpenattr_int(vt, VTERM_ATTR_FONT, CSI_ARG(args[argi]) - 10);
       break;
 
     case 21: // Underline double
