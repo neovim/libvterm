@@ -511,9 +511,9 @@ int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **p
     break;
 
   case VTERM_ATTR_UNDERLINE:
-    ADDATTR(pango_attr_underline_new(val->value == 1 ? PANGO_UNDERLINE_SINGLE :
-                                     val->value == 2 ? PANGO_UNDERLINE_DOUBLE :
-                                                      PANGO_UNDERLINE_NONE));
+    ADDATTR(pango_attr_underline_new(val->number == 1 ? PANGO_UNDERLINE_SINGLE :
+                                     val->number == 2 ? PANGO_UNDERLINE_DOUBLE :
+                                                        PANGO_UNDERLINE_NONE));
     break;
 
   case VTERM_ATTR_ITALIC:
