@@ -13,7 +13,7 @@ typedef union {
 
 typedef enum {
   VTERM_ATTR_NONE,
-  VTERM_ATTR_BOLD,       // bool:   1
+  VTERM_ATTR_BOLD,       // bool:   1, 22
   VTERM_ATTR_UNDERLINE,  // number: 4, 21, 24
   VTERM_ATTR_ITALIC,     // bool:   3, 23
   VTERM_ATTR_REVERSE,    // bool:   7, 27
