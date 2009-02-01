@@ -189,6 +189,10 @@ void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
       setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 2);
       break;
 
+    case 22: // Bold off
+      setpenattr_bool(vt, VTERM_ATTR_BOLD, 0);
+      break;
+
     case 23: // Italic and Gothic (currently unsupported) off
       setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
       break;
