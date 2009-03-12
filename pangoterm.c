@@ -818,7 +818,8 @@ int main(int argc, char *argv[])
     }
     else {
       char *shell = getenv("SHELL");
-      execvp(shell, NULL);
+      char *args[2] = { shell, NULL };
+      execvp(shell, args);
       fprintf(stderr, "Cannot exec(%s) - %s\n", shell, strerror(errno));
     }
     _exit(1);
