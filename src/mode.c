@@ -9,6 +9,7 @@ void vterm_state_initmodes(vterm_t *vt)
     int val = 0;
 
     switch(mode) {
+    case VTERM_MODE_DEC_AUTOWRAP:
     case VTERM_MODE_DEC_CURSORBLINK:
     case VTERM_MODE_DEC_CURSORVISIBLE:
       val = 1;
@@ -60,6 +61,10 @@ void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val)
 
   case VTERM_MODE_DEC_CURSOR:
     vt->mode.cursor = val;
+    break;
+
+  case VTERM_MODE_DEC_AUTOWRAP:
+    vt->mode.autowrap = val;
     break;
 
   case VTERM_MODE_DEC_CURSORBLINK:
