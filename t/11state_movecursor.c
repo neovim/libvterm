@@ -337,4 +337,35 @@ static void test_tabs(void)
   CU_ASSERT_EQUAL(cursor.col, 40);
 }
 
+static void test_decawm(void)
+{
+  vterm_state_initialise(vt);
+  vterm_state_get_cursorpos(vt, &cursor);
+
+  int i;
+  for(i = 0; i < 79; i++)
+    vterm_push_bytes(vt, "x", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+  CU_ASSERT_EQUAL(cursor.col, 79);
+
+  vterm_push_bytes(vt, "x", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 0);
+
+  vterm_push_bytes(vt, "\e[?7l", 5);
+
+  for(i = 0; i < 79; i++)
+    vterm_push_bytes(vt, "x", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 79);
+
+  vterm_push_bytes(vt, "x", 1);
+
+  CU_ASSERT_EQUAL(cursor.row, 1);
+  CU_ASSERT_EQUAL(cursor.col, 79);
+}
+
 #include "11state_movecursor.inc"

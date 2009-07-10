@@ -278,11 +278,6 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
   }
 
   for(; i < npoints; i++) {
-    if(state->pos.col >= vt->cols) {
-      linefeed(vt);
-      state->pos.col = 0;
-    }
-
     // Try to find combining characters following this
     int glyph_starts = i;
     int glyph_ends;
@@ -343,6 +338,16 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
     }
 
     state->pos.col += width;
+
+    if(state->pos.col >= vt->cols) {
+      if(vt->mode.autowrap) {
+        linefeed(vt);
+        state->pos.col = 0;
+      }
+      else {
+        state->pos.col = vt->cols - 1;
+      }
+    }
   }
 
   updatecursor(vt, state, &oldpos);
@@ -436,6 +441,10 @@ static void set_dec_mode(vterm_t *vt, int num, int val)
   switch(num) {
   case 1:
     vterm_state_setmode(vt, VTERM_MODE_DEC_CURSOR, val);
+    break;
+
+  case 7:
+    vterm_state_setmode(vt, VTERM_MODE_DEC_AUTOWRAP, val);
     break;
 
   case 12:

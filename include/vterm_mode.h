@@ -8,6 +8,7 @@ typedef enum {
 
   // DEC private modes
   VTERM_MODE_DEC_CURSOR,
+  VTERM_MODE_DEC_AUTOWRAP,
   VTERM_MODE_DEC_CURSORBLINK,
   VTERM_MODE_DEC_CURSORVISIBLE,
   VTERM_MODE_DEC_MOUSE,
@@ -20,6 +21,7 @@ typedef enum {
 typedef struct {
   int keypad:1;
   int cursor:1;
+  int autowrap:1;
   int cursor_blink:1;
   int cursor_visible:1;
   int alt_screen:1;
