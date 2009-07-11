@@ -55,13 +55,13 @@ static int cb_control(vterm_t *_vt, char control)
   return 1;
 }
 
-static int cb_escape(vterm_t *_vt, char escape)
+static int cb_escape(vterm_t *_vt, const char bytes[], size_t len)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
   cb *c = g_new0(cb, 1);
   c->type = CB_ESCAPE;
-  c->val.escape = escape;
+  c->val.escape = bytes[0];
 
   cbs = g_slist_append(cbs, c);
 

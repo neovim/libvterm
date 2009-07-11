@@ -418,22 +418,20 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
   return 1;
 }
 
-int vterm_state_on_escape(vterm_t *vt, char escape)
+int vterm_state_on_escape(vterm_t *vt, const char *bytes, size_t len)
 {
-  switch(escape) {
+  switch(bytes[0]) {
   case 0x3d:
     vterm_state_setmode(vt, VTERM_MODE_KEYPAD, 1);
-    break;
+    return 1;
 
   case 0x3e:
     vterm_state_setmode(vt, VTERM_MODE_KEYPAD, 0);
-    break;
+    return 1;
 
   default:
     return 0;
   }
-
-  return 1;
 }
 
 static void set_dec_mode(vterm_t *vt, int num, int val)
