@@ -300,12 +300,6 @@ int vterm_state_on_text(VTerm *vt, const int codepoints[], int npoints)
         done = (*state->callbacks->putglyph)(vt, state->combine_chars, state->combine_width, state->combine_pos, state->pen);
       }
 
-      if(!done && state->callbacks && state->callbacks->putchar) {
-        done = (*state->callbacks->putchar)(vt, state->combine_chars[0], state->combine_width, state->combine_pos, state->pen);
-        // TODO: We have lost information here; namely, the combining chars.
-        // Anything we can do about this?
-      }
-
       if(!done)
         fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n",
             state->combine_chars[0], state->pos.col, state->pos.row);
@@ -347,12 +341,6 @@ int vterm_state_on_text(VTerm *vt, const int codepoints[], int npoints)
 
     if(state->callbacks && state->callbacks->putglyph) {
       done = (*state->callbacks->putglyph)(vt, chars, width, state->pos, state->pen);
-    }
-
-    if(!done && state->callbacks && state->callbacks->putchar) {
-      done = (*state->callbacks->putchar)(vt, chars[0], width, state->pos, state->pen);
-      // TODO: We have lost information here; namely, the combining chars.
-      // Anything we can do about this?
     }
 
     if(!done)
