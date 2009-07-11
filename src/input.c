@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-void vterm_input_push_str(vterm_t *vt, vterm_mod state, const char *str, size_t len)
+void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len)
 {
-  vterm_mod state_noshift = state & ~VTERM_MOD_SHIFT;
+  VTermModifier state_noshift = state & ~VTERM_MOD_SHIFT;
 
   if(state_noshift == 0)
     // Normal text - ignore just shift
@@ -74,7 +74,7 @@ keycodes_s keycodes[] = {
   { KEYCODE_CSINUM, '~', 24 }, // F12
 };
 
-void vterm_input_push_key(vterm_t *vt, vterm_mod state, vterm_key key)
+void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key)
 {
   if(key == VTERM_KEY_NONE || key >= VTERM_KEY_MAX)
     return;

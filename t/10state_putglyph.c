@@ -4,7 +4,7 @@
 
 #include <glib.h>
 
-static vterm_t *vt;
+static VTerm *vt;
 
 #define MAX_CP 100
 static uint32_t codepoints[MAX_CP];
@@ -12,7 +12,7 @@ static int width[MAX_CP];
 static int column[MAX_CP];
 static int this_cp;
 
-static int cb_putglyph(vterm_t *_vt, const uint32_t chars[], int _width, vterm_position_t pos, void *pen)
+static int cb_putglyph(VTerm *_vt, const uint32_t chars[], int _width, VTermPos pos, void *pen)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -30,7 +30,7 @@ static int cb_putglyph(vterm_t *_vt, const uint32_t chars[], int _width, vterm_p
   return 1;
 }
 
-static vterm_state_callbacks_t state_cbs = {
+static VTermStateCallbacks state_cbs = {
   .putglyph = cb_putglyph,
 };
 

@@ -2,7 +2,7 @@
 
 #include "vterm.h"
 
-vterm_t *vt;
+VTerm *vt;
 
 int vterm_init(void)
 {

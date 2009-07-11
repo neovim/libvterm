@@ -17,7 +17,7 @@
 #endif
 
 int master;
-vterm_t *vt;
+VTerm *vt;
 
 int cell_width_pango;
 int cell_width;
@@ -77,7 +77,7 @@ PangoFontDescription *fontdesc;
 
 GtkIMContext *im_context;
 
-vterm_mousefunc mousefunc;
+VTermMouseFunc mousefunc;
 void *mousedata;
 
 typedef struct {
@@ -93,7 +93,7 @@ GArray *glyph_widths = NULL;
 GdkRectangle glyph_area;
 term_pen *glyph_pen;
 
-vterm_key convert_keyval(guint gdk_keyval)
+VTermKey convert_keyval(guint gdk_keyval)
 {
   if(gdk_keyval >= GDK_F1 && gdk_keyval <= GDK_F35)
     return VTERM_KEY_FUNCTION(gdk_keyval - GDK_F1 + 1);
@@ -256,7 +256,7 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->is_modifier)
     return FALSE;
 
-  vterm_mod state = VTERM_MOD_NONE;
+  VTermModifier state = VTERM_MOD_NONE;
   if(event->state & GDK_SHIFT_MASK)
     state |= VTERM_MOD_SHIFT;
   if(event->state & GDK_CONTROL_MASK)
@@ -264,7 +264,7 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->state & GDK_MOD1_MASK)
     state |= VTERM_MOD_ALT;
 
-  vterm_key keyval = convert_keyval(event->keyval);
+  VTermKey keyval = convert_keyval(event->keyval);
 
   if(keyval)
     vterm_input_push_key(vt, state, keyval);
@@ -317,7 +317,7 @@ gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
   return FALSE;
 }
 
-int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position_t pos, void *pen_p)
+int term_putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos, void *pen_p)
 {
   term_pen *pen = pen_p;
 
@@ -357,7 +357,7 @@ int term_putglyph(vterm_t *vt, const uint32_t chars[], int width, vterm_position
   return 1;
 }
 
-int term_movecursor(vterm_t *vt, vterm_position_t pos, vterm_position_t oldpos, int visible)
+int term_movecursor(VTerm *vt, VTermPos pos, VTermPos oldpos, int visible)
 {
   GdkRectangle destarea = {
     .x      = oldpos.col * cell_width,
@@ -401,7 +401,7 @@ gboolean cursor_blink(gpointer data)
   return TRUE;
 }
 
-int term_copyrect(vterm_t *vt, vterm_rectangle_t dest, vterm_rectangle_t src)
+int term_copyrect(VTerm *vt, VTermRect dest, VTermRect src)
 {
   flush_glyphs();
 
@@ -429,7 +429,7 @@ int term_copyrect(vterm_t *vt, vterm_rectangle_t dest, vterm_rectangle_t src)
   return 0; // Because we still need to get copycell to move the metadata
 }
 
-int term_copycell(vterm_t *vt, vterm_position_t destpos, vterm_position_t srcpos)
+int term_copycell(VTerm *vt, VTermPos destpos, VTermPos srcpos)
 {
   cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
   cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
@@ -437,7 +437,7 @@ int term_copycell(vterm_t *vt, vterm_position_t destpos, vterm_position_t srcpos
   return 1;
 }
 
-int term_erase(vterm_t *vt, vterm_rectangle_t rect, void *pen_p)
+int term_erase(VTerm *vt, VTermRect rect, void *pen_p)
 {
   flush_glyphs();
 
@@ -474,7 +474,7 @@ int term_erase(vterm_t *vt, vterm_rectangle_t rect, void *pen_p)
   return 1;
 }
 
-int term_setpen(vterm_t *vt, int sgrcmd, void **penstore)
+int term_setpen(VTerm *vt, int sgrcmd, void **penstore)
 {
   term_pen *pen = *penstore;
 
@@ -492,7 +492,7 @@ int term_setpen(vterm_t *vt, int sgrcmd, void **penstore)
   return 0;
 }
 
-int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **penstore)
+int term_setpenattr(VTerm *vt, VTermAttr attr, VTermAttrvalue *val, void **penstore)
 {
   flush_glyphs();
 
@@ -553,7 +553,7 @@ int term_setpenattr(vterm_t *vt, vterm_attr attr, vterm_attrvalue *val, void **p
   return 1;
 }
 
-int term_setmode(vterm_t *vt, vterm_mode mode, int val)
+int term_setmode(VTerm *vt, VTermMode mode, int val)
 {
   switch(mode) {
   case VTERM_MODE_DEC_CURSORVISIBLE:
@@ -596,7 +596,7 @@ int term_setmode(vterm_t *vt, vterm_mode mode, int val)
   return 1;
 }
 
-int term_setmousefunc(vterm_t *vt, vterm_mousefunc func, void *data)
+int term_setmousefunc(VTerm *vt, VTermMouseFunc func, void *data)
 {
   mousefunc = func;
   mousedata = data;
@@ -613,13 +613,13 @@ int term_setmousefunc(vterm_t *vt, vterm_mousefunc func, void *data)
   return 1;
 }
 
-int term_bell(vterm_t *vt)
+int term_bell(VTerm *vt)
 {
   gtk_widget_error_bell(GTK_WIDGET(termwin));
   return 1;
 }
 
-static vterm_state_callbacks_t cb = {
+static VTermStateCallbacks cb = {
   .putglyph     = term_putglyph,
   .movecursor   = term_movecursor,
   .copyrect     = term_copyrect,
@@ -632,7 +632,7 @@ static vterm_state_callbacks_t cb = {
   .bell         = term_bell,
 };
 
-int term_osc(vterm_t *vt, const char *command, size_t cmdlen)
+int term_osc(VTerm *vt, const char *command, size_t cmdlen)
 {
   if(cmdlen < 2)
     return 0;
@@ -660,7 +660,7 @@ int term_osc(vterm_t *vt, const char *command, size_t cmdlen)
   return 0;
 }
 
-static vterm_parser_callbacks_t parser_cb = {
+static VTermParserCallbacks parser_cb = {
   .osc = term_osc,
 };
 

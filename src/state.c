@@ -7,9 +7,9 @@
 # define DEBUG_GLYPH_COMBINE
 #endif
 
-static vterm_state_t *vterm_state_new(void)
+static VTermState *vterm_state_new(void)
 {
-  vterm_state_t *state = g_new0(vterm_state_t, 1);
+  VTermState *state = g_new0(VTermState, 1);
 
   state->pos.row = 0;
   state->pos.col = 0;
@@ -20,12 +20,12 @@ static vterm_state_t *vterm_state_new(void)
   return state;
 }
 
-void vterm_state_free(vterm_state_t *state)
+void vterm_state_free(VTermState *state)
 {
   g_free(state);
 }
 
-void vterm_set_state_callbacks(vterm_t *vt, const vterm_state_callbacks_t *callbacks)
+void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
 {
   if(callbacks) {
     if(!vt->state) {
@@ -44,9 +44,9 @@ void vterm_set_state_callbacks(vterm_t *vt, const vterm_state_callbacks_t *callb
   }
 }
 
-void vterm_state_initialise(vterm_t *vt)
+void vterm_state_initialise(VTerm *vt)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   if(!state)
     return;
@@ -65,14 +65,14 @@ void vterm_state_initialise(vterm_t *vt)
 
   if(state->callbacks &&
      state->callbacks->erase) {
-    vterm_rectangle_t rect = { 0, vt->rows, 0, vt->cols };
+    VTermRect rect = { 0, vt->rows, 0, vt->cols };
     (*state->callbacks->erase)(vt, rect, state->pen);
   }
 }
 
-void vterm_state_get_cursorpos(vterm_t *vt, vterm_position_t *cursorpos)
+void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   if(!state) {
     cursorpos->col = -1;
@@ -83,9 +83,9 @@ void vterm_state_get_cursorpos(vterm_t *vt, vterm_position_t *cursorpos)
   }
 }
 
-static void scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward)
+static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   if(!downward && !rightward)
     return;
@@ -96,8 +96,8 @@ static void scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightw
     done = (*state->callbacks->scroll)(vt, rect, downward, rightward);
 
   if(!done && state->callbacks && state->callbacks->copyrect) {
-    vterm_rectangle_t src;
-    vterm_rectangle_t dest;
+    VTermRect src;
+    VTermRect dest;
 
     if(rightward >= 0) {
       /* rect: [XXX................]
@@ -174,10 +174,10 @@ static void scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightw
       inc_col = +1;
     }
 
-    vterm_position_t pos;
+    VTermPos pos;
     for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
       for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
-        vterm_position_t srcpos = { pos.row + downward, pos.col + rightward };
+        VTermPos srcpos = { pos.row + downward, pos.col + rightward };
         (*state->callbacks->copycell)(vt, pos, srcpos);
       }
 
@@ -199,7 +199,7 @@ static void scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightw
     (*state->callbacks->erase)(vt, rect, state->pen);
 }
 
-static void updatecursor(vterm_t *vt, const vterm_state_t *state, vterm_position_t *oldpos)
+static void updatecursor(VTerm *vt, const VTermState *state, VTermPos *oldpos)
 {
   if(state->pos.col != oldpos->col || state->pos.row != oldpos->row) {
     if(state->callbacks &&
@@ -208,12 +208,12 @@ static void updatecursor(vterm_t *vt, const vterm_state_t *state, vterm_position
   }
 }
 
-static void linefeed(vterm_t *vt)
+static void linefeed(VTerm *vt)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   if(state->pos.row == (state->scrollregion_end-1)) {
-    vterm_rectangle_t rect = {
+    VTermRect rect = {
       .start_row = state->scrollregion_start,
       .end_row   = state->scrollregion_end,
       .start_col = 0,
@@ -226,21 +226,21 @@ static void linefeed(vterm_t *vt)
     state->pos.row++;
 }
 
-static void grow_combine_buffer(vterm_state_t *state)
+static void grow_combine_buffer(VTermState *state)
 {
   state->combine_chars_size *= 2;
   state->combine_chars = g_realloc(state->combine_chars, state->combine_chars_size * sizeof(state->combine_chars[0]));
 }
 
-static int is_col_tabstop(vterm_state_t *state, int col)
+static int is_col_tabstop(VTermState *state, int col)
 {
   // TODO: Implement variable tabstops
   return (col % 8) == 0;
 }
 
-static void tab(vterm_t *vt, int count, int direction)
+static void tab(VTerm *vt, int count, int direction)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   while(count--)
     while(state->pos.col >= 0 && state->pos.col <= vt->cols-1) {
@@ -251,11 +251,11 @@ static void tab(vterm_t *vt, int count, int direction)
     }
 }
 
-int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
+int vterm_state_on_text(VTerm *vt, const int codepoints[], int npoints)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
-  vterm_position_t oldpos = state->pos;
+  VTermPos oldpos = state->pos;
 
   int i = 0;
 
@@ -393,11 +393,11 @@ int vterm_state_on_text(vterm_t *vt, const int codepoints[], int npoints)
   return 1;
 }
 
-int vterm_state_on_control(vterm_t *vt, unsigned char control)
+int vterm_state_on_control(VTerm *vt, unsigned char control)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
-  vterm_position_t oldpos = state->pos;
+  VTermPos oldpos = state->pos;
 
   switch(control) {
   case 0x07: // BEL - ECMA-48 8.3.3
@@ -434,7 +434,7 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
 
   case 0x8d: // RI - ECMA-48 8.3.104
     if(state->pos.row == state->scrollregion_start) {
-      vterm_rectangle_t rect = {
+      VTermRect rect = {
         .start_row = state->scrollregion_start,
         .end_row   = state->scrollregion_end,
         .start_col = 0,
@@ -456,7 +456,7 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
   return 1;
 }
 
-int vterm_state_on_escape(vterm_t *vt, const char *bytes, size_t len)
+int vterm_state_on_escape(VTerm *vt, const char *bytes, size_t len)
 {
   switch(bytes[0]) {
   case 0x28: case 0x29: case 0x2a: case 0x2b:
@@ -478,7 +478,7 @@ int vterm_state_on_escape(vterm_t *vt, const char *bytes, size_t len)
   }
 }
 
-static void set_dec_mode(vterm_t *vt, int num, int val)
+static void set_dec_mode(VTerm *vt, int num, int val)
 {
   switch(num) {
   case 1:
@@ -520,7 +520,7 @@ static void set_dec_mode(vterm_t *vt, int num, int val)
   }
 }
 
-static int vterm_state_on_csi_qmark(vterm_t *vt, const long *args, int argcount, char command)
+static int vterm_state_on_csi_qmark(VTerm *vt, const long *args, int argcount, char command)
 {
   switch(command) {
   case 0x68: // DEC private mode set
@@ -540,7 +540,7 @@ static int vterm_state_on_csi_qmark(vterm_t *vt, const long *args, int argcount,
   return 1;
 }
 
-int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int argcount, char command)
+int vterm_state_on_csi(VTerm *vt, const char *intermed, const long args[], int argcount, char command)
 {
   if(intermed) {
     if(strcmp(intermed, "?") == 0)
@@ -549,9 +549,9 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
     return 0;
   }
 
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
-  vterm_position_t oldpos = state->pos;
+  VTermPos oldpos = state->pos;
 
 #define LBOUND(v,min) if((v) < (min)) (v) = (min)
 #define UBOUND(v,max) if((v) > (max)) (v) = (max)
@@ -559,7 +559,7 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
   // Some temporaries for later code
   int count;
   int row, col;
-  vterm_rectangle_t rect;
+  VTermRect rect;
 
   switch(command) {
   case 0x40: // ICH - ECMA-48 8.3.64
