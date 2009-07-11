@@ -10,9 +10,9 @@
  * API functions *
  *****************/
 
-vterm_t *vterm_new(int rows, int cols)
+VTerm *vterm_new(int rows, int cols)
 {
-  vterm_t *vt = g_new0(struct vterm_s, 1);
+  VTerm *vt = g_new0(VTerm, 1);
 
   vt->rows = rows;
   vt->cols = cols;
@@ -23,7 +23,7 @@ vterm_t *vterm_new(int rows, int cols)
   return vt;
 }
 
-void vterm_get_size(vterm_t *vt, int *rowsp, int *colsp)
+void vterm_get_size(VTerm *vt, int *rowsp, int *colsp)
 {
   if(rowsp)
     *rowsp = vt->rows;
@@ -31,23 +31,23 @@ void vterm_get_size(vterm_t *vt, int *rowsp, int *colsp)
     *colsp = vt->cols;
 }
 
-void vterm_set_size(vterm_t *vt, int rows, int cols)
+void vterm_set_size(VTerm *vt, int rows, int cols)
 {
   vt->rows = rows;
   vt->cols = cols;
 }
 
-void vterm_set_parser_callbacks(vterm_t *vt, const vterm_parser_callbacks_t *callbacks)
+void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks)
 {
   vt->parser_callbacks = callbacks;
 }
 
-void vterm_parser_set_utf8(vterm_t *vt, int is_utf8)
+void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
 {
   vt->is_utf8 = is_utf8;
 }
 
-void vterm_push_bytes(vterm_t *vt, const char *bytes, size_t len)
+void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
 {
   if((vt->inbuffer->len)) {
     g_string_append_len(vt->inbuffer, bytes, len);
@@ -61,17 +61,17 @@ void vterm_push_bytes(vterm_t *vt, const char *bytes, size_t len)
   }
 }
 
-void vterm_push_output_bytes(vterm_t *vt, const char *bytes, size_t len)
+void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
 {
   g_string_append_len(vt->outbuffer, bytes, len);
 }
 
-void vterm_push_output_vsprintf(vterm_t *vt, const char *format, va_list args)
+void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
 {
   g_string_append_vprintf(vt->outbuffer, format, args);
 }
 
-void vterm_push_output_sprintf(vterm_t *vt, const char *format, ...)
+void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -79,12 +79,12 @@ void vterm_push_output_sprintf(vterm_t *vt, const char *format, ...)
   va_end(args);
 }
 
-size_t vterm_output_bufferlen(vterm_t *vt)
+size_t vterm_output_bufferlen(VTerm *vt)
 {
   return vt->outbuffer->len;
 }
 
-size_t vterm_output_bufferread(vterm_t *vt, char *buffer, size_t len)
+size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len)
 {
   if(len > vt->outbuffer->len)
     len = vt->outbuffer->len;

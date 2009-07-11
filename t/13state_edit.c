@@ -4,33 +4,33 @@
 
 #include <glib.h>
 
-static vterm_t *vt;
+static VTerm *vt;
 
 char buffer[25][80];
-static vterm_position_t cursor;
+static VTermPos cursor;
 
-static int cb_putglyph(vterm_t *_vt, const uint32_t chars[], int _width, vterm_position_t pos, void *pen)
+static int cb_putglyph(VTerm *_vt, const uint32_t chars[], int _width, VTermPos pos, void *pen)
 {
   buffer[pos.row][pos.col] = chars[0];
 
   return 1;
 }
 
-static int cb_movecursor(vterm_t *_vt, vterm_position_t pos, vterm_position_t oldpos, int visible)
+static int cb_movecursor(VTerm *_vt, VTermPos pos, VTermPos oldpos, int visible)
 {
   cursor = pos;
 
   return 1;
 }
 
-static int cb_copycell(vterm_t *_vt, vterm_position_t dest, vterm_position_t src)
+static int cb_copycell(VTerm *_vt, VTermPos dest, VTermPos src)
 {
   buffer[dest.row][dest.col] = buffer[src.row][src.col];
 
   return 1;
 }
 
-static int cb_erase(vterm_t *_vt, vterm_rectangle_t rect, void *pen)
+static int cb_erase(VTerm *_vt, VTermRect rect, void *pen)
 {
   for(int row = rect.start_row; row < rect.end_row; row++)
     for(int col = rect.start_col; col < rect.end_col; col++)
@@ -39,7 +39,7 @@ static int cb_erase(vterm_t *_vt, vterm_rectangle_t rect, void *pen)
   return 1;
 }
 
-static vterm_state_callbacks_t state_cbs = {
+static VTermStateCallbacks state_cbs = {
   .putglyph   = cb_putglyph,
   .movecursor = cb_movecursor,
   .copycell   = cb_copycell,

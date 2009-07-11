@@ -4,7 +4,7 @@
 
 #include <glib.h>
 
-static vterm_t *vt;
+static VTerm *vt;
 
 static GSList *cbs;
 
@@ -27,7 +27,7 @@ typedef struct {
   } val;
 } cb;
 
-static int cb_text(vterm_t *_vt, const int codepoints[], int npoints)
+static int cb_text(VTerm *_vt, const int codepoints[], int npoints)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -42,7 +42,7 @@ static int cb_text(vterm_t *_vt, const int codepoints[], int npoints)
   return 1;
 }
 
-static int cb_control(vterm_t *_vt, char control)
+static int cb_control(VTerm *_vt, char control)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -55,7 +55,7 @@ static int cb_control(vterm_t *_vt, char control)
   return 1;
 }
 
-static int cb_escape(vterm_t *_vt, const char bytes[], size_t len)
+static int cb_escape(VTerm *_vt, const char bytes[], size_t len)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -70,7 +70,7 @@ static int cb_escape(vterm_t *_vt, const char bytes[], size_t len)
 
 static int capture_csi_raw = 0;
 
-static int cb_csi_raw(vterm_t *_vt, const char *args, size_t arglen, char command)
+static int cb_csi_raw(VTerm *_vt, const char *args, size_t arglen, char command)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -88,7 +88,7 @@ static int cb_csi_raw(vterm_t *_vt, const char *args, size_t arglen, char comman
   return 1;
 }
 
-static int cb_csi(vterm_t *_vt, const char *intermed, const long args[], int argcount, char command)
+static int cb_csi(VTerm *_vt, const char *intermed, const long args[], int argcount, char command)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -105,7 +105,7 @@ static int cb_csi(vterm_t *_vt, const char *intermed, const long args[], int arg
   return 1;
 }
 
-static int cb_osc(vterm_t *_vt, const char *command, size_t cmdlen)
+static int cb_osc(VTerm *_vt, const char *command, size_t cmdlen)
 {
   CU_ASSERT_PTR_EQUAL(vt, _vt);
 
@@ -145,7 +145,7 @@ static void free_cbs(void)
   cbs = NULL;
 }
 
-static vterm_parser_callbacks_t parser_cbs = {
+static VTermParserCallbacks parser_cbs = {
   .text    = cb_text,
   .control = cb_control,
   .escape  = cb_escape,

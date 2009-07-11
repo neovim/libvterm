@@ -4,21 +4,21 @@
 
 #include <glib.h>
 
-static vterm_t *vt;
+static VTerm *vt;
 
-static vterm_position_t cursor;
-static vterm_rectangle_t rect;
+static VTermPos cursor;
+static VTermRect rect;
 static int down;
 static int right;
 
-static int cb_movecursor(vterm_t *_vt, vterm_position_t pos, vterm_position_t oldpos, int visible)
+static int cb_movecursor(VTerm *_vt, VTermPos pos, VTermPos oldpos, int visible)
 {
   cursor = pos;
 
   return 1;
 }
 
-static int cb_scroll(vterm_t *_vt, vterm_rectangle_t _rect, int downward, int rightward)
+static int cb_scroll(VTerm *_vt, VTermRect _rect, int downward, int rightward)
 {
   rect = _rect;
 
@@ -28,7 +28,7 @@ static int cb_scroll(vterm_t *_vt, vterm_rectangle_t _rect, int downward, int ri
   return 1;
 }
 
-static vterm_state_callbacks_t state_cbs = {
+static VTermStateCallbacks state_cbs = {
   .movecursor = cb_movecursor,
   .scroll     = cb_scroll,
 };

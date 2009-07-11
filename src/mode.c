@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-void vterm_state_initmodes(vterm_t *vt)
+void vterm_state_initmodes(VTerm *vt)
 {
-  vterm_mode mode;
+  VTermMode mode;
   for(mode = VTERM_MODE_NONE; mode < VTERM_MODE_MAX; mode++) {
     int val = 0;
 
@@ -25,8 +25,8 @@ void vterm_state_initmodes(vterm_t *vt)
 
 static void mousefunc(int x, int y, int button, int pressed, void *data)
 {
-  vterm_t *vt = data;
-  vterm_state_t *state = vt->state;
+  VTerm *vt = data;
+  VTermState *state = vt->state;
 
   int old_buttons = state->mouse_buttons;
 
@@ -42,9 +42,9 @@ static void mousefunc(int x, int y, int button, int pressed, void *data)
   }
 }
 
-void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val)
+void vterm_state_setmode(VTerm *vt, VTermMode mode, int val)
 {
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   int done = 0;
   if(state->callbacks && state->callbacks->setmode)
@@ -91,7 +91,7 @@ void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val)
       vt->mode.alt_screen = val;
     if(done && val) {
       if(state->callbacks && state->callbacks->erase) {
-        vterm_rectangle_t rect = {
+        VTermRect rect = {
           .start_row = 0,
           .start_col = 0,
           .end_row = vt->rows,
@@ -108,7 +108,7 @@ void vterm_state_setmode(vterm_t *vt, vterm_mode mode, int val)
       state->saved_pos = state->pos;
     }
     else {
-      vterm_position_t oldpos = state->pos;
+      VTermPos oldpos = state->pos;
       state->pos = state->saved_pos;
       if(state->callbacks && state->callbacks->movecursor)
         (*state->callbacks->movecursor)(vt, state->pos, oldpos, vt->mode.cursor_visible);
