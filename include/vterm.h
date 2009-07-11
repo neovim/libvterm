@@ -58,6 +58,7 @@ typedef struct {
   int (*putglyph)(vterm_t *vt, const uint32_t chars[], int width, vterm_position_t pos, void *pen);
   int (*movecursor)(vterm_t *vt, vterm_position_t pos, vterm_position_t oldpos, int visible);
   int (*scroll)(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward);
+  int (*copyrect)(vterm_t *vt, vterm_rectangle_t dest, vterm_rectangle_t src);
   int (*copycell)(vterm_t *vt, vterm_position_t dest, vterm_position_t src);
   int (*erase)(vterm_t *vt, vterm_rectangle_t rect, void *pen);
   int (*setpen)(vterm_t *vt, int sgrcmd, void **penstore);

@@ -401,45 +401,24 @@ gboolean cursor_blink(gpointer data)
   return TRUE;
 }
 
-int term_scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward)
+int term_copyrect(vterm_t *vt, vterm_rectangle_t dest, vterm_rectangle_t src)
 {
   flush_glyphs();
 
-  int rows = rect.end_row - rect.start_row - abs(downward);
-  int cols = rect.end_col - rect.start_col - abs(rightward);
-
   GdkRectangle destarea = {
-    .width  = cols * cell_width,
-    .height = rows * cell_height
+    .x      = dest.start_col * cell_width,
+    .y      = dest.start_row * cell_height,
+    .width  = (dest.end_col - dest.start_col) * cell_width,
+    .height = (dest.end_row - dest.start_row) * cell_height,
   };
-
-  GdkRectangle srcarea;
-
-  if(rightward > 0) {
-    destarea.x = rect.start_col * cell_width;
-    srcarea.x  = (rect.start_col + rightward) * cell_width;
-  }
-  else {
-    destarea.x = (rect.start_col - rightward) * cell_width;
-    srcarea.x  = rect.start_col * cell_width;
-  }
-
-  if(downward > 0) {
-    destarea.y = rect.start_row * cell_height;
-    srcarea.y  = (rect.start_row + downward) * cell_height;
-  }
-  else {
-    destarea.y = (rect.start_row - downward) * cell_height;
-    srcarea.y  = rect.start_row * cell_height;
-  }
 
   gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
 
   gdk_draw_drawable(termbuffer,
       termbuffer_gc,
       termbuffer,
-      srcarea.x,
-      srcarea.y,
+      src.start_col * cell_width,
+      src.start_row * cell_height,
       destarea.x,
       destarea.y,
       destarea.width,
@@ -643,7 +622,7 @@ int term_bell(vterm_t *vt)
 static vterm_state_callbacks_t cb = {
   .putglyph     = term_putglyph,
   .movecursor   = term_movecursor,
-  .scroll       = term_scroll,
+  .copyrect     = term_copyrect,
   .copycell     = term_copycell,
   .erase        = term_erase,
   .setpen       = term_setpen,
