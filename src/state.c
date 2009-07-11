@@ -421,6 +421,12 @@ int vterm_state_on_control(vterm_t *vt, unsigned char control)
 int vterm_state_on_escape(vterm_t *vt, const char *bytes, size_t len)
 {
   switch(bytes[0]) {
+  case 0x28: case 0x29: case 0x2a: case 0x2b:
+    if(len < 2)
+      return -1;
+    // TODO: "Designate G%d charset %c\n", bytes[0] - 0x28, bytes[1];
+    return 2;
+
   case 0x3d:
     vterm_state_setmode(vt, VTERM_MODE_KEYPAD, 1);
     return 1;
