@@ -25,25 +25,6 @@ static void vterm_state_free(VTermState *state)
   g_free(state);
 }
 
-void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
-{
-  if(callbacks) {
-    if(!vt->state) {
-      vt->state = vterm_state_new();
-    }
-    vt->state->callbacks = callbacks;
-
-    // Initialise the modes
-    vterm_state_initmodes(vt);
-  }
-  else {
-    if(vt->state) {
-      vterm_state_free(vt->state);
-      vt->state = NULL;
-    }
-  }
-}
-
 void vterm_state_initialise(VTerm *vt)
 {
   VTermState *state = vt->state;
@@ -251,7 +232,7 @@ static void tab(VTerm *vt, int count, int direction)
     }
 }
 
-int vterm_state_on_text(VTerm *vt, const int codepoints[], int npoints)
+static int on_text(VTerm *vt, const int codepoints[], int npoints)
 {
   VTermState *state = vt->state;
 
@@ -381,7 +362,7 @@ int vterm_state_on_text(VTerm *vt, const int codepoints[], int npoints)
   return 1;
 }
 
-int vterm_state_on_control(VTerm *vt, unsigned char control)
+static int on_control(VTerm *vt, unsigned char control)
 {
   VTermState *state = vt->state;
 
@@ -444,7 +425,7 @@ int vterm_state_on_control(VTerm *vt, unsigned char control)
   return 1;
 }
 
-int vterm_state_on_escape(VTerm *vt, const char *bytes, size_t len)
+static int on_escape(VTerm *vt, const char *bytes, size_t len)
 {
   switch(bytes[0]) {
   case 0x28: case 0x29: case 0x2a: case 0x2b:
@@ -508,7 +489,7 @@ static void set_dec_mode(VTerm *vt, int num, int val)
   }
 }
 
-static int vterm_state_on_csi_qmark(VTerm *vt, const long *args, int argcount, char command)
+static int on_csi_qmark(VTerm *vt, const long *args, int argcount, char command)
 {
   switch(command) {
   case 0x68: // DEC private mode set
@@ -528,11 +509,11 @@ static int vterm_state_on_csi_qmark(VTerm *vt, const long *args, int argcount, c
   return 1;
 }
 
-int vterm_state_on_csi(VTerm *vt, const char *intermed, const long args[], int argcount, char command)
+static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcount, char command)
 {
   if(intermed) {
     if(strcmp(intermed, "?") == 0)
-      return vterm_state_on_csi_qmark(vt, args, argcount, command);
+      return on_csi_qmark(vt, args, argcount, command);
 
     return 0;
   }
@@ -820,4 +801,33 @@ int vterm_state_on_csi(VTerm *vt, const char *intermed, const long args[], int a
   updatecursor(vt, state, &oldpos);
 
   return 1;
+}
+
+static const VTermParserCallbacks parser_callbacks = {
+  .text    = on_text,
+  .control = on_control,
+  .escape  = on_escape,
+  .csi     = on_csi,
+};
+
+void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
+{
+  if(callbacks) {
+    if(!vt->state) {
+      vt->state = vterm_state_new();
+    }
+    vt->state->callbacks = callbacks;
+    vt->parser_callbacks[1] = &parser_callbacks;
+
+    // Initialise the modes
+    vterm_state_initmodes(vt);
+  }
+  else {
+    if(vt->state) {
+      vterm_state_free(vt->state);
+      vt->state = NULL;
+    }
+
+    vt->parser_callbacks[1] = NULL;
+  }
 }

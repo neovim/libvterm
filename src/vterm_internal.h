@@ -38,7 +38,8 @@ struct _VTerm
 
   int is_utf8;
 
-  const VTermParserCallbacks *parser_callbacks;
+  /* [0] for user code, [1] for state engine */
+  const VTermParserCallbacks *parser_callbacks[2];
 
   GString *inbuffer;
   GString *outbuffer;
@@ -52,11 +53,6 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len);
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len);
 void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args);
 void vterm_push_output_sprintf(VTerm *vt, const char *format, ...);
-
-int vterm_state_on_text(VTerm *vt, const int codepoints[], int npoints);
-int vterm_state_on_control(VTerm *vt, unsigned char control);
-int vterm_state_on_escape(VTerm *vt, const char *bytes, size_t len);
-int vterm_state_on_csi(VTerm *vt, const char *intermed, const long args[], int argcount, char command);
 
 void vterm_state_setpen(VTerm *vt, const long args[], int argcount);
 
