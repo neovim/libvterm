@@ -405,23 +405,41 @@ int term_scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightward
 {
   flush_glyphs();
 
-  int rows = rect.end_row - rect.start_row - downward;
-  int cols = rect.end_col - rect.start_col - rightward;
+  int rows = rect.end_row - rect.start_row - abs(downward);
+  int cols = rect.end_col - rect.start_col - abs(rightward);
 
   GdkRectangle destarea = {
-    .x      = rect.start_col * cell_width,
-    .y      = rect.start_row * cell_height,
     .width  = cols * cell_width,
     .height = rows * cell_height
   };
+
+  GdkRectangle srcarea;
+
+  if(rightward > 0) {
+    destarea.x = rect.start_col * cell_width;
+    srcarea.x  = (rect.start_col + rightward) * cell_width;
+  }
+  else {
+    destarea.x = (rect.start_col - rightward) * cell_width;
+    srcarea.x  = rect.start_col * cell_width;
+  }
+
+  if(downward > 0) {
+    destarea.y = rect.start_row * cell_height;
+    srcarea.y  = (rect.start_row + downward) * cell_height;
+  }
+  else {
+    destarea.y = (rect.start_row - downward) * cell_height;
+    srcarea.y  = rect.start_row * cell_height;
+  }
 
   gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
 
   gdk_draw_drawable(termbuffer,
       termbuffer_gc,
       termbuffer,
-      (rect.start_col + rightward) * cell_width,
-      (rect.start_row + downward ) * cell_height,
+      srcarea.x,
+      srcarea.y,
       destarea.x,
       destarea.y,
       destarea.width,
