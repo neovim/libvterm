@@ -13,64 +13,43 @@
 
 static void vterm_on_parser_text(VTerm *vt, int codepoints[], int npoints)
 {
-  int done = 0;
+  for(int cb = 0; cb < 2; cb++)
+    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->text)
+      if((*vt->parser_callbacks[cb]->text)(vt, codepoints, npoints))
+        return;
 
-  if(vt->parser_callbacks &&
-     vt->parser_callbacks->text)
-    done = (*vt->parser_callbacks->text)(vt, codepoints, npoints);
-
-  if(!done && vt->state)
-    done = vterm_state_on_text(vt, codepoints, npoints);
-
-  if(!done)
-    fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
+  fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
 }
 
 static void vterm_on_parser_control(VTerm *vt, unsigned char control)
 {
-  int done = 0;
+  for(int cb = 0; cb < 2; cb++)
+    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->control)
+      if((*vt->parser_callbacks[cb]->control)(vt, control))
+        return;
 
-  if(vt->parser_callbacks &&
-     vt->parser_callbacks->control)
-    done = (*vt->parser_callbacks->control)(vt, control);
-
-  if(!done && vt->state)
-    done = vterm_state_on_control(vt, control);
-
-  if(!done)
-    fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
+  fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
 
 static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
 {
-  int done = 0;
+  size_t eaten;
 
-  if(vt->parser_callbacks &&
-     vt->parser_callbacks->escape)
-    done = (*vt->parser_callbacks->escape)(vt, bytes, len);
+  for(int cb = 0; cb < 2; cb++)
+    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->escape)
+      if((eaten = (*vt->parser_callbacks[cb]->escape)(vt, bytes, len)))
+        return eaten;
 
-  if(done)
-    return done;
-
-  if(!done && vt->state)
-    done = vterm_state_on_escape(vt, bytes, len);
-
-  if(!done)
-    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", bytes[0]);
-
-  return done;
+  fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", bytes[0]);
+  return 0;
 }
 
 static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
-  int done = 0;
-
-  if(vt->parser_callbacks &&
-     vt->parser_callbacks->csi_raw)
-    done = (*vt->parser_callbacks->csi_raw)(vt, args, arglen, command);
-
-  if(done)
-    return;
+  for(int cb = 0; cb < 2; cb++)
+    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->csi_raw)
+      if((*vt->parser_callbacks[cb]->csi_raw)(vt, args, arglen, command))
+        return;
 
   if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3e) {
     int i;
@@ -132,28 +111,23 @@ static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char
     //    printf("\n");
     //}
 
-    if(vt->parser_callbacks &&
-      vt->parser_callbacks->csi)
-      done = (*vt->parser_callbacks->csi)(vt, intermed, csi_args, argcount, command);
-
-    if(!done && vt->state)
-      done = vterm_state_on_csi(vt, intermed, csi_args, argcount, command);
+    for(int cb = 0; cb < 2; cb++)
+      if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->csi)
+        if((*vt->parser_callbacks[cb]->csi)(vt, intermed, csi_args, argcount, command))
+          return;
   }
 
-  if(!done)
-    fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
+  fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
 
 static void vterm_on_parser_osc(VTerm *vt, const char *command, size_t cmdlen)
 {
-  int done = 0;
+  for(int cb = 0; cb < 2; cb++)
+    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->osc)
+      if((*vt->parser_callbacks[cb]->osc)(vt, command, cmdlen))
+        return;
 
-  if(vt->parser_callbacks &&
-     vt->parser_callbacks->osc)
-    done = (*vt->parser_callbacks->osc)(vt, command, cmdlen);
-
-  if(!done)
-    fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
+  fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
 }
 
 static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
