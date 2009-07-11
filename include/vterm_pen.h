@@ -3,13 +3,13 @@
 
 typedef struct {
   uint8_t red, green, blue;
-} vterm_attrvalue_color;
+} VTermAttrvalue_color;
 
 typedef union {
   int boolean;
   int number;
-  vterm_attrvalue_color color;
-} vterm_attrvalue;
+  VTermAttrvalue_color color;
+} VTermAttrvalue;
 
 typedef enum {
   VTERM_ATTR_NONE,
@@ -20,6 +20,6 @@ typedef enum {
   VTERM_ATTR_FONT,       // number: 10-19
   VTERM_ATTR_FOREGROUND, // color:  30-39
   VTERM_ATTR_BACKGROUND, // color:  40-49
-} vterm_attr;
+} VTermAttr;
 
 #endif

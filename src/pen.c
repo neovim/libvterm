@@ -13,7 +13,7 @@ static int gamma24[] = {
   215, 222, 227, 233, 239, 244, 249, 255,
 };
 
-static void lookup_colour_ansi(long index, char is_bg, vterm_attrvalue_color *col)
+static void lookup_colour_ansi(long index, char is_bg, VTermAttrvalue_color *col)
 {
   if(index == -1) {
     if(is_bg)
@@ -29,7 +29,7 @@ static void lookup_colour_ansi(long index, char is_bg, vterm_attrvalue_color *co
   }
 }
 
-static int lookup_colour(int palette, const long args[], int argcount, char is_bg, vterm_attrvalue_color *col)
+static int lookup_colour(int palette, const long args[], int argcount, char is_bg, VTermAttrvalue_color *col)
 {
   long index;
 
@@ -85,28 +85,28 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
 }
 
 // Some conveniences
-static void setpenattr_bool(vterm_t *vt, vterm_attr attr, int boolean)
+static void setpenattr_bool(VTerm *vt, VTermAttr attr, int boolean)
 {
-  vterm_state_t *state = vt->state;
-  vterm_attrvalue val = { .boolean = boolean };
+  VTermState *state = vt->state;
+  VTermAttrvalue val = { .boolean = boolean };
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
 }
 
-static void setpenattr_int(vterm_t *vt, vterm_attr attr, int number)
+static void setpenattr_int(VTerm *vt, VTermAttr attr, int number)
 {
-  vterm_state_t *state = vt->state;
-  vterm_attrvalue val = { .number = number };
+  VTermState *state = vt->state;
+  VTermAttrvalue val = { .number = number };
 
   if(state->callbacks && state->callbacks->setpenattr)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
 }
 
-static void setpenattr_col_ansi(vterm_t *vt, vterm_attr attr, long col)
+static void setpenattr_col_ansi(VTerm *vt, VTermAttr attr, long col)
 {
-  vterm_state_t *state = vt->state;
-  vterm_attrvalue val;
+  VTermState *state = vt->state;
+  VTermAttrvalue val;
 
   lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
@@ -114,10 +114,10 @@ static void setpenattr_col_ansi(vterm_t *vt, vterm_attr attr, long col)
     (*state->callbacks->setpenattr)(vt, attr, &val, &state->pen);
 }
 
-static int setpenattr_col_palette(vterm_t *vt, vterm_attr attr, const long args[], int argcount)
+static int setpenattr_col_palette(VTerm *vt, VTermAttr attr, const long args[], int argcount)
 {
-  vterm_state_t *state = vt->state;
-  vterm_attrvalue val;
+  VTermState *state = vt->state;
+  VTermAttrvalue val;
 
   if(!argcount)
     return 0;
@@ -130,10 +130,10 @@ static int setpenattr_col_palette(vterm_t *vt, vterm_attr attr, const long args[
   return eaten + 1; // we ate palette
 }
 
-void vterm_state_setpen(vterm_t *vt, const long args[], int argcount)
+void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
-  vterm_state_t *state = vt->state;
+  VTermState *state = vt->state;
 
   int argi = 0;
 

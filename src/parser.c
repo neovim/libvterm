@@ -11,7 +11,7 @@
 
 #include <glib.h>
 
-static void vterm_on_parser_text(vterm_t *vt, int codepoints[], int npoints)
+static void vterm_on_parser_text(VTerm *vt, int codepoints[], int npoints)
 {
   int done = 0;
 
@@ -26,7 +26,7 @@ static void vterm_on_parser_text(vterm_t *vt, int codepoints[], int npoints)
     fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
 }
 
-static void vterm_on_parser_control(vterm_t *vt, unsigned char control)
+static void vterm_on_parser_control(VTerm *vt, unsigned char control)
 {
   int done = 0;
 
@@ -41,7 +41,7 @@ static void vterm_on_parser_control(vterm_t *vt, unsigned char control)
     fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
 
-static size_t vterm_on_parser_escape(vterm_t *vt, const char bytes[], size_t len)
+static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
 {
   int done = 0;
 
@@ -61,7 +61,7 @@ static size_t vterm_on_parser_escape(vterm_t *vt, const char bytes[], size_t len
   return done;
 }
 
-static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, char command)
+static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
   int done = 0;
 
@@ -144,7 +144,7 @@ static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, ch
     fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
 
-static void vterm_on_parser_osc(vterm_t *vt, const char *command, size_t cmdlen)
+static void vterm_on_parser_osc(VTerm *vt, const char *command, size_t cmdlen)
 {
   int done = 0;
 
@@ -294,7 +294,7 @@ static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, s
   return 1;
 }
 
-size_t vterm_parser_interpret_bytes(vterm_t *vt, const char bytes[], size_t len)
+size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
 {
   size_t pos = 0;
   size_t eaten = 0;
