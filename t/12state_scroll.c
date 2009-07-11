@@ -188,4 +188,57 @@ static void test_region(void)
   CU_ASSERT_EQUAL(cursor.row, 24);
 }
 
+static void test_sdsu(void)
+{
+  vterm_state_initialise(vt);
+  vterm_state_get_cursorpos(vt, &cursor);
+
+  down = 0;
+  right = 0;
+
+  vterm_push_bytes(vt, "\e[S", 3);
+
+  CU_ASSERT_EQUAL(down,  1);
+  CU_ASSERT_EQUAL(right, 0);
+  CU_ASSERT_EQUAL(rect.start_row,  0);
+  CU_ASSERT_EQUAL(rect.end_row,   25);
+  CU_ASSERT_EQUAL(rect.start_col,  0);
+  CU_ASSERT_EQUAL(rect.end_col,   80);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+
+  vterm_push_bytes(vt, "\e[2S", 4);
+
+  CU_ASSERT_EQUAL(down,  2);
+  CU_ASSERT_EQUAL(right, 0);
+  CU_ASSERT_EQUAL(rect.start_row,  0);
+  CU_ASSERT_EQUAL(rect.end_row,   25);
+  CU_ASSERT_EQUAL(rect.start_col,  0);
+  CU_ASSERT_EQUAL(rect.end_col,   80);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+
+  vterm_push_bytes(vt, "\e[T", 3);
+
+  CU_ASSERT_EQUAL(down, -1);
+  CU_ASSERT_EQUAL(right, 0);
+  CU_ASSERT_EQUAL(rect.start_row,  0);
+  CU_ASSERT_EQUAL(rect.end_row,   25);
+  CU_ASSERT_EQUAL(rect.start_col,  0);
+  CU_ASSERT_EQUAL(rect.end_col,   80);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+
+  vterm_push_bytes(vt, "\e[2T", 4);
+
+  CU_ASSERT_EQUAL(down, -2);
+  CU_ASSERT_EQUAL(right, 0);
+  CU_ASSERT_EQUAL(rect.start_row,  0);
+  CU_ASSERT_EQUAL(rect.end_row,   25);
+  CU_ASSERT_EQUAL(rect.start_col,  0);
+  CU_ASSERT_EQUAL(rect.end_col,   80);
+
+  CU_ASSERT_EQUAL(cursor.row, 0);
+}
+
 #include "12state_scroll.inc"

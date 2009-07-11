@@ -690,6 +690,30 @@ int vterm_state_on_csi(vterm_t *vt, const char *intermed, const long args[], int
 
     break;
 
+  case 0x53: // SU - ECMA-48 8.3.147
+    count = CSI_ARG_OR(args[0], 1);
+
+    rect.start_row = state->scrollregion_start,
+    rect.end_row   = state->scrollregion_end,
+    rect.start_col = 0,
+    rect.end_col   = vt->cols,
+
+    scroll(vt, rect, count, 0);
+
+    break;
+
+  case 0x54: // SD - ECMA-48 8.3.113
+    count = CSI_ARG_OR(args[0], 1);
+
+    rect.start_row = state->scrollregion_start,
+    rect.end_row   = state->scrollregion_end,
+    rect.start_col = 0,
+    rect.end_col   = vt->cols,
+
+    scroll(vt, rect, -count, 0);
+
+    break;
+
   case 0x58: // ECH - ECMA-48 8.3.38
     count = CSI_ARG_OR(args[0], 1);
 
