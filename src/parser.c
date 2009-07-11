@@ -41,19 +41,24 @@ static void vterm_on_parser_control(vterm_t *vt, unsigned char control)
     fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
 
-static void vterm_on_parser_escape(vterm_t *vt, char escape)
+static size_t vterm_on_parser_escape(vterm_t *vt, const char bytes[], size_t len)
 {
   int done = 0;
 
   if(vt->parser_callbacks &&
      vt->parser_callbacks->escape)
-    done = (*vt->parser_callbacks->escape)(vt, escape);
+    done = (*vt->parser_callbacks->escape)(vt, bytes, len);
+
+  if(done)
+    return done;
 
   if(!done && vt->state)
-    done = vterm_state_on_escape(vt, escape);
+    done = vterm_state_on_escape(vt, bytes, len);
 
   if(!done)
-    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", (unsigned char)escape);
+    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", bytes[0]);
+
+  return done;
 }
 
 static void vterm_on_parser_csi(vterm_t *vt, const char *args, size_t arglen, char command)
@@ -318,12 +323,18 @@ size_t vterm_parser_interpret_bytes(vterm_t *vt, const char bytes[], size_t len)
         string_start = pos + 1;
         break;
       default:
-        if(c >= 0x40 && c < 0x60)
+        if(c >= 0x40 && c < 0x60) {
           // C1 emulations using 7bit clean
           // ESC 0x40 == 0x80
           vterm_on_parser_control(vt, c + 0x40);
-        else 
-          vterm_on_parser_escape(vt, c);
+        }
+        else {
+          size_t esc_eaten = vterm_on_parser_escape(vt, bytes + pos, len - pos);
+          if(esc_eaten < 0)
+            return eaten;
+          if(esc_eaten > 0)
+            pos += (esc_eaten - 1); // we'll ++ it again in a moment
+        }
         parse_state = NORMAL;
         eaten = pos + 1;
       }
