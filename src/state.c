@@ -90,17 +90,55 @@ static void scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightw
   if(!downward && !rightward)
     return;
 
-  int done_scroll = 0;
+  int done = 0;
 
-  if(state->callbacks &&
-     state->callbacks->scroll)
-    done_scroll = (*state->callbacks->scroll)(vt, rect, downward, rightward);
+  if(state->callbacks && state->callbacks->scroll)
+    done = (*state->callbacks->scroll)(vt, rect, downward, rightward);
 
-  if(!done_scroll &&
-     state->callbacks &&
-     state->callbacks->copycell) {
-    // User code doesn't implement a real scroll; so instead we'll synthesize
-    // one out of copycell
+  if(!done && state->callbacks && state->callbacks->copyrect) {
+    vterm_rectangle_t src;
+    vterm_rectangle_t dest;
+
+    if(rightward >= 0) {
+      /* rect: [XXX................]
+       * src:     [----------------]
+       * dest: [----------------]
+       */
+      dest.start_col = rect.start_col;
+      dest.end_col   = rect.end_col   - rightward;
+      src.start_col  = rect.start_col + rightward;
+      src.end_col    = rect.end_col;
+    }
+    else {
+      /* rect: [................XXX]
+       * src:  [----------------]
+       * dest:    [----------------]
+       */
+      int leftward = -rightward;
+      dest.start_col = rect.start_col + leftward;
+      dest.end_col   = rect.end_col;
+      src.start_col  = rect.start_col;
+      src.end_col    = rect.end_col - leftward;
+    }
+
+    if(downward >= 0) {
+      dest.start_row = rect.start_row;
+      dest.end_row   = rect.end_row   - downward;
+      src.start_row  = rect.start_row + downward;
+      src.end_row    = rect.end_row;
+    }
+    else {
+      int upward = -downward;
+      dest.start_row = rect.start_row + upward;
+      dest.end_row   = rect.end_row;
+      src.start_row  = rect.start_row;
+      src.end_row    = rect.end_row - upward;
+    }
+
+    done = (*state->callbacks->copyrect)(vt, dest, src);
+  }
+
+  if(!done && state->callbacks && state->callbacks->copycell) {
     int init_row, test_row, init_col, test_col;
     int inc_row, inc_col;
 
@@ -143,7 +181,7 @@ static void scroll(vterm_t *vt, vterm_rectangle_t rect, int downward, int rightw
         (*state->callbacks->copycell)(vt, pos, srcpos);
       }
 
-    done_scroll = 1;
+    done = 1;
   }
 
   if(downward > 0)
