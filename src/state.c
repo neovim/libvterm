@@ -20,7 +20,7 @@ static VTermState *vterm_state_new(void)
   return state;
 }
 
-void vterm_state_free(VTermState *state)
+static void vterm_state_free(VTermState *state)
 {
   g_free(state);
 }
