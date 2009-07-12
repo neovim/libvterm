@@ -7,7 +7,8 @@
 
 typedef struct
 {
-  const VTermStateCallbacks *callbacks;
+  /* [0] for user code, [1] for buffer engine */
+  const VTermStateCallbacks *callbacks[2];
 
   /* Current cursor position */
   VTermPos pos;
