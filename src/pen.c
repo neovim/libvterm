@@ -90,8 +90,9 @@ static void setpenattr(VTerm *vt, VTermAttr attr, VTermAttrvalue *val)
 {
   VTermState *state = vt->state;
 
-  if(state->callbacks && state->callbacks->setpenattr)
-    (*state->callbacks->setpenattr)(vt, attr, val, &state->pen);
+  for(int cb = 0; cb < 2; cb++)
+  if(state->callbacks[cb] && state->callbacks[cb]->setpenattr)
+    (*state->callbacks[cb]->setpenattr)(vt, attr, val, &state->pen);
 }
 
 static void setpenattr_bool(VTerm *vt, VTermAttr attr, int boolean)
@@ -139,9 +140,10 @@ void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
   while(argi < argcount) {
     int done = 0;
 
-    if(state->callbacks &&
-       state->callbacks->setpen)
-      done = (*state->callbacks->setpen)(vt, args[argi], &state->pen);
+    for(int cb = 0; cb < 2; cb++)
+      if(state->callbacks[cb] && state->callbacks[cb]->setpen)
+        if((*state->callbacks[cb]->setpen)(vt, args[argi], &state->pen))
+          done = 1;
 
     if(done)
       goto next;
