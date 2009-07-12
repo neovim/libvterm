@@ -12,13 +12,13 @@
 static void putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos)
 {
   VTermState *state = vt->state;
-  int done = 0;
 
-  if(state->callbacks && state->callbacks->putglyph)
-    done = (*state->callbacks->putglyph)(vt, chars, width, pos, state->pen);
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->putglyph)
+      if((*state->callbacks[cb]->putglyph)(vt, chars, width, pos, state->pen))
+        return;
 
-  if(!done)
-    fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
+  fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
 }
 
 static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
@@ -26,17 +26,20 @@ static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
   if(state->pos.col == oldpos->col && state->pos.row == oldpos->row)
     return;
 
-  if(state->callbacks && state->callbacks->movecursor)
-    (*state->callbacks->movecursor)(vt, state->pos, *oldpos, vt->mode.cursor_visible);
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->movecursor)
+      if((*state->callbacks[cb]->movecursor)(vt, state->pos, *oldpos, vt->mode.cursor_visible))
+        return;
 }
 
 static void erase(VTerm *vt, VTermRect rect)
 {
   VTermState *state = vt->state;
-  int done = 0;
 
-  if(state->callbacks && state->callbacks->erase)
-    done = (*state->callbacks->erase)(vt, rect, state->pen);
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->erase)
+      if((*state->callbacks[cb]->erase)(vt, rect, state->pen))
+        return;
 }
 
 static VTermState *vterm_state_new(void)
@@ -72,9 +75,9 @@ void vterm_state_initialise(VTerm *vt)
 
   state->pen = NULL;
 
-  if(state->callbacks &&
-     state->callbacks->setpen)
-    (*state->callbacks->setpen)(vt, 0, &state->pen);
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->setpen)
+      (*state->callbacks[cb]->setpen)(vt, 0, &state->pen);
 
   VTermRect rect = { 0, vt->rows, 0, vt->cols };
   erase(vt, rect);
@@ -102,10 +105,14 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
 
   int done = 0;
 
-  if(state->callbacks && state->callbacks->scroll)
-    done = (*state->callbacks->scroll)(vt, rect, downward, rightward);
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->scroll)
+      if((*state->callbacks[cb]->scroll)(vt, rect, downward, rightward)) {
+        done = 1;
+        break;
+      }
 
-  if(!done && state->callbacks && state->callbacks->copyrect) {
+  if(!done) {
     VTermRect src;
     VTermRect dest;
 
@@ -145,10 +152,15 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
       src.end_row    = rect.end_row - upward;
     }
 
-    done = (*state->callbacks->copyrect)(vt, dest, src);
+    for(int cb = 0; cb < 2; cb++)
+      if(state->callbacks[cb] && state->callbacks[cb]->copyrect)
+        if((*state->callbacks[cb]->copyrect)(vt, dest, src)) {
+          done = 1;
+          break;
+        }
   }
 
-  if(!done && state->callbacks && state->callbacks->copycell) {
+  if(!done) {
     int init_row, test_row, init_col, test_col;
     int inc_row, inc_col;
 
@@ -188,7 +200,10 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
     for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
       for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
         VTermPos srcpos = { pos.row + downward, pos.col + rightward };
-        (*state->callbacks->copycell)(vt, pos, srcpos);
+        for(int cb = 0; cb < 2; cb++)
+          if(state->callbacks[cb] && state->callbacks[cb]->copycell)
+            if((*state->callbacks[cb]->copycell)(vt, pos, srcpos))
+              break;
       }
 
     done = 1;
@@ -372,9 +387,10 @@ static int on_control(VTerm *vt, unsigned char control)
 
   switch(control) {
   case 0x07: // BEL - ECMA-48 8.3.3
-    if(state->callbacks &&
-       state->callbacks->bell)
-      (*state->callbacks->bell)(vt);
+    for(int cb = 0; cb < 2; cb++)
+      if(state->callbacks[cb] && state->callbacks[cb]->bell)
+        if((*state->callbacks[cb]->bell)(vt))
+          break;
     break;
 
   case 0x08: // BS - ECMA-48 8.3.5
@@ -451,8 +467,12 @@ static void setmode(VTerm *vt, VTermMode mode, int val)
   VTermState *state = vt->state;
 
   int done = 0;
-  if(state->callbacks && state->callbacks->setmode)
-    done = (*state->callbacks->setmode)(vt, mode, val);
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->setmode)
+      if((*state->callbacks[cb]->setmode)(vt, mode, val)) {
+        done = 1;
+        break;
+      }
 
   switch(mode) {
   case VTERM_MODE_NONE:
@@ -480,12 +500,14 @@ static void setmode(VTerm *vt, VTermMode mode, int val)
     break;
 
   case VTERM_MODE_DEC_MOUSE:
-    if(state->callbacks && state->callbacks->setmousefunc) {
-      if(val) {
-        state->mouse_buttons = 0;
-      }
-      (*state->callbacks->setmousefunc)(vt, val ? mousefunc : NULL, vt);
-    }
+    if(val)
+      state->mouse_buttons = 0;
+
+    for(int cb = 0; cb < 2; cb++)
+      if(state->callbacks[cb] && state->callbacks[cb]->setmousefunc)
+        if((*state->callbacks[cb]->setmousefunc)(vt, val ? mousefunc : NULL, vt))
+          break;
+
     break;
 
   case VTERM_MODE_DEC_ALTSCREEN:
@@ -904,7 +926,7 @@ void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
     if(!vt->state) {
       vt->state = vterm_state_new();
     }
-    vt->state->callbacks = callbacks;
+    vt->state->callbacks[0] = callbacks;
     vt->parser_callbacks[1] = &parser_callbacks;
 
     // Initialise the modes
