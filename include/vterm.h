@@ -44,7 +44,7 @@ typedef struct {
 
 typedef struct {
   int (*text)(VTerm *vt, const int codepoints[], int npoints);
-  int (*control)(VTerm *vt, char control);
+  int (*control)(VTerm *vt, unsigned char control);
   int (*escape)(VTerm *vt, const char *bytes, size_t len);
   int (*csi_raw)(VTerm *vt, const char *args, size_t arglen, char command);
   int (*csi)(VTerm *vt, const char *intermed, const long args[], int argcount, char command);
