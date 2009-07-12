@@ -13,7 +13,7 @@ static int gamma24[] = {
   215, 222, 227, 233, 239, 244, 249, 255,
 };
 
-static void lookup_colour_ansi(long index, char is_bg, VTermAttrvalue_color *col)
+static void lookup_colour_ansi(long index, char is_bg, VTermAttrValueColor *col)
 {
   if(index == -1) {
     if(is_bg)
@@ -29,7 +29,7 @@ static void lookup_colour_ansi(long index, char is_bg, VTermAttrvalue_color *col
   }
 }
 
-static int lookup_colour(int palette, const long args[], int argcount, char is_bg, VTermAttrvalue_color *col)
+static int lookup_colour(int palette, const long args[], int argcount, char is_bg, VTermAttrValueColor *col)
 {
   long index;
 
@@ -86,7 +86,7 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
 
 // Some conveniences
 
-static void setpenattr(VTerm *vt, VTermAttr attr, VTermAttrvalue *val)
+static void setpenattr(VTerm *vt, VTermAttr attr, VTermAttrValue *val)
 {
   VTermState *state = vt->state;
 
@@ -97,19 +97,19 @@ static void setpenattr(VTerm *vt, VTermAttr attr, VTermAttrvalue *val)
 
 static void setpenattr_bool(VTerm *vt, VTermAttr attr, int boolean)
 {
-  VTermAttrvalue val = { .boolean = boolean };
+  VTermAttrValue val = { .boolean = boolean };
   setpenattr(vt, attr, &val);
 }
 
 static void setpenattr_int(VTerm *vt, VTermAttr attr, int number)
 {
-  VTermAttrvalue val = { .number = number };
+  VTermAttrValue val = { .number = number };
   setpenattr(vt, attr, &val);
 }
 
 static void setpenattr_col_ansi(VTerm *vt, VTermAttr attr, long col)
 {
-  VTermAttrvalue val;
+  VTermAttrValue val;
 
   lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
@@ -118,7 +118,7 @@ static void setpenattr_col_ansi(VTerm *vt, VTermAttr attr, long col)
 
 static int setpenattr_col_palette(VTerm *vt, VTermAttr attr, const long args[], int argcount)
 {
-  VTermAttrvalue val;
+  VTermAttrValue val;
 
   if(!argcount)
     return 0;
