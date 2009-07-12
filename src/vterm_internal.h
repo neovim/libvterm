@@ -56,9 +56,6 @@ void vterm_push_output_sprintf(VTerm *vt, const char *format, ...);
 
 void vterm_state_setpen(VTerm *vt, const long args[], int argcount);
 
-void vterm_state_initmodes(VTerm *vt);
-void vterm_state_setmode(VTerm *vt, VTermMode mode, int val);
-
 int vterm_unicode_width(int codepoint);
 int vterm_unicode_is_combining(int codepoint);
 
