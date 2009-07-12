@@ -425,6 +425,101 @@ static int on_control(VTerm *vt, unsigned char control)
   return 1;
 }
 
+static void mousefunc(int x, int y, int button, int pressed, void *data)
+{
+  VTerm *vt = data;
+  VTermState *state = vt->state;
+
+  int old_buttons = state->mouse_buttons;
+
+  if(pressed)
+    state->mouse_buttons |= (1 << button);
+  else
+    state->mouse_buttons &= ~(1 << button);
+
+  if(state->mouse_buttons != old_buttons) {
+    if(button < 4) {
+      vterm_push_output_sprintf(vt, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
+    }
+  }
+}
+
+static void setmode(VTerm *vt, VTermMode mode, int val)
+{
+  VTermState *state = vt->state;
+
+  int done = 0;
+  if(state->callbacks && state->callbacks->setmode)
+    done = (*state->callbacks->setmode)(vt, mode, val);
+
+  switch(mode) {
+  case VTERM_MODE_NONE:
+  case VTERM_MODE_MAX:
+    break;
+
+  case VTERM_MODE_KEYPAD:
+    vt->mode.keypad = val;
+    break;
+
+  case VTERM_MODE_DEC_CURSOR:
+    vt->mode.cursor = val;
+    break;
+
+  case VTERM_MODE_DEC_AUTOWRAP:
+    vt->mode.autowrap = val;
+    break;
+
+  case VTERM_MODE_DEC_CURSORBLINK:
+    vt->mode.cursor_blink = val;
+    break;
+
+  case VTERM_MODE_DEC_CURSORVISIBLE:
+    vt->mode.cursor_visible = val;
+    break;
+
+  case VTERM_MODE_DEC_MOUSE:
+    if(state->callbacks && state->callbacks->setmousefunc) {
+      if(val) {
+        state->mouse_buttons = 0;
+      }
+      (*state->callbacks->setmousefunc)(vt, val ? mousefunc : NULL, vt);
+    }
+    break;
+
+  case VTERM_MODE_DEC_ALTSCREEN:
+    /* Only store that we're on the alternate screen if the usercode said it
+     * switched */
+    if(done)
+      vt->mode.alt_screen = val;
+    if(done && val) {
+      if(state->callbacks && state->callbacks->erase) {
+        VTermRect rect = {
+          .start_row = 0,
+          .start_col = 0,
+          .end_row = vt->rows,
+          .end_col = vt->cols,
+        };
+        (*state->callbacks->erase)(vt, rect, state->pen);
+      }
+    }
+    break;
+
+  case VTERM_MODE_DEC_SAVECURSOR:
+    vt->mode.saved_cursor = val;
+    if(val) {
+      state->saved_pos = state->pos;
+    }
+    else {
+      VTermPos oldpos = state->pos;
+      state->pos = state->saved_pos;
+      if(state->callbacks && state->callbacks->movecursor)
+        (*state->callbacks->movecursor)(vt, state->pos, oldpos, vt->mode.cursor_visible);
+    }
+    break;
+
+  }
+}
+
 static int on_escape(VTerm *vt, const char *bytes, size_t len)
 {
   switch(bytes[0]) {
@@ -435,11 +530,11 @@ static int on_escape(VTerm *vt, const char *bytes, size_t len)
     return 2;
 
   case 0x3d:
-    vterm_state_setmode(vt, VTERM_MODE_KEYPAD, 1);
+    setmode(vt, VTERM_MODE_KEYPAD, 1);
     return 1;
 
   case 0x3e:
-    vterm_state_setmode(vt, VTERM_MODE_KEYPAD, 0);
+    setmode(vt, VTERM_MODE_KEYPAD, 0);
     return 1;
 
   default:
@@ -451,36 +546,36 @@ static void set_dec_mode(VTerm *vt, int num, int val)
 {
   switch(num) {
   case 1:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_CURSOR, val);
+    setmode(vt, VTERM_MODE_DEC_CURSOR, val);
     break;
 
   case 7:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_AUTOWRAP, val);
+    setmode(vt, VTERM_MODE_DEC_AUTOWRAP, val);
     break;
 
   case 12:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_CURSORBLINK, val);
+    setmode(vt, VTERM_MODE_DEC_CURSORBLINK, val);
     break;
 
   case 25:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_CURSORVISIBLE, val);
+    setmode(vt, VTERM_MODE_DEC_CURSORVISIBLE, val);
     break;
 
   case 1000:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_MOUSE, val);
+    setmode(vt, VTERM_MODE_DEC_MOUSE, val);
     break;
 
   case 1047:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_ALTSCREEN, val);
+    setmode(vt, VTERM_MODE_DEC_ALTSCREEN, val);
     break;
 
   case 1048:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_SAVECURSOR, val);
+    setmode(vt, VTERM_MODE_DEC_SAVECURSOR, val);
     break;
 
   case 1049:
-    vterm_state_setmode(vt, VTERM_MODE_DEC_ALTSCREEN, val);
-    vterm_state_setmode(vt, VTERM_MODE_DEC_SAVECURSOR, val);
+    setmode(vt, VTERM_MODE_DEC_ALTSCREEN, val);
+    setmode(vt, VTERM_MODE_DEC_SAVECURSOR, val);
     break;
 
   default:
@@ -820,7 +915,23 @@ void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
     vt->parser_callbacks[1] = &parser_callbacks;
 
     // Initialise the modes
-    vterm_state_initmodes(vt);
+    VTermMode mode;
+    for(mode = VTERM_MODE_NONE; mode < VTERM_MODE_MAX; mode++) {
+      int val = 0;
+
+      switch(mode) {
+      case VTERM_MODE_DEC_AUTOWRAP:
+      case VTERM_MODE_DEC_CURSORBLINK:
+      case VTERM_MODE_DEC_CURSORVISIBLE:
+        val = 1;
+        break;
+
+      default:
+        break;
+      }
+
+      setmode(vt, mode, val);
+    }
   }
   else {
     if(vt->state) {
