@@ -492,7 +492,7 @@ int term_initpen(VTerm *vt, void **penstore)
   return 0;
 }
 
-int term_setpenattr(VTerm *vt, VTermAttr attr, VTermAttrvalue *val, void **penstore)
+int term_setpenattr(VTerm *vt, VTermAttr attr, VTermAttrValue *val, void **penstore)
 {
   flush_glyphs();
 
