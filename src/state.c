@@ -7,6 +7,38 @@
 # define DEBUG_GLYPH_COMBINE
 #endif
 
+/* Some convenient wrappers to make callback functions easier */
+
+static void putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos)
+{
+  VTermState *state = vt->state;
+  int done = 0;
+
+  if(state->callbacks && state->callbacks->putglyph)
+    done = (*state->callbacks->putglyph)(vt, chars, width, pos, state->pen);
+
+  if(!done)
+    fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
+}
+
+static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
+{
+  if(state->pos.col == oldpos->col && state->pos.row == oldpos->row)
+    return;
+
+  if(state->callbacks && state->callbacks->movecursor)
+    (*state->callbacks->movecursor)(vt, state->pos, *oldpos, vt->mode.cursor_visible);
+}
+
+static void erase(VTerm *vt, VTermRect rect)
+{
+  VTermState *state = vt->state;
+  int done = 0;
+
+  if(state->callbacks && state->callbacks->erase)
+    done = (*state->callbacks->erase)(vt, rect, state->pen);
+}
+
 static VTermState *vterm_state_new(void)
 {
   VTermState *state = g_new0(VTermState, 1);
@@ -44,11 +76,8 @@ void vterm_state_initialise(VTerm *vt)
      state->callbacks->setpen)
     (*state->callbacks->setpen)(vt, 0, &state->pen);
 
-  if(state->callbacks &&
-     state->callbacks->erase) {
-    VTermRect rect = { 0, vt->rows, 0, vt->cols };
-    (*state->callbacks->erase)(vt, rect, state->pen);
-  }
+  VTermRect rect = { 0, vt->rows, 0, vt->cols };
+  erase(vt, rect);
 }
 
 void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos)
@@ -175,18 +204,7 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
   else if(rightward < 0)
     rect.end_col = rect.start_col - rightward;
 
-  if(state->callbacks &&
-     state->callbacks->erase)
-    (*state->callbacks->erase)(vt, rect, state->pen);
-}
-
-static void updatecursor(VTerm *vt, const VTermState *state, VTermPos *oldpos)
-{
-  if(state->pos.col != oldpos->col || state->pos.row != oldpos->row) {
-    if(state->callbacks &&
-      state->callbacks->movecursor)
-      (*state->callbacks->movecursor)(vt, state->pos, *oldpos, vt->mode.cursor_visible);
-  }
+  erase(vt, rect);
 }
 
 static void linefeed(VTerm *vt)
@@ -275,15 +293,7 @@ static int on_text(VTerm *vt, const int codepoints[], int npoints)
 #endif
 
       /* Now render it */
-      int done = 0;
-
-      if(state->callbacks && state->callbacks->putglyph) {
-        done = (*state->callbacks->putglyph)(vt, state->combine_chars, state->combine_width, state->combine_pos, state->pen);
-      }
-
-      if(!done)
-        fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n",
-            state->combine_chars[0], state->pos.col, state->pos.row);
+      putglyph(vt, state->combine_chars, state->combine_width, state->combine_pos);
     }
     else {
       fprintf(stderr, "libvterm: TODO: Skip over split char+combining\n");
@@ -318,15 +328,7 @@ static int on_text(VTerm *vt, const int codepoints[], int npoints)
     printf("}, onscreen width %d\n", width);
 #endif
 
-    int done = 0;
-
-    if(state->callbacks && state->callbacks->putglyph) {
-      done = (*state->callbacks->putglyph)(vt, chars, width, state->pos, state->pen);
-    }
-
-    if(!done)
-      fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n",
-          chars[0], state->pos.col, state->pos.row);
+    putglyph(vt, chars, width, state->pos);
 
     if(i == npoints - 1) {
       /* End of the buffer. Save the chars in case we have to combine with
@@ -492,15 +494,13 @@ static void setmode(VTerm *vt, VTermMode mode, int val)
     if(done)
       vt->mode.alt_screen = val;
     if(done && val) {
-      if(state->callbacks && state->callbacks->erase) {
-        VTermRect rect = {
-          .start_row = 0,
-          .start_col = 0,
-          .end_row = vt->rows,
-          .end_col = vt->cols,
-        };
-        (*state->callbacks->erase)(vt, rect, state->pen);
-      }
+      VTermRect rect = {
+        .start_row = 0,
+        .start_col = 0,
+        .end_row = vt->rows,
+        .end_col = vt->cols,
+      };
+      erase(vt, rect);
     }
     break;
 
@@ -512,8 +512,7 @@ static void setmode(VTerm *vt, VTermMode mode, int val)
     else {
       VTermPos oldpos = state->pos;
       state->pos = state->saved_pos;
-      if(state->callbacks && state->callbacks->movecursor)
-        (*state->callbacks->movecursor)(vt, state->pos, oldpos, vt->mode.cursor_visible);
+      updatecursor(vt, state, &oldpos);
     }
     break;
 
@@ -698,39 +697,36 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     break;
 
   case 0x4a: // ED - ECMA-48 8.3.39
-    if(!state->callbacks || !state->callbacks->erase)
-      return 1;
-
     switch(CSI_ARG(args[0])) {
     case CSI_ARG_MISSING:
     case 0:
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
       rect.start_col = state->pos.col; rect.end_col = vt->cols;
       if(rect.end_col > rect.start_col)
-        (*state->callbacks->erase)(vt, rect, state->pen);
+        erase(vt, rect);
 
       rect.start_row = state->pos.row + 1; rect.end_row = vt->rows;
       rect.start_col = 0;
       if(rect.end_row > rect.start_row)
-        (*state->callbacks->erase)(vt, rect, state->pen);
+        erase(vt, rect);
       break;
 
     case 1:
       rect.start_row = 0; rect.end_row = state->pos.row;
       rect.start_col = 0; rect.end_col = vt->cols;
       if(rect.end_col > rect.start_col)
-        (*state->callbacks->erase)(vt, rect, state->pen);
+        erase(vt, rect);
 
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
                           rect.end_col = state->pos.col + 1;
       if(rect.end_row > rect.start_row)
-        (*state->callbacks->erase)(vt, rect, state->pen);
+        erase(vt, rect);
       break;
 
     case 2:
       rect.start_row = 0; rect.end_row = vt->rows;
       rect.start_col = 0; rect.end_col = vt->cols;
-      (*state->callbacks->erase)(vt, rect, state->pen);
+      erase(vt, rect);
       break;
     }
 
@@ -750,9 +746,8 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
       return 0;
     }
 
-    if(state->callbacks && state->callbacks->erase)
-      if(rect.end_col > rect.start_col)
-        (*state->callbacks->erase)(vt, rect, state->pen);
+    if(rect.end_col > rect.start_col)
+      erase(vt, rect);
 
     break;
 
@@ -824,9 +819,7 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     rect.start_col = state->pos.col;
     rect.end_col   = state->pos.col + count;
 
-    if(state->callbacks && state->callbacks->erase)
-      (*state->callbacks->erase)(vt, rect, state->pen);
-
+    erase(vt, rect);
     break;
 
   case 0x5a: // CBT - ECMA-48 8.3.7
