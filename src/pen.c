@@ -133,24 +133,13 @@ static int setpenattr_col_palette(VTerm *vt, VTermAttr attr, const long args[], 
 void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
-  VTermState *state = vt->state;
 
   int argi = 0;
 
   while(argi < argcount) {
-    int done = 0;
-
-    for(int cb = 0; cb < 2; cb++)
-      if(state->callbacks[cb] && state->callbacks[cb]->setpen)
-        if((*state->callbacks[cb]->setpen)(vt, args[argi], &state->pen))
-          done = 1;
-
-    if(done)
-      goto next;
-
     // This logic is easier to do 'done' backwards; set it true, and make it
     // false again in the 'default' case
-    done = 1;
+    int done = 1;
 
     long arg;
     switch(arg = CSI_ARG(args[argi])) {
@@ -240,7 +229,6 @@ void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
     if(!done)
       fprintf(stderr, "libvterm: Unhandled CSI SGR %lu\n", arg);
 
-next:
     while(CSI_ARG_HAS_MORE(args[argi++]));
   }
 }

@@ -76,8 +76,8 @@ void vterm_state_initialise(VTerm *vt)
   state->pen = NULL;
 
   for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->setpen)
-      (*state->callbacks[cb]->setpen)(vt, 0, &state->pen);
+    if(state->callbacks[cb] && state->callbacks[cb]->initpen)
+      (*state->callbacks[cb]->initpen)(vt, &state->pen);
 
   VTermRect rect = { 0, vt->rows, 0, vt->cols };
   erase(vt, rect);
