@@ -13,7 +13,6 @@ typedef struct {
     CB_TEXT,
     CB_CONTROL,
     CB_ESCAPE,
-    CB_CSI_RAW,
     CB_CSI,
     CB_OSC,
   } type;
@@ -21,7 +20,6 @@ typedef struct {
     struct { int *codepoints; int npoints; } text;
     unsigned char control;
     char escape;
-    struct { char *args; size_t arglen; char command; } csi_raw;
     struct { char *intermed; long *args; int argcount; char command; } csi;
     struct { char *command; size_t cmdlen; } osc;
   } val;
@@ -62,26 +60,6 @@ static int cb_escape(VTerm *_vt, const char bytes[], size_t len)
   cb *c = g_new0(cb, 1);
   c->type = CB_ESCAPE;
   c->val.escape = bytes[0];
-
-  cbs = g_slist_append(cbs, c);
-
-  return 1;
-}
-
-static int capture_csi_raw = 0;
-
-static int cb_csi_raw(VTerm *_vt, const char *args, size_t arglen, char command)
-{
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
-  if(!capture_csi_raw)
-    return 0;
-
-  cb *c = g_new0(cb, 1);
-  c->type = CB_CSI_RAW;
-  c->val.csi_raw.args = g_strndup(args, arglen);
-  c->val.csi_raw.arglen = arglen;
-  c->val.csi_raw.command = command;
 
   cbs = g_slist_append(cbs, c);
 
@@ -130,8 +108,6 @@ static void free_cbs(void)
     case CB_CONTROL:
     case CB_ESCAPE:
       break;
-    case CB_CSI_RAW:
-      g_free(c->val.csi_raw.args); break;
     case CB_CSI:
       g_free(c->val.csi.intermed); g_free(c->val.csi.args); break;
     case CB_OSC:
@@ -149,7 +125,6 @@ static VTermParserCallbacks parser_cbs = {
   .text    = cb_text,
   .control = cb_control,
   .escape  = cb_escape,
-  .csi_raw = cb_csi_raw,
   .csi     = cb_csi,
   .osc     = cb_osc,
 };
@@ -305,50 +280,8 @@ static void test_escape(void)
   free_cbs();
 }
 
-static void test_csi_raw(void)
-{
-  capture_csi_raw = 1;
-
-  vterm_push_bytes(vt, "\e[A", 3);
-
-  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
-
-  cb *c = cbs->data;
-  CU_ASSERT_EQUAL(c->type, CB_CSI_RAW);
-  CU_ASSERT_EQUAL(c->val.csi_raw.command, 'A');
-  CU_ASSERT_EQUAL(c->val.csi_raw.arglen, 0);
-
-  free_cbs();
-
-  vterm_push_bytes(vt, "\e[15B", 5);
-
-  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
-
-  c = cbs->data;
-  CU_ASSERT_EQUAL(c->type, CB_CSI_RAW);
-  CU_ASSERT_EQUAL(c->val.csi_raw.command, 'B');
-  CU_ASSERT_EQUAL(c->val.csi_raw.arglen, 2);
-  CU_ASSERT_NSTRING_EQUAL(c->val.csi_raw.args, "15", 2);
-
-  free_cbs();
-
-  vterm_push_bytes(vt, "\e[?004C", 7);
-
-  CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
-
-  c = cbs->data;
-  CU_ASSERT_EQUAL(c->type, CB_CSI_RAW);
-  CU_ASSERT_EQUAL(c->val.csi_raw.command, 'C');
-  CU_ASSERT_EQUAL(c->val.csi_raw.arglen, 4);
-  CU_ASSERT_NSTRING_EQUAL(c->val.csi_raw.args, "?004", 4);
-
-  free_cbs();
-}
-
 static void test_csi_0arg(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[a", 3);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
@@ -365,8 +298,6 @@ static void test_csi_0arg(void)
 
 static void test_csi_1arg(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[9b", 4);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
@@ -384,8 +315,6 @@ static void test_csi_1arg(void)
 
 static void test_csi_2arg(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[3;4c", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
@@ -405,8 +334,6 @@ static void test_csi_2arg(void)
 
 static void test_csi_1arg1sub(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[1:2c", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
@@ -426,8 +353,6 @@ static void test_csi_1arg1sub(void)
 
 static void test_csi_manydigits(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[678d", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 1);
@@ -445,8 +370,6 @@ static void test_csi_manydigits(void)
 
 static void test_csi_leadingzero(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[007e", 6);
 
   cb *c = cbs->data;
@@ -462,8 +385,6 @@ static void test_csi_leadingzero(void)
 
 static void test_csi_qmark(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e[?2;7f", 7);
 
   cb *c = cbs->data;
@@ -482,8 +403,6 @@ static void test_csi_qmark(void)
 
 static void test_mixedcsi(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "A\e[8mB", 6);
 
   CU_ASSERT_EQUAL(g_slist_length(cbs), 3);
@@ -511,8 +430,6 @@ static void test_mixedcsi(void)
 
 static void test_splitwrite(void)
 {
-  capture_csi_raw = 0;
-
   vterm_push_bytes(vt, "\e", 1);
 
   CU_ASSERT_PTR_NULL(cbs);
