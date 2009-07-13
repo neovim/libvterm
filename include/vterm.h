@@ -82,7 +82,6 @@ typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data
 typedef struct {
   int (*putglyph)(VTerm *vt, const uint32_t chars[], int width, VTermPos pos, void *pen);
   int (*movecursor)(VTerm *vt, VTermPos pos, VTermPos oldpos, int visible);
-  int (*scroll)(VTerm *vt, VTermRect rect, int downward, int rightward);
   int (*copyrect)(VTerm *vt, VTermRect dest, VTermRect src);
   int (*copycell)(VTerm *vt, VTermPos dest, VTermPos src);
   int (*erase)(VTerm *vt, VTermRect rect, void *pen);

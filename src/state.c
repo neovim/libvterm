@@ -105,60 +105,51 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
 
   int done = 0;
 
+  VTermRect src;
+  VTermRect dest;
+
+  if(rightward >= 0) {
+    /* rect: [XXX................]
+     * src:     [----------------]
+     * dest: [----------------]
+     */
+    dest.start_col = rect.start_col;
+    dest.end_col   = rect.end_col   - rightward;
+    src.start_col  = rect.start_col + rightward;
+    src.end_col    = rect.end_col;
+  }
+  else {
+    /* rect: [................XXX]
+     * src:  [----------------]
+     * dest:    [----------------]
+     */
+    int leftward = -rightward;
+    dest.start_col = rect.start_col + leftward;
+    dest.end_col   = rect.end_col;
+    src.start_col  = rect.start_col;
+    src.end_col    = rect.end_col - leftward;
+  }
+
+  if(downward >= 0) {
+    dest.start_row = rect.start_row;
+    dest.end_row   = rect.end_row   - downward;
+    src.start_row  = rect.start_row + downward;
+    src.end_row    = rect.end_row;
+  }
+  else {
+    int upward = -downward;
+    dest.start_row = rect.start_row + upward;
+    dest.end_row   = rect.end_row;
+    src.start_row  = rect.start_row;
+    src.end_row    = rect.end_row - upward;
+  }
+
   for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->scroll)
-      if((*state->callbacks[cb]->scroll)(vt, rect, downward, rightward)) {
+    if(state->callbacks[cb] && state->callbacks[cb]->copyrect)
+      if((*state->callbacks[cb]->copyrect)(vt, dest, src)) {
         done = 1;
         break;
       }
-
-  if(!done) {
-    VTermRect src;
-    VTermRect dest;
-
-    if(rightward >= 0) {
-      /* rect: [XXX................]
-       * src:     [----------------]
-       * dest: [----------------]
-       */
-      dest.start_col = rect.start_col;
-      dest.end_col   = rect.end_col   - rightward;
-      src.start_col  = rect.start_col + rightward;
-      src.end_col    = rect.end_col;
-    }
-    else {
-      /* rect: [................XXX]
-       * src:  [----------------]
-       * dest:    [----------------]
-       */
-      int leftward = -rightward;
-      dest.start_col = rect.start_col + leftward;
-      dest.end_col   = rect.end_col;
-      src.start_col  = rect.start_col;
-      src.end_col    = rect.end_col - leftward;
-    }
-
-    if(downward >= 0) {
-      dest.start_row = rect.start_row;
-      dest.end_row   = rect.end_row   - downward;
-      src.start_row  = rect.start_row + downward;
-      src.end_row    = rect.end_row;
-    }
-    else {
-      int upward = -downward;
-      dest.start_row = rect.start_row + upward;
-      dest.end_row   = rect.end_row;
-      src.start_row  = rect.start_row;
-      src.end_row    = rect.end_row - upward;
-    }
-
-    for(int cb = 0; cb < 2; cb++)
-      if(state->callbacks[cb] && state->callbacks[cb]->copyrect)
-        if((*state->callbacks[cb]->copyrect)(vt, dest, src)) {
-          done = 1;
-          break;
-        }
-  }
 
   if(!done) {
     int init_row, test_row, init_col, test_col;
