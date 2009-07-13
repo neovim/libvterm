@@ -84,7 +84,7 @@ typedef struct {
   int (*copyrect)(VTerm *vt, VTermRect dest, VTermRect src);
   int (*copycell)(VTerm *vt, VTermPos dest, VTermPos src);
   int (*erase)(VTerm *vt, VTermRect rect, void *pen);
-  int (*setpen)(VTerm *vt, int sgrcmd, void **penstore);
+  int (*initpen)(VTerm *vt, void **penstore);
   int (*setpenattr)(VTerm *vt, VTermAttr attr, VTermAttrvalue *val, void **penstore);
   int (*setmode)(VTerm *vt, VTermMode mode, int val);
   int (*setmousefunc)(VTerm *vt, VTermMouseFunc func, void *data);

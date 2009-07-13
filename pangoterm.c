@@ -474,7 +474,7 @@ int term_erase(VTerm *vt, VTermRect rect, void *pen_p)
   return 1;
 }
 
-int term_setpen(VTerm *vt, int sgrcmd, void **penstore)
+int term_initpen(VTerm *vt, void **penstore)
 {
   term_pen *pen = *penstore;
 
@@ -625,7 +625,7 @@ static VTermStateCallbacks cb = {
   .copyrect     = term_copyrect,
   .copycell     = term_copycell,
   .erase        = term_erase,
-  .setpen       = term_setpen,
+  .initpen      = term_initpen,
   .setpenattr   = term_setpenattr,
   .setmode      = term_setmode,
   .setmousefunc = term_setmousefunc,
