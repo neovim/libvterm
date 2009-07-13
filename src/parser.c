@@ -46,11 +46,6 @@ static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
 
 static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
-  for(int cb = 0; cb < 2; cb++)
-    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->csi_raw)
-      if((*vt->parser_callbacks[cb]->csi_raw)(vt, args, arglen, command))
-        return;
-
   if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3e) {
     int i;
     for(i = 0; i < arglen; i++)
