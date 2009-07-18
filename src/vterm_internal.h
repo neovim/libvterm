@@ -46,7 +46,15 @@ struct _VTerm
   GString *outbuffer;
   VTermState *state;
 
-  VTermModeValues mode;
+  struct {
+    int keypad:1;
+    int cursor:1;
+    int autowrap:1;
+    int cursor_blink:1;
+    int cursor_visible:1;
+    int alt_screen:1;
+    int saved_cursor:1;
+  } mode;
 };
 
 size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len);
