@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 #include "vterm_input.h"
-#include "vterm_pen.h"
 
 typedef struct _VTerm VTerm;
 
@@ -48,6 +47,27 @@ typedef struct {
   int (*csi)(VTerm *vt, const char *intermed, const long args[], int argcount, char command);
   int (*osc)(VTerm *vt, const char *command, size_t cmdlen);
 } VTermParserCallbacks;
+
+typedef struct {
+  uint8_t red, green, blue;
+} VTermAttrValueColor;
+
+typedef union {
+  int boolean;
+  int number;
+  VTermAttrValueColor color;
+} VTermAttrValue;
+
+typedef enum {
+  VTERM_ATTR_NONE,
+  VTERM_ATTR_BOLD,       // bool:   1, 22
+  VTERM_ATTR_UNDERLINE,  // number: 4, 21, 24
+  VTERM_ATTR_ITALIC,     // bool:   3, 23
+  VTERM_ATTR_REVERSE,    // bool:   7, 27
+  VTERM_ATTR_FONT,       // number: 10-19
+  VTERM_ATTR_FOREGROUND, // color:  30-39
+  VTERM_ATTR_BACKGROUND, // color:  40-49
+} VTermAttr;
 
 typedef enum {
   VTERM_MODE_NONE,
