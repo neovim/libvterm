@@ -468,6 +468,25 @@ static int settermprop_bool(VTerm *vt, VTermProp prop, int v)
   return 0;
 }
 
+static int settermprop_string(VTerm *vt, VTermProp prop, const char *str, size_t len)
+{
+  VTermState *state = vt->state;
+
+  char strvalue[len+1];
+  strncpy(strvalue, str, len);
+  strvalue[len] = 0;
+
+  VTermValue val;
+  val.string = strvalue;
+
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->settermprop)
+      if((*state->callbacks[cb]->settermprop)(vt, prop, &val))
+        return 1;
+
+  return 0;
+}
+
 static void savecursor(VTerm *vt, int save)
 {
   VTermState *state = vt->state;
@@ -884,11 +903,34 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
   return 1;
 }
 
+static int on_osc(VTerm *vt, const char *command, size_t cmdlen)
+{
+  if(cmdlen < 2)
+    return 0;
+
+  if(strncmp(command, "0;", 2) == 0) {
+    settermprop_string(vt, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
+    settermprop_string(vt, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
+    return 1;
+  }
+  else if(strncmp(command, "1;", 2) == 0) {
+    settermprop_string(vt, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
+    return 1;
+  }
+  else if(strncmp(command, "2;", 2) == 0) {
+    settermprop_string(vt, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
+    return 1;
+  }
+
+  return 0;
+}
+
 static const VTermParserCallbacks parser_callbacks = {
   .text    = on_text,
   .control = on_control,
   .escape  = on_escape,
   .csi     = on_csi,
+  .osc     = on_osc,
 };
 
 void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
