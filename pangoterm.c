@@ -589,6 +589,14 @@ int term_settermprop(VTerm *vt, VTermProp prop, VTermValue *val)
     }
     break;
 
+  case VTERM_PROP_ICONNAME:
+    gdk_window_set_icon_name(GDK_WINDOW(termwin->window), val->string);
+    break;
+
+  case VTERM_PROP_TITLE:
+    gtk_window_set_title(GTK_WINDOW(termwin), val->string);
+    break;
+
   default:
     return 0;
   }
@@ -630,38 +638,6 @@ static VTermStateCallbacks cb = {
   .settermprop  = term_settermprop,
   .setmousefunc = term_setmousefunc,
   .bell         = term_bell,
-};
-
-int term_osc(VTerm *vt, const char *command, size_t cmdlen)
-{
-  if(cmdlen < 2)
-    return 0;
-
-  if(strncmp(command, "0;", 2) == 0) {
-    gchar *title = g_strndup(command + 2, cmdlen - 2);
-    gtk_window_set_title(GTK_WINDOW(termwin), title);
-    gdk_window_set_icon_name(GDK_WINDOW(termwin->window), title);
-    g_free(title);
-    return 1;
-  }
-  else if(strncmp(command, "1;", 2) == 0) {
-    gchar *title = g_strndup(command + 2, cmdlen - 2);
-    gdk_window_set_icon_name(GDK_WINDOW(termwin->window), title);
-    g_free(title);
-    return 1;
-  }
-  else if(strncmp(command, "2;", 2) == 0) {
-    gchar *title = g_strndup(command + 2, cmdlen - 2);
-    gtk_window_set_title(GTK_WINDOW(termwin), title);
-    g_free(title);
-    return 1;
-  }
-
-  return 0;
-}
-
-static VTermParserCallbacks parser_cb = {
-  .osc = term_osc,
 };
 
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
@@ -743,7 +719,6 @@ int main(int argc, char *argv[])
 
   gtk_widget_realize(window);
 
-  vterm_set_parser_callbacks(vt, &parser_cb);
   vterm_set_state_callbacks(vt, &cb);
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
