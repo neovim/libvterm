@@ -50,13 +50,13 @@ typedef struct {
 
 typedef struct {
   uint8_t red, green, blue;
-} VTermAttrValueColor;
+} VTermColor;
 
 typedef union {
   int boolean;
   int number;
-  VTermAttrValueColor color;
-} VTermAttrValue;
+  VTermColor color;
+} VTermValue;
 
 typedef enum {
   VTERM_ATTR_NONE,
@@ -105,7 +105,7 @@ typedef struct {
   int (*copycell)(VTerm *vt, VTermPos dest, VTermPos src);
   int (*erase)(VTerm *vt, VTermRect rect, void *pen);
   int (*initpen)(VTerm *vt, void **penstore);
-  int (*setpenattr)(VTerm *vt, VTermAttr attr, VTermAttrValue *val, void **penstore);
+  int (*setpenattr)(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore);
   int (*setmode)(VTerm *vt, VTermMode mode, int val);
   int (*setmousefunc)(VTerm *vt, VTermMouseFunc func, void *data);
   int (*bell)(VTerm *vt);
