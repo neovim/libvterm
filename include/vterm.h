@@ -70,15 +70,11 @@ typedef enum {
 } VTermAttr;
 
 typedef enum {
-  VTERM_MODE_NONE,
-
-  // DEC private modes
-  VTERM_MODE_DEC_CURSORBLINK,
-  VTERM_MODE_DEC_CURSORVISIBLE,
-  VTERM_MODE_DEC_ALTSCREEN,
-
-  VTERM_MODE_MAX, // Must be last
-} VTermMode;
+  VTERM_PROP_NONE,
+  VTERM_PROP_CURSORVISIBLE, // bool
+  VTERM_PROP_CURSORBLINK,   // bool
+  VTERM_PROP_ALTSCREEN,     // bool
+} VTermProp;
 
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
 
@@ -90,7 +86,7 @@ typedef struct {
   int (*erase)(VTerm *vt, VTermRect rect, void *pen);
   int (*initpen)(VTerm *vt, void **penstore);
   int (*setpenattr)(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore);
-  int (*setmode)(VTerm *vt, VTermMode mode, int val);
+  int (*settermprop)(VTerm *vt, VTermProp prop, VTermValue *val);
   int (*setmousefunc)(VTerm *vt, VTermMouseFunc func, void *data);
   int (*bell)(VTerm *vt);
 } VTermStateCallbacks;
