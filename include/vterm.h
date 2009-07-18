@@ -55,6 +55,7 @@ typedef struct {
 typedef union {
   int boolean;
   int number;
+  char *string;
   VTermColor color;
 } VTermValue;
 
@@ -74,6 +75,8 @@ typedef enum {
   VTERM_PROP_CURSORVISIBLE, // bool
   VTERM_PROP_CURSORBLINK,   // bool
   VTERM_PROP_ALTSCREEN,     // bool
+  VTERM_PROP_TITLE,         // string
+  VTERM_PROP_ICONNAME,      // string
 } VTermProp;
 
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
