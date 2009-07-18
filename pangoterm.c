@@ -553,16 +553,16 @@ int term_setpenattr(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore)
   return 1;
 }
 
-int term_setmode(VTerm *vt, VTermMode mode, int val)
+int term_settermprop(VTerm *vt, VTermProp prop, VTermValue *val)
 {
-  switch(mode) {
-  case VTERM_MODE_DEC_CURSORVISIBLE:
-    cursor_visible = val;
+  switch(prop) {
+  case VTERM_PROP_CURSORVISIBLE:
+    cursor_visible = val->boolean;
     gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
     break;
 
-  case VTERM_MODE_DEC_CURSORBLINK:
-    if(val) {
+  case VTERM_PROP_CURSORBLINK:
+    if(val->boolean) {
       cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, NULL);
     }
     else {
@@ -570,7 +570,7 @@ int term_setmode(VTerm *vt, VTermMode mode, int val)
     }
     break;
 
-  case VTERM_MODE_DEC_ALTSCREEN:
+  case VTERM_PROP_ALTSCREEN:
     {
       int rows, cols;
       vterm_get_size(vt, &rows, &cols);
@@ -582,7 +582,7 @@ int term_setmode(VTerm *vt, VTermMode mode, int val)
         .height = rows * cell_height,
       };
 
-      termbuffer = val ? termbuffer_alternate : termbuffer_main;
+      termbuffer = val->boolean ? termbuffer_alternate : termbuffer_main;
       update_termbuffer();
 
       gdk_rectangle_union(&rect, &invalid_area, &invalid_area);
@@ -627,7 +627,7 @@ static VTermStateCallbacks cb = {
   .erase        = term_erase,
   .initpen      = term_initpen,
   .setpenattr   = term_setpenattr,
-  .setmode      = term_setmode,
+  .settermprop  = term_settermprop,
   .setmousefunc = term_setmousefunc,
   .bell         = term_bell,
 };
