@@ -86,16 +86,6 @@ typedef enum {
   VTERM_MODE_MAX, // Must be last
 } VTermMode;
 
-typedef struct {
-  int keypad:1;
-  int cursor:1;
-  int autowrap:1;
-  int cursor_blink:1;
-  int cursor_visible:1;
-  int alt_screen:1;
-  int saved_cursor:1;
-} VTermModeValues;
-
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
 
 typedef struct {
