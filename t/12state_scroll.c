@@ -5,6 +5,7 @@
 #include <glib.h>
 
 static VTerm *vt;
+static VTermState *state;
 
 static VTermPos cursor;
 static VTermRect dest;
@@ -46,15 +47,16 @@ int state_scroll_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs, NULL);
+  state = vterm_obtain_state(vt);
+  vterm_state_set_callbacks(state, &state_cbs, NULL);
 
   return 0;
 }
 
 static void test_linefeed(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   dest.start_row = -1;
 
@@ -81,8 +83,8 @@ static void test_linefeed(void)
 
 static void test_ind(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\e[25H", 5);
   vterm_push_bytes(vt, "\eD", 2);
@@ -97,8 +99,8 @@ static void test_ind(void)
 
 static void test_ri(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\eM", 2);
 
@@ -114,8 +116,8 @@ static void test_ri(void)
 
 static void test_region(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   CU_ASSERT_EQUAL(cursor.row, 0);
 
@@ -181,8 +183,8 @@ static void test_region(void)
 
 static void test_sdsu(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\e[S", 3);
 

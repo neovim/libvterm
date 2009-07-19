@@ -7,6 +7,7 @@
 #include "vterm_input.h"
 
 typedef struct _VTerm VTerm;
+typedef struct _VTermState VTermState;
 
 typedef struct {
   int row;
@@ -99,10 +100,12 @@ void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 
 void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
-void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, void *user);
 
-void vterm_state_initialise(VTerm *vt);
-void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos);
+VTermState *vterm_obtain_state(VTerm *vt);
+
+void vterm_state_reset(VTermState *state);
+void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
+void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
 
 void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);

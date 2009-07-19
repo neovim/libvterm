@@ -5,6 +5,7 @@
 #include <glib.h>
 
 static VTerm *vt;
+static VTermState *state;
 
 static VTermPos cursor;
 
@@ -32,14 +33,15 @@ int state_movecursor_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs, NULL);
+  state = vterm_obtain_state(vt);
+  vterm_state_set_callbacks(state, &state_cbs, NULL);
 
   return 0;
 }
 
 static void test_initial(void)
 {
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   CU_ASSERT_EQUAL(cursor.row, 0);
   CU_ASSERT_EQUAL(cursor.col, 0);
@@ -47,8 +49,8 @@ static void test_initial(void)
 
 static void test_c0(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABC", 3);
 
@@ -78,8 +80,8 @@ static void test_c0(void)
 
 static void test_c1(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABC", 3);
   vterm_push_bytes(vt, "\eD", 2);
@@ -100,8 +102,8 @@ static void test_c1(void)
 
 static void test_cu_basic(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\e[B", 3);
 
@@ -197,8 +199,8 @@ static void test_cu_basic(void)
 
 static void test_cu_bounds(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\e[A", 3);
 
@@ -249,8 +251,8 @@ static void test_cu_bounds(void)
 
 static void test_hvp_basic(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\e[5`", 4);
 
@@ -290,8 +292,8 @@ static void test_hvp_basic(void)
 
 static void test_tabs(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "\t", 1);
 
@@ -339,8 +341,8 @@ static void test_tabs(void)
 
 static void test_decawm(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   int i;
   for(i = 0; i < 79; i++)
