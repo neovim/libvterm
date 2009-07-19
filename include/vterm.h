@@ -98,7 +98,7 @@ VTerm *vterm_new(int rows, int cols);
 void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 
-void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks);
+void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
 void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, void *user);
 
 void vterm_state_initialise(VTerm *vt);

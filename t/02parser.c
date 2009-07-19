@@ -25,10 +25,8 @@ typedef struct {
   } val;
 } cb;
 
-static int cb_text(VTerm *_vt, const int codepoints[], int npoints)
+static int cb_text(const int codepoints[], int npoints, void *user)
 {
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
   cb *c = g_new0(cb, 1);
   c->type = CB_TEXT;
   c->val.text.npoints = npoints;
@@ -40,10 +38,8 @@ static int cb_text(VTerm *_vt, const int codepoints[], int npoints)
   return 1;
 }
 
-static int cb_control(VTerm *_vt, char control)
+static int cb_control(char control, void *user)
 {
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
   cb *c = g_new0(cb, 1);
   c->type = CB_CONTROL;
   c->val.control = control;
@@ -53,10 +49,8 @@ static int cb_control(VTerm *_vt, char control)
   return 1;
 }
 
-static int cb_escape(VTerm *_vt, const char bytes[], size_t len)
+static int cb_escape(const char bytes[], size_t len, void *user)
 {
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
   cb *c = g_new0(cb, 1);
   c->type = CB_ESCAPE;
   c->val.escape = bytes[0];
@@ -66,10 +60,8 @@ static int cb_escape(VTerm *_vt, const char bytes[], size_t len)
   return 1;
 }
 
-static int cb_csi(VTerm *_vt, const char *intermed, const long args[], int argcount, char command)
+static int cb_csi(const char *intermed, const long args[], int argcount, char command, void *user)
 {
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
   cb *c = g_new0(cb, 1);
   c->type = CB_CSI;
   c->val.csi.intermed = g_strdup(intermed);
@@ -83,10 +75,8 @@ static int cb_csi(VTerm *_vt, const char *intermed, const long args[], int argco
   return 1;
 }
 
-static int cb_osc(VTerm *_vt, const char *command, size_t cmdlen)
+static int cb_osc(const char *command, size_t cmdlen, void *user)
 {
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
   cb *c = g_new0(cb, 1);
   c->type = CB_OSC;
   c->val.osc.command = g_strndup(command, cmdlen);
@@ -136,7 +126,7 @@ int parser_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 0);
-  vterm_set_parser_callbacks(vt, &parser_cbs);
+  vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
 
   return 0;
 }
