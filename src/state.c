@@ -11,10 +11,9 @@
 
 static void putglyph(VTermState *state, const uint32_t chars[], int width, VTermPos pos)
 {
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->putglyph)
-      if((*state->callbacks[cb]->putglyph)(chars, width, pos, state->cbdata[cb]))
-        return;
+  if(state->callbacks && state->callbacks->putglyph)
+    if((*state->callbacks->putglyph)(chars, width, pos, state->cbdata))
+      return;
 
   fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
 }
@@ -24,18 +23,16 @@ static void updatecursor(VTermState *state, VTermPos *oldpos)
   if(state->pos.col == oldpos->col && state->pos.row == oldpos->row)
     return;
 
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->movecursor)
-      if((*state->callbacks[cb]->movecursor)(state->pos, *oldpos, state->mode.cursor_visible, state->cbdata[cb]))
-        return;
+  if(state->callbacks && state->callbacks->movecursor)
+    if((*state->callbacks->movecursor)(state->pos, *oldpos, state->mode.cursor_visible, state->cbdata))
+      return;
 }
 
 static void erase(VTermState *state, VTermRect rect)
 {
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->erase)
-      if((*state->callbacks[cb]->erase)(rect, state->cbdata[cb]))
-        return;
+  if(state->callbacks && state->callbacks->erase)
+    if((*state->callbacks->erase)(rect, state->cbdata))
+      return;
 }
 
 static VTermState *vterm_state_new(VTerm *vt)
@@ -99,12 +96,10 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
     src.end_row    = rect.end_row - upward;
   }
 
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->copyrect)
-      if((*state->callbacks[cb]->copyrect)(dest, src, state->cbdata[cb])) {
-        done = 1;
-        break;
-      }
+  if(state->callbacks && state->callbacks->copyrect)
+    if((*state->callbacks->copyrect)(dest, src, state->cbdata)) {
+      done = 1;
+    }
 
   if(!done) {
     int init_row, test_row, init_col, test_col;
@@ -146,10 +141,8 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
     for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
       for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
         VTermPos srcpos = { pos.row + downward, pos.col + rightward };
-        for(int cb = 0; cb < 2; cb++)
-          if(state->callbacks[cb] && state->callbacks[cb]->copycell)
-            if((*state->callbacks[cb]->copycell)(pos, srcpos, state->cbdata[cb]))
-              break;
+        if(state->callbacks && state->callbacks->copycell)
+          (*state->callbacks->copycell)(pos, srcpos, state->cbdata);
       }
 
     done = 1;
@@ -329,10 +322,8 @@ static int on_control(unsigned char control, void *user)
 
   switch(control) {
   case 0x07: // BEL - ECMA-48 8.3.3
-    for(int cb = 0; cb < 2; cb++)
-      if(state->callbacks[cb] && state->callbacks[cb]->bell)
-        if((*state->callbacks[cb]->bell)(state->cbdata[cb]))
-          break;
+    if(state->callbacks && state->callbacks->bell)
+      (*state->callbacks->bell)(state->cbdata);
     break;
 
   case 0x08: // BS - ECMA-48 8.3.5
@@ -408,10 +399,9 @@ static int settermprop_bool(VTermState *state, VTermProp prop, int v)
   VTermValue val;
   val.boolean = v;
 
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->settermprop)
-      if((*state->callbacks[cb]->settermprop)(prop, &val, state->cbdata[cb]))
-        return 1;
+  if(state->callbacks && state->callbacks->settermprop)
+    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
+      return 1;
 
   return 0;
 }
@@ -425,10 +415,9 @@ static int settermprop_string(VTermState *state, VTermProp prop, const char *str
   VTermValue val;
   val.string = strvalue;
 
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->settermprop)
-      if((*state->callbacks[cb]->settermprop)(prop, &val, state->cbdata[cb]))
-        return 1;
+  if(state->callbacks && state->callbacks->settermprop)
+    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
+      return 1;
 
   return 0;
 }
@@ -513,10 +502,8 @@ static void set_dec_mode(VTermState *state, int num, int val)
     if(val)
       state->mouse_buttons = 0;
 
-    for(int cb = 0; cb < 2; cb++)
-      if(state->callbacks[cb] && state->callbacks[cb]->setmousefunc)
-        if((*state->callbacks[cb]->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata[cb]))
-          break;
+    if(state->callbacks && state->callbacks->setmousefunc)
+      (*state->callbacks->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata);
 
     break;
 
@@ -906,9 +893,8 @@ void vterm_state_reset(VTermState *state)
   state->mode.autowrap = 1;
   state->mode.cursor_visible = 1;
 
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->initpen)
-      (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
+  if(state->callbacks && state->callbacks->initpen)
+    (*state->callbacks->initpen)(state->cbdata);
 
   VTermRect rect = { 0, state->vt->rows, 0, state->vt->cols };
   erase(state, rect);
@@ -922,19 +908,18 @@ void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)
 void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user)
 {
   if(callbacks) {
-    state->callbacks[0] = callbacks;
-    state->cbdata[0] = user;
+    state->callbacks = callbacks;
+    state->cbdata = user;
 
     // Initialise the props
     settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
     settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
 
-    for(int cb = 0; cb < 2; cb++)
-      if(state->callbacks[cb] && state->callbacks[cb]->initpen)
-        (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
+    if(state->callbacks && state->callbacks->initpen)
+      (*state->callbacks->initpen)(state->cbdata);
   }
   else {
-    state->callbacks[0] = NULL;
-    state->cbdata[0] = NULL;
+    state->callbacks = NULL;
+    state->cbdata = NULL;
   }
 }

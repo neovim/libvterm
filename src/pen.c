@@ -88,9 +88,8 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
 
 static void setpenattr(VTermState *state, VTermAttr attr, VTermValue *val)
 {
-  for(int cb = 0; cb < 2; cb++)
-  if(state->callbacks[cb] && state->callbacks[cb]->setpenattr)
-    (*state->callbacks[cb]->setpenattr)(attr, val, state->cbdata[cb]);
+  if(state->callbacks && state->callbacks->setpenattr)
+    (*state->callbacks->setpenattr)(attr, val, state->cbdata);
 }
 
 static void setpenattr_bool(VTermState *state, VTermAttr attr, int boolean)
