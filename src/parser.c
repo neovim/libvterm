@@ -13,20 +13,18 @@
 
 static void vterm_on_parser_text(VTerm *vt, int codepoints[], int npoints)
 {
-  for(int cb = 0; cb < 2; cb++)
-    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->text)
-      if((*vt->parser_callbacks[cb]->text)(codepoints, npoints, vt->cbdata[cb]))
-        return;
+  if(vt->parser_callbacks && vt->parser_callbacks->text)
+    if((*vt->parser_callbacks->text)(codepoints, npoints, vt->cbdata))
+      return;
 
   fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
 }
 
 static void vterm_on_parser_control(VTerm *vt, unsigned char control)
 {
-  for(int cb = 0; cb < 2; cb++)
-    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->control)
-      if((*vt->parser_callbacks[cb]->control)(control, vt->cbdata[cb]))
-        return;
+  if(vt->parser_callbacks && vt->parser_callbacks->control)
+    if((*vt->parser_callbacks->control)(control, vt->cbdata))
+      return;
 
   fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
@@ -35,10 +33,9 @@ static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
 {
   size_t eaten;
 
-  for(int cb = 0; cb < 2; cb++)
-    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->escape)
-      if((eaten = (*vt->parser_callbacks[cb]->escape)(bytes, len, vt->cbdata[cb])))
-        return eaten;
+  if(vt->parser_callbacks && vt->parser_callbacks->escape)
+    if((eaten = (*vt->parser_callbacks->escape)(bytes, len, vt->cbdata)))
+      return eaten;
 
   fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", bytes[0]);
   return 0;
@@ -106,10 +103,9 @@ static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char
     //    printf("\n");
     //}
 
-    for(int cb = 0; cb < 2; cb++)
-      if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->csi)
-        if((*vt->parser_callbacks[cb]->csi)(intermed, csi_args, argcount, command, vt->cbdata[cb]))
-          return;
+    if(vt->parser_callbacks && vt->parser_callbacks->csi)
+      if((*vt->parser_callbacks->csi)(intermed, csi_args, argcount, command, vt->cbdata))
+        return;
   }
 
   fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
@@ -117,10 +113,9 @@ static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char
 
 static void vterm_on_parser_osc(VTerm *vt, const char *command, size_t cmdlen)
 {
-  for(int cb = 0; cb < 2; cb++)
-    if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->osc)
-      if((*vt->parser_callbacks[cb]->osc)(command, cmdlen, vt->cbdata[cb]))
-        return;
+  if(vt->parser_callbacks && vt->parser_callbacks->osc)
+    if((*vt->parser_callbacks->osc)(command, cmdlen, vt->cbdata))
+      return;
 
   fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
 }

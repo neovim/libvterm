@@ -39,8 +39,8 @@ void vterm_set_size(VTerm *vt, int rows, int cols)
 
 void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user)
 {
-  vt->parser_callbacks[0] = callbacks;
-  vt->cbdata[0] = user;
+  vt->parser_callbacks = callbacks;
+  vt->cbdata = user;
 }
 
 void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
