@@ -38,15 +38,12 @@ static void erase(VTermState *state, VTermRect rect)
         return;
 }
 
-static VTermState *vterm_state_new(void)
+static VTermState *vterm_state_new(VTerm *vt)
 {
   VTermState *state = g_new0(VTermState, 1);
+  state->vt = vt;
 
-  state->pos.row = 0;
-  state->pos.col = 0;
-
-  state->combine_chars_size = 16;
-  state->combine_chars = g_new0(uint32_t, state->combine_chars_size);
+  vterm_state_reset(state);
 
   return state;
 }
@@ -54,40 +51,6 @@ static VTermState *vterm_state_new(void)
 static void vterm_state_free(VTermState *state)
 {
   g_free(state);
-}
-
-void vterm_state_initialise(VTerm *vt)
-{
-  VTermState *state = vt->state;
-
-  if(!state)
-    return;
-
-  state->pos.row = 0;
-  state->pos.col = 0;
-
-  state->scrollregion_start = 0;
-  state->scrollregion_end = vt->rows;
-
-  for(int cb = 0; cb < 2; cb++)
-    if(state->callbacks[cb] && state->callbacks[cb]->initpen)
-      (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
-
-  VTermRect rect = { 0, vt->rows, 0, vt->cols };
-  erase(state, rect);
-}
-
-void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos)
-{
-  VTermState *state = vt->state;
-
-  if(!state) {
-    cursorpos->col = -1;
-    cursorpos->row = -1;
-  }
-  else {
-    *cursorpos = state->pos;
-  }
 }
 
 static void scroll(VTermState *state, VTermRect rect, int downward, int rightward)
@@ -916,33 +879,63 @@ static const VTermParserCallbacks parser_callbacks = {
   .osc     = on_osc,
 };
 
-void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, void *user)
+VTermState *vterm_obtain_state(VTerm *vt)
+{
+  if(vt->state)
+    return vt->state;
+
+  VTermState *state = vterm_state_new(vt);
+
+  vt->state = state;
+  vt->parser_callbacks[1] = &parser_callbacks;
+  vt->cbdata[1] = state;
+
+  return state;
+}
+
+void vterm_state_reset(VTermState *state)
+{
+  state->pos.row = 0;
+  state->pos.col = 0;
+
+  state->combine_chars_size = 16;
+  state->combine_chars = g_new0(uint32_t, state->combine_chars_size);
+
+  state->scrollregion_start = 0;
+  state->scrollregion_end = state->vt->rows;
+
+  state->mode.autowrap = 1;
+  state->mode.cursor_visible = 1;
+
+  for(int cb = 0; cb < 2; cb++)
+    if(state->callbacks[cb] && state->callbacks[cb]->initpen)
+      (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
+
+  VTermRect rect = { 0, state->vt->rows, 0, state->vt->cols };
+  erase(state, rect);
+}
+
+void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)
+{
+  *cursorpos = state->pos;
+}
+
+void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user)
 {
   if(callbacks) {
-    if(!vt->state) {
-      vt->state = vterm_state_new();
-      vt->state->vt = vt;
-    }
-    vt->state->callbacks[0] = callbacks;
-    vt->state->cbdata[0] = user;
-
-    vt->parser_callbacks[1] = &parser_callbacks;
-    vt->cbdata[1] = vt->state;
+    state->callbacks[0] = callbacks;
+    state->cbdata[0] = user;
 
     // Initialise the props
-    settermprop_bool(vt->state, VTERM_PROP_CURSORBLINK, 1);
-    settermprop_bool(vt->state, VTERM_PROP_CURSORVISIBLE, 1);
+    settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+    settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
 
-    // Initialise the modes
-    vt->state->mode.autowrap = 1;
+    for(int cb = 0; cb < 2; cb++)
+      if(state->callbacks[cb] && state->callbacks[cb]->initpen)
+        (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
   }
   else {
-    if(vt->state) {
-      vterm_state_free(vt->state);
-      vt->state = NULL;
-    }
-
-    vt->parser_callbacks[1] = NULL;
-    vt->cbdata[1] = NULL;
+    state->callbacks[0] = NULL;
+    state->cbdata[0] = NULL;
   }
 }

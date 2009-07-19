@@ -707,7 +707,8 @@ int main(int argc, char *argv[])
   gdk_color_parse(default_fg, &pen->fg_col);
   gdk_color_parse(default_bg, &pen->bg_col);
 
-  vterm_set_state_callbacks(vt, &cb, pen);
+  VTermState *vts = vterm_obtain_state(vt);
+  vterm_state_set_callbacks(vts, &cb, pen);
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
@@ -768,7 +769,7 @@ int main(int argc, char *argv[])
   gdk_color_parse(cursor_col, &col);
   gdk_gc_set_rgb_fg_color(cursor_gc, &col);
 
-  vterm_state_initialise(vt);
+  vterm_state_reset(vts);
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {

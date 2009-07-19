@@ -5,6 +5,7 @@
 #include <glib.h>
 
 static VTerm *vt;
+static VTermState *state;
 
 #define MAX_CP 100
 static uint32_t codepoints[MAX_CP];
@@ -39,7 +40,8 @@ int state_putglyph_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs, NULL);
+  state = vterm_obtain_state(vt);
+  vterm_state_set_callbacks(state, &state_cbs, NULL);
 
   return 0;
 }
@@ -47,7 +49,7 @@ int state_putglyph_init(void)
 static void test_low(void)
 {
   this_cp = 0;
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   vterm_push_bytes(vt, "ABC", 3);
 
@@ -69,7 +71,7 @@ static void test_low(void)
 static void test_uni_1char(void)
 {
   this_cp = 0;
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   /* U+00C1 = 0xC3 0x81  name: LATIN CAPITAL LETTER A WITH ACUTE
    * U+00E9 = 0xC3 0xA9  name: LATIN SMALL LETTER E WITH ACUTE
@@ -90,7 +92,7 @@ static void test_uni_1char(void)
 static void test_uni_widechar(void)
 {
   this_cp = 0;
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   /* U+FF10 = 0xEF 0xBC 0x90  name: FULLWIDTH DIGIT ZERO
    */
@@ -110,7 +112,7 @@ static void test_uni_widechar(void)
 static void test_uni_combining(void)
 {
   this_cp = 0;
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   /* U+0301 = 0xCC 0x81  name: COMBINING ACUTE
    */
@@ -131,7 +133,7 @@ static void test_uni_combining(void)
    * cannot know the second will be coming, it has to emit the bare 'e' first
    */
   this_cp = 0;
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   vterm_push_bytes(vt, "e", 1);
 
@@ -157,7 +159,7 @@ static void test_uni_combining(void)
   /* Now try again with two combining chars, split across three buffers, to
    * ensure the saving/combining logic both interact */
   this_cp = 0;
-  vterm_state_initialise(vt);
+  vterm_state_reset(state);
 
   vterm_push_bytes(vt, "e", 1);
 
