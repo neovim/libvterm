@@ -93,7 +93,7 @@ void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key)
     break;
 
   case KEYCODE_CSI_CURSOR:
-    if(vt->mode.cursor && state == 0) {
+    if(vt->state->mode.cursor && state == 0) {
       vterm_push_output_sprintf(vt, "\eO%c", k.literal);
       break;
     }

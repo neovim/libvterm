@@ -30,6 +30,15 @@ typedef struct
   size_t combine_chars_size;
   int combine_width; // The width of the glyph above
   VTermPos combine_pos;   // Position before movement
+
+  struct {
+    int keypad:1;
+    int cursor:1;
+    int autowrap:1;
+    int cursor_visible:1;
+    int alt_screen:1;
+    int saved_cursor:1;
+  } mode;
 } VTermState;
 
 struct _VTerm
@@ -45,15 +54,6 @@ struct _VTerm
   GString *inbuffer;
   GString *outbuffer;
   VTermState *state;
-
-  struct {
-    int keypad:1;
-    int cursor:1;
-    int autowrap:1;
-    int cursor_visible:1;
-    int alt_screen:1;
-    int saved_cursor:1;
-  } mode;
 };
 
 size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len);
