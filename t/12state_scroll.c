@@ -11,14 +11,14 @@ static VTermRect dest;
 static VTermRect src;
 static VTermRect erase;
 
-static int cb_movecursor(VTerm *_vt, VTermPos pos, VTermPos oldpos, int visible)
+static int cb_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   cursor = pos;
 
   return 1;
 }
 
-static int cb_copyrect(VTerm *_vt, VTermRect _dest, VTermRect _src)
+static int cb_copyrect(VTermRect _dest, VTermRect _src, void *user)
 {
   dest = _dest;
   src  = _src;
@@ -26,7 +26,7 @@ static int cb_copyrect(VTerm *_vt, VTermRect _dest, VTermRect _src)
   return 1;
 }
 
-static int cb_erase(VTerm *_vt, VTermRect rect, void *pen)
+static int cb_erase(VTermRect rect, void *user)
 {
   erase = rect;
 
@@ -46,7 +46,7 @@ int state_scroll_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs);
+  vterm_set_state_callbacks(vt, &state_cbs, NULL);
 
   return 0;
 }

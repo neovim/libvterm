@@ -8,12 +8,12 @@ static VTerm *vt;
 
 static VTermPos cursor;
 
-static int cb_putglyph(VTerm *_vt, const uint32_t chars[], int _width, VTermPos pos, void *pen)
+static int cb_putglyph(const uint32_t chars[], int _width, VTermPos pos, void *user)
 {
   return 1;
 }
 
-static int cb_movecursor(VTerm *_vt, VTermPos pos, VTermPos oldpos, int visible)
+static int cb_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   cursor = pos;
 
@@ -32,7 +32,7 @@ int state_movecursor_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs);
+  vterm_set_state_callbacks(vt, &state_cbs, NULL);
 
   return 0;
 }

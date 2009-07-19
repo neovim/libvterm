@@ -9,28 +9,28 @@ static VTerm *vt;
 char buffer[25][80];
 static VTermPos cursor;
 
-static int cb_putglyph(VTerm *_vt, const uint32_t chars[], int _width, VTermPos pos, void *pen)
+static int cb_putglyph(const uint32_t chars[], int _width, VTermPos pos, void *user)
 {
   buffer[pos.row][pos.col] = chars[0];
 
   return 1;
 }
 
-static int cb_movecursor(VTerm *_vt, VTermPos pos, VTermPos oldpos, int visible)
+static int cb_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   cursor = pos;
 
   return 1;
 }
 
-static int cb_copycell(VTerm *_vt, VTermPos dest, VTermPos src)
+static int cb_copycell(VTermPos dest, VTermPos src, void *user)
 {
   buffer[dest.row][dest.col] = buffer[src.row][src.col];
 
   return 1;
 }
 
-static int cb_erase(VTerm *_vt, VTermRect rect, void *pen)
+static int cb_erase(VTermRect rect, void *user)
 {
   for(int row = rect.start_row; row < rect.end_row; row++)
     for(int col = rect.start_col; col < rect.end_col; col++)
@@ -53,7 +53,7 @@ int state_edit_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs);
+  vterm_set_state_callbacks(vt, &state_cbs, NULL);
 
   return 0;
 }
