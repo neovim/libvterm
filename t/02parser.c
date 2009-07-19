@@ -38,7 +38,7 @@ static int cb_text(const int codepoints[], int npoints, void *user)
   return 1;
 }
 
-static int cb_control(char control, void *user)
+static int cb_control(unsigned char control, void *user)
 {
   cb *c = g_new0(cb, 1);
   c->type = CB_CONTROL;
