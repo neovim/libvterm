@@ -10,7 +10,7 @@ static int cb_count;
 static int cb_n;
 static int cb_p[256];
 
-static int cb_text(VTerm *_vt, const int codepoints[], int npoints)
+static int cb_text(const int codepoints[], int npoints, void *user)
 {
   cb_count++;
   cb_n = npoints;
@@ -30,7 +30,7 @@ int parser_utf8_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_parser_callbacks(vt, &parser_cbs);
+  vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
 
   return 0;
 }
