@@ -885,10 +885,9 @@ VTermState *vterm_obtain_state(VTerm *vt)
     return vt->state;
 
   VTermState *state = vterm_state_new(vt);
-
   vt->state = state;
-  vt->parser_callbacks[1] = &parser_callbacks;
-  vt->cbdata[1] = state;
+
+  vterm_set_parser_callbacks(vt, &parser_callbacks, state);
 
   return state;
 }
