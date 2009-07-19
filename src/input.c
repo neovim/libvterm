@@ -2,20 +2,20 @@
 
 #include <stdio.h>
 
-void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len)
+void vterm_input_push_str(VTerm *vt, VTermModifier mod, const char *str, size_t len)
 {
-  VTermModifier state_noshift = state & ~VTERM_MOD_SHIFT;
+  VTermModifier mod_noshift = mod & ~VTERM_MOD_SHIFT;
 
-  if(state_noshift == 0)
+  if(mod_noshift == 0)
     // Normal text - ignore just shift
     vterm_push_output_bytes(vt, str, len);
   else if(len == 1) {
     char c = str[0];
 
-    if(state & VTERM_MOD_CTRL)
+    if(mod & VTERM_MOD_CTRL)
       c &= 0x1f;
 
-    if(state & VTERM_MOD_ALT) {
+    if(mod & VTERM_MOD_ALT) {
       vterm_push_output_sprintf(vt, "\e%c", c);
     }
     else {
@@ -23,7 +23,7 @@ void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_
     }
   }
   else {
-    printf("Can't cope with push_str with non-zero state %d\n", state);
+    printf("Can't cope with push_str with non-zero state %d\n", mod);
   }
 }
 
@@ -74,7 +74,7 @@ keycodes_s keycodes[] = {
   { KEYCODE_CSINUM, '~', 24 }, // F12
 };
 
-void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key)
+void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
 {
   if(key == VTERM_KEY_NONE || key >= VTERM_KEY_MAX)
     return;
@@ -93,23 +93,23 @@ void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key)
     break;
 
   case KEYCODE_CSI_CURSOR:
-    if(vt->state->mode.cursor && state == 0) {
+    if(vt->state->mode.cursor && mod == 0) {
       vterm_push_output_sprintf(vt, "\eO%c", k.literal);
       break;
     }
     /* else FALLTHROUGH */
   case KEYCODE_CSI:
-    if(state == 0)
+    if(mod == 0)
       vterm_push_output_sprintf(vt, "\e[%c", k.literal);
     else
-      vterm_push_output_sprintf(vt, "\e[1;%d%c", state + 1, k.literal);
+      vterm_push_output_sprintf(vt, "\e[1;%d%c", mod + 1, k.literal);
     break;
 
   case KEYCODE_CSINUM:
-    if(state == 0)
+    if(mod == 0)
       vterm_push_output_sprintf(vt, "\e[%d%c", k.csinum, k.literal);
     else
-      vterm_push_output_sprintf(vt, "\e[%d;%d%c", k.csinum, state + 1, k.literal);
+      vterm_push_output_sprintf(vt, "\e[%d;%d%c", k.csinum, mod + 1, k.literal);
     break;
   }
 }
