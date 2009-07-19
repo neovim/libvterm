@@ -5,7 +5,7 @@
 
 #include <glib.h>
 
-typedef struct
+struct _VTermState
 {
   VTerm *vt;
 
@@ -39,7 +39,7 @@ typedef struct
     int alt_screen:1;
     int saved_cursor:1;
   } mode;
-} VTermState;
+};
 
 struct _VTerm
 {

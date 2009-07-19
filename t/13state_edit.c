@@ -5,6 +5,7 @@
 #include <glib.h>
 
 static VTerm *vt;
+static VTermState *state;
 
 char buffer[25][80];
 static VTermPos cursor;
@@ -53,15 +54,16 @@ int state_edit_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs, NULL);
+  state = vterm_obtain_state(vt);
+  vterm_state_set_callbacks(state, &state_cbs, NULL);
 
   return 0;
 }
 
 static void test_ich(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   CU_ASSERT_EQUAL(buffer[0][0], 0);
 
@@ -118,8 +120,8 @@ static void test_ich(void)
 
 static void test_dch(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABBC", 4);
 
@@ -152,8 +154,8 @@ static void test_dch(void)
 
 static void test_ech(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABC", 3);
 
@@ -180,8 +182,8 @@ static void test_ech(void)
 
 static void test_il(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "A\r\nC", 4);
 
@@ -224,8 +226,8 @@ static void test_il(void)
 
 static void test_dl(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "A\r\nB\r\nB\r\nC", 10);
 
@@ -261,8 +263,8 @@ static void test_dl(void)
 
 static void test_el0(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABCDE", 5);
 
@@ -280,8 +282,8 @@ static void test_el0(void)
 
 static void test_el1(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABCDE", 5);
 
@@ -299,8 +301,8 @@ static void test_el1(void)
 
 static void test_el2(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABCDE", 5);
 
@@ -318,8 +320,8 @@ static void test_el2(void)
 
 static void test_ed0(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABC\r\nDEF\r\nGHI", 13);
 
@@ -342,8 +344,8 @@ static void test_ed0(void)
 
 static void test_ed1(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABC\r\nDEF\r\nGHI", 13);
 
@@ -366,8 +368,8 @@ static void test_ed1(void)
 
 static void test_ed2(void)
 {
-  vterm_state_initialise(vt);
-  vterm_state_get_cursorpos(vt, &cursor);
+  vterm_state_reset(state);
+  vterm_state_get_cursorpos(state, &cursor);
 
   vterm_push_bytes(vt, "ABC\r\nDEF\r\nGHI", 13);
 
