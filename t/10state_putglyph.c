@@ -12,10 +12,8 @@ static int width[MAX_CP];
 static int column[MAX_CP];
 static int this_cp;
 
-static int cb_putglyph(VTerm *_vt, const uint32_t chars[], int _width, VTermPos pos, void *pen)
+static int cb_putglyph(const uint32_t chars[], int _width, VTermPos pos, void *user)
 {
-  CU_ASSERT_PTR_EQUAL(vt, _vt);
-
   CU_ASSERT_TRUE_FATAL(this_cp < MAX_CP);
 
   int i;
@@ -41,7 +39,7 @@ int state_putglyph_init(void)
     return 1;
 
   vterm_parser_set_utf8(vt, 1);
-  vterm_set_state_callbacks(vt, &state_cbs);
+  vterm_set_state_callbacks(vt, &state_cbs, NULL);
 
   return 0;
 }

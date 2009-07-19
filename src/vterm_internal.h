@@ -9,6 +9,7 @@ typedef struct
 {
   /* [0] for user code, [1] for buffer engine */
   const VTermStateCallbacks *callbacks[2];
+  void *cbdata[2];
 
   /* Current cursor position */
   VTermPos pos;
@@ -17,9 +18,6 @@ typedef struct
 
   int scrollregion_start;
   int scrollregion_end;
-
-  /* Current pen - entirely managed by user code */
-  void *pen;
 
   /* Mouse state */
   int mouse_col, mouse_row;
