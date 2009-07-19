@@ -35,6 +35,9 @@ void vterm_set_size(VTerm *vt, int rows, int cols)
 {
   vt->rows = rows;
   vt->cols = cols;
+
+  if(vt->parser_callbacks && vt->parser_callbacks->resize)
+    (*vt->parser_callbacks->resize)(rows, cols, vt->cbdata);
 }
 
 void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user)

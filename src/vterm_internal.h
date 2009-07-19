@@ -12,6 +12,9 @@ struct _VTermState
   const VTermStateCallbacks *callbacks;
   void *cbdata;
 
+  int rows;
+  int cols;
+
   /* Current cursor position */
   VTermPos pos;
   /* Saved cursor position under DEC mode 1048/1049 */

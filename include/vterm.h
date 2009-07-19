@@ -47,6 +47,7 @@ typedef struct {
   int (*escape)(const char *bytes, size_t len, void *user);
   int (*csi)(const char *intermed, const long args[], int argcount, char command, void *user);
   int (*osc)(const char *command, size_t cmdlen, void *user);
+  int (*resize)(int rows, int cols, void *user);
 } VTermParserCallbacks;
 
 typedef struct {
@@ -93,6 +94,7 @@ typedef struct {
   int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
   int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
   int (*bell)(void *user);
+  int (*resize)(int rows, int cols, void *user);
 } VTermStateCallbacks;
 
 VTerm *vterm_new(int rows, int cols);
