@@ -41,11 +41,11 @@ typedef struct {
 #define CSI_ARG_OR(a,def)     (CSI_ARG(a) == CSI_ARG_MISSING ? (def) : CSI_ARG(a))
 
 typedef struct {
-  int (*text)(VTerm *vt, const int codepoints[], int npoints);
-  int (*control)(VTerm *vt, unsigned char control);
-  int (*escape)(VTerm *vt, const char *bytes, size_t len);
-  int (*csi)(VTerm *vt, const char *intermed, const long args[], int argcount, char command);
-  int (*osc)(VTerm *vt, const char *command, size_t cmdlen);
+  int (*text)(const int codepoints[], int npoints, void *user);
+  int (*control)(unsigned char control, void *user);
+  int (*escape)(const char *bytes, size_t len, void *user);
+  int (*csi)(const char *intermed, const long args[], int argcount, char command, void *user);
+  int (*osc)(const char *command, size_t cmdlen, void *user);
 } VTermParserCallbacks;
 
 typedef struct {

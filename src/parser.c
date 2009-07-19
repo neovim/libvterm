@@ -15,7 +15,7 @@ static void vterm_on_parser_text(VTerm *vt, int codepoints[], int npoints)
 {
   for(int cb = 0; cb < 2; cb++)
     if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->text)
-      if((*vt->parser_callbacks[cb]->text)(vt, codepoints, npoints))
+      if((*vt->parser_callbacks[cb]->text)(codepoints, npoints, vt->cbdata[cb]))
         return;
 
   fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
@@ -25,7 +25,7 @@ static void vterm_on_parser_control(VTerm *vt, unsigned char control)
 {
   for(int cb = 0; cb < 2; cb++)
     if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->control)
-      if((*vt->parser_callbacks[cb]->control)(vt, control))
+      if((*vt->parser_callbacks[cb]->control)(control, vt->cbdata[cb]))
         return;
 
   fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
@@ -37,7 +37,7 @@ static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
 
   for(int cb = 0; cb < 2; cb++)
     if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->escape)
-      if((eaten = (*vt->parser_callbacks[cb]->escape)(vt, bytes, len)))
+      if((eaten = (*vt->parser_callbacks[cb]->escape)(bytes, len, vt->cbdata[cb])))
         return eaten;
 
   fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", bytes[0]);
@@ -108,7 +108,7 @@ static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char
 
     for(int cb = 0; cb < 2; cb++)
       if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->csi)
-        if((*vt->parser_callbacks[cb]->csi)(vt, intermed, csi_args, argcount, command))
+        if((*vt->parser_callbacks[cb]->csi)(intermed, csi_args, argcount, command, vt->cbdata[cb]))
           return;
   }
 
@@ -119,7 +119,7 @@ static void vterm_on_parser_osc(VTerm *vt, const char *command, size_t cmdlen)
 {
   for(int cb = 0; cb < 2; cb++)
     if(vt->parser_callbacks[cb] && vt->parser_callbacks[cb]->osc)
-      if((*vt->parser_callbacks[cb]->osc)(vt, command, cmdlen))
+      if((*vt->parser_callbacks[cb]->osc)(command, cmdlen, vt->cbdata[cb]))
         return;
 
   fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);

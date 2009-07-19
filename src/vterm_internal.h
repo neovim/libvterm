@@ -7,6 +7,8 @@
 
 typedef struct
 {
+  VTerm *vt;
+
   /* [0] for user code, [1] for buffer engine */
   const VTermStateCallbacks *callbacks[2];
   void *cbdata[2];
@@ -48,6 +50,7 @@ struct _VTerm
 
   /* [0] for user code, [1] for state engine */
   const VTermParserCallbacks *parser_callbacks[2];
+  void *cbdata[2];
 
   GString *inbuffer;
   GString *outbuffer;
@@ -60,7 +63,7 @@ void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len);
 void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args);
 void vterm_push_output_sprintf(VTerm *vt, const char *format, ...);
 
-void vterm_state_setpen(VTerm *vt, const long args[], int argcount);
+void vterm_state_setpen(VTermState *state, const long args[], int argcount);
 
 int vterm_unicode_width(int codepoint);
 int vterm_unicode_is_combining(int codepoint);
