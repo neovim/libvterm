@@ -86,37 +86,35 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
 
 // Some conveniences
 
-static void setpenattr(VTerm *vt, VTermAttr attr, VTermValue *val)
+static void setpenattr(VTermState *state, VTermAttr attr, VTermValue *val)
 {
-  VTermState *state = vt->state;
-
   for(int cb = 0; cb < 2; cb++)
   if(state->callbacks[cb] && state->callbacks[cb]->setpenattr)
     (*state->callbacks[cb]->setpenattr)(attr, val, state->cbdata[cb]);
 }
 
-static void setpenattr_bool(VTerm *vt, VTermAttr attr, int boolean)
+static void setpenattr_bool(VTermState *state, VTermAttr attr, int boolean)
 {
   VTermValue val = { .boolean = boolean };
-  setpenattr(vt, attr, &val);
+  setpenattr(state, attr, &val);
 }
 
-static void setpenattr_int(VTerm *vt, VTermAttr attr, int number)
+static void setpenattr_int(VTermState *state, VTermAttr attr, int number)
 {
   VTermValue val = { .number = number };
-  setpenattr(vt, attr, &val);
+  setpenattr(state, attr, &val);
 }
 
-static void setpenattr_col_ansi(VTerm *vt, VTermAttr attr, long col)
+static void setpenattr_col_ansi(VTermState *state, VTermAttr attr, long col)
 {
   VTermValue val;
 
   lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
-  setpenattr(vt, attr, &val);
+  setpenattr(state, attr, &val);
 }
 
-static int setpenattr_col_palette(VTerm *vt, VTermAttr attr, const long args[], int argcount)
+static int setpenattr_col_palette(VTermState *state, VTermAttr attr, const long args[], int argcount)
 {
   VTermValue val;
 
@@ -125,12 +123,12 @@ static int setpenattr_col_palette(VTerm *vt, VTermAttr attr, const long args[], 
 
   int eaten = lookup_colour(CSI_ARG(args[0]), args + 1, argcount - 1, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
-  setpenattr(vt, attr, &val);
+  setpenattr(state, attr, &val);
 
   return eaten + 1; // we ate palette
 }
 
-void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
+void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
 
@@ -145,80 +143,80 @@ void vterm_state_setpen(VTerm *vt, const long args[], int argcount)
     switch(arg = CSI_ARG(args[argi])) {
     case CSI_ARG_MISSING:
     case 0: // Reset
-      setpenattr_bool(vt, VTERM_ATTR_BOLD, 0);
-      setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 0);
-      setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
-      setpenattr_bool(vt, VTERM_ATTR_REVERSE, 0);
-      setpenattr_int(vt, VTERM_ATTR_FONT, 0);
-      setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, -1);
-      setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, -1);
+      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
+      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 0);
+      setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
+      setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
+      setpenattr_int(state, VTERM_ATTR_FONT, 0);
+      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
+      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
       break;
 
     case 1: // Bold on
-      setpenattr_bool(vt, VTERM_ATTR_BOLD, 1);
+      setpenattr_bool(state, VTERM_ATTR_BOLD, 1);
       break;
 
     case 3: // Italic on
-      setpenattr_bool(vt, VTERM_ATTR_ITALIC, 1);
+      setpenattr_bool(state, VTERM_ATTR_ITALIC, 1);
       break;
 
     case 4: // Underline single
-      setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 1);
+      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 1);
       break;
 
     case 7: // Reverse on
-      setpenattr_bool(vt, VTERM_ATTR_REVERSE, 1);
+      setpenattr_bool(state, VTERM_ATTR_REVERSE, 1);
       break;
 
     case 10: case 11: case 12: case 13: case 14:
     case 15: case 16: case 17: case 18: case 19: // Select font
-      setpenattr_int(vt, VTERM_ATTR_FONT, CSI_ARG(args[argi]) - 10);
+      setpenattr_int(state, VTERM_ATTR_FONT, CSI_ARG(args[argi]) - 10);
       break;
 
     case 21: // Underline double
-      setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 2);
+      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 2);
       break;
 
     case 22: // Bold off
-      setpenattr_bool(vt, VTERM_ATTR_BOLD, 0);
+      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
       break;
 
     case 23: // Italic and Gothic (currently unsupported) off
-      setpenattr_bool(vt, VTERM_ATTR_ITALIC, 0);
+      setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
       break;
 
     case 24: // Underline off
-      setpenattr_int(vt, VTERM_ATTR_UNDERLINE, 0);
+      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 0);
       break;
 
     case 27: // Reverse off
-      setpenattr_bool(vt, VTERM_ATTR_REVERSE, 0);
+      setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
       break;
 
     case 30: case 31: case 32: case 33:
     case 34: case 35: case 36: case 37: // Foreground colour palette
-      setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 30);
+      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 30);
       break;
 
     case 38: // Foreground colour alternative palette
-      argi += setpenattr_col_palette(vt, VTERM_ATTR_FOREGROUND, args + argi + 1, argcount - argi - 1);
+      argi += setpenattr_col_palette(state, VTERM_ATTR_FOREGROUND, args + argi + 1, argcount - argi - 1);
       break;
 
     case 39: // Foreground colour default
-      setpenattr_col_ansi(vt, VTERM_ATTR_FOREGROUND, -1);
+      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
       break;
 
     case 40: case 41: case 42: case 43:
     case 44: case 45: case 46: case 47: // Background colour palette
-      setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 40);
+      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 40);
       break;
 
     case 48: // Background colour alternative palette
-      argi += setpenattr_col_palette(vt, VTERM_ATTR_BACKGROUND, args + argi + 1, argcount - argi - 1);
+      argi += setpenattr_col_palette(state, VTERM_ATTR_BACKGROUND, args + argi + 1, argcount - argi - 1);
       break;
 
     case 49: // Default background
-      setpenattr_col_ansi(vt, VTERM_ATTR_BACKGROUND, -1);
+      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
       break;
 
     default:

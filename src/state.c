@@ -9,10 +9,8 @@
 
 /* Some convenient wrappers to make callback functions easier */
 
-static void putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos)
+static void putglyph(VTermState *state, const uint32_t chars[], int width, VTermPos pos)
 {
-  VTermState *state = vt->state;
-
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->putglyph)
       if((*state->callbacks[cb]->putglyph)(chars, width, pos, state->cbdata[cb]))
@@ -21,7 +19,7 @@ static void putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos)
   fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
 }
 
-static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
+static void updatecursor(VTermState *state, VTermPos *oldpos)
 {
   if(state->pos.col == oldpos->col && state->pos.row == oldpos->row)
     return;
@@ -32,10 +30,8 @@ static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
         return;
 }
 
-static void erase(VTerm *vt, VTermRect rect)
+static void erase(VTermState *state, VTermRect rect)
 {
-  VTermState *state = vt->state;
-
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->erase)
       if((*state->callbacks[cb]->erase)(rect, state->cbdata[cb]))
@@ -78,7 +74,7 @@ void vterm_state_initialise(VTerm *vt)
       (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
 
   VTermRect rect = { 0, vt->rows, 0, vt->cols };
-  erase(vt, rect);
+  erase(state, rect);
 }
 
 void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos)
@@ -94,10 +90,8 @@ void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos)
   }
 }
 
-static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
+static void scroll(VTermState *state, VTermRect rect, int downward, int rightward)
 {
-  VTermState *state = vt->state;
-
   if(!downward && !rightward)
     return;
 
@@ -208,24 +202,22 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
   else if(rightward < 0)
     rect.end_col = rect.start_col - rightward;
 
-  erase(vt, rect);
+  erase(state, rect);
 }
 
-static void linefeed(VTerm *vt)
+static void linefeed(VTermState *state)
 {
-  VTermState *state = vt->state;
-
   if(state->pos.row == (state->scrollregion_end-1)) {
     VTermRect rect = {
       .start_row = state->scrollregion_start,
       .end_row   = state->scrollregion_end,
       .start_col = 0,
-      .end_col   = vt->cols,
+      .end_col   = state->vt->cols,
     };
 
-    scroll(vt, rect, 1, 0);
+    scroll(state, rect, 1, 0);
   }
-  else if(state->pos.row < vt->rows-1)
+  else if(state->pos.row < state->vt->rows-1)
     state->pos.row++;
 }
 
@@ -241,12 +233,10 @@ static int is_col_tabstop(VTermState *state, int col)
   return (col % 8) == 0;
 }
 
-static void tab(VTerm *vt, int count, int direction)
+static void tab(VTermState *state, int count, int direction)
 {
-  VTermState *state = vt->state;
-
   while(count--)
-    while(state->pos.col >= 0 && state->pos.col <= vt->cols-1) {
+    while(state->pos.col >= 0 && state->pos.col <= state->vt->cols-1) {
       state->pos.col += direction;
 
       if(is_col_tabstop(state, state->pos.col))
@@ -254,9 +244,9 @@ static void tab(VTerm *vt, int count, int direction)
     }
 }
 
-static int on_text(VTerm *vt, const int codepoints[], int npoints)
+static int on_text(const int codepoints[], int npoints, void *user)
 {
-  VTermState *state = vt->state;
+  VTermState *state = user;
 
   VTermPos oldpos = state->pos;
 
@@ -297,7 +287,7 @@ static int on_text(VTerm *vt, const int codepoints[], int npoints)
 #endif
 
       /* Now render it */
-      putglyph(vt, state->combine_chars, state->combine_width, state->combine_pos);
+      putglyph(state, state->combine_chars, state->combine_width, state->combine_pos);
     }
     else {
       fprintf(stderr, "libvterm: TODO: Skip over split char+combining\n");
@@ -332,7 +322,7 @@ static int on_text(VTerm *vt, const int codepoints[], int npoints)
     printf("}, onscreen width %d\n", width);
 #endif
 
-    putglyph(vt, chars, width, state->pos);
+    putglyph(state, chars, width, state->pos);
 
     if(i == npoints - 1) {
       /* End of the buffer. Save the chars in case we have to combine with
@@ -352,25 +342,25 @@ static int on_text(VTerm *vt, const int codepoints[], int npoints)
 
     state->pos.col += width;
 
-    if(state->pos.col >= vt->cols) {
+    if(state->pos.col >= state->vt->cols) {
       if(state->mode.autowrap) {
-        linefeed(vt);
+        linefeed(state);
         state->pos.col = 0;
       }
       else {
-        state->pos.col = vt->cols - 1;
+        state->pos.col = state->vt->cols - 1;
       }
     }
   }
 
-  updatecursor(vt, state, &oldpos);
+  updatecursor(state, &oldpos);
 
   return 1;
 }
 
-static int on_control(VTerm *vt, unsigned char control)
+static int on_control(unsigned char control, void *user)
 {
-  VTermState *state = vt->state;
+  VTermState *state = user;
 
   VTermPos oldpos = state->pos;
 
@@ -378,7 +368,7 @@ static int on_control(VTerm *vt, unsigned char control)
   case 0x07: // BEL - ECMA-48 8.3.3
     for(int cb = 0; cb < 2; cb++)
       if(state->callbacks[cb] && state->callbacks[cb]->bell)
-        if((*state->callbacks[cb]->bell)(vt))
+        if((*state->callbacks[cb]->bell)(state->cbdata[cb]))
           break;
     break;
 
@@ -388,11 +378,11 @@ static int on_control(VTerm *vt, unsigned char control)
     break;
 
   case 0x09: // HT - ECMA-48 8.3.60
-    tab(vt, 1, +1);
+    tab(state, 1, +1);
     break;
 
   case 0x0a: // LF - ECMA-48 8.3.74
-    linefeed(vt);
+    linefeed(state);
     break;
 
   case 0x0d: // CR - ECMA-48 8.3.15
@@ -400,11 +390,11 @@ static int on_control(VTerm *vt, unsigned char control)
     break;
 
   case 0x84: // IND - DEPRECATED but implemented for completeness
-    linefeed(vt);
+    linefeed(state);
     break;
 
   case 0x85: // NEL - ECMA-48 8.3.86
-    linefeed(vt);
+    linefeed(state);
     state->pos.col = 0;
     break;
 
@@ -414,10 +404,10 @@ static int on_control(VTerm *vt, unsigned char control)
         .start_row = state->scrollregion_start,
         .end_row   = state->scrollregion_end,
         .start_col = 0,
-        .end_col   = vt->cols,
+        .end_col   = state->vt->cols,
       };
 
-      scroll(vt, rect, -1, 0);
+      scroll(state, rect, -1, 0);
     }
     else if(state->pos.row > 0)
         state->pos.row--;
@@ -427,15 +417,14 @@ static int on_control(VTerm *vt, unsigned char control)
     return 0;
   }
 
-  updatecursor(vt, state, &oldpos);
+  updatecursor(state, &oldpos);
 
   return 1;
 }
 
 static void mousefunc(int x, int y, int button, int pressed, void *data)
 {
-  VTerm *vt = data;
-  VTermState *state = vt->state;
+  VTermState *state = data;
 
   int old_buttons = state->mouse_buttons;
 
@@ -446,15 +435,13 @@ static void mousefunc(int x, int y, int button, int pressed, void *data)
 
   if(state->mouse_buttons != old_buttons) {
     if(button < 4) {
-      vterm_push_output_sprintf(vt, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
+      vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
     }
   }
 }
 
-static int settermprop_bool(VTerm *vt, VTermProp prop, int v)
+static int settermprop_bool(VTermState *state, VTermProp prop, int v)
 {
-  VTermState *state = vt->state;
-
   VTermValue val;
   val.boolean = v;
 
@@ -466,10 +453,8 @@ static int settermprop_bool(VTerm *vt, VTermProp prop, int v)
   return 0;
 }
 
-static int settermprop_string(VTerm *vt, VTermProp prop, const char *str, size_t len)
+static int settermprop_string(VTermState *state, VTermProp prop, const char *str, size_t len)
 {
-  VTermState *state = vt->state;
-
   char strvalue[len+1];
   strncpy(strvalue, str, len);
   strvalue[len] = 0;
@@ -485,10 +470,8 @@ static int settermprop_string(VTerm *vt, VTermProp prop, const char *str, size_t
   return 0;
 }
 
-static void savecursor(VTerm *vt, int save)
+static void savecursor(VTermState *state, int save)
 {
-  VTermState *state = vt->state;
-
   state->mode.saved_cursor = save;
   if(save) {
     state->saved_pos = state->pos;
@@ -496,17 +479,15 @@ static void savecursor(VTerm *vt, int save)
   else {
     VTermPos oldpos = state->pos;
     state->pos = state->saved_pos;
-    updatecursor(vt, state, &oldpos);
+    updatecursor(state, &oldpos);
   }
 }
 
-static void altscreen(VTerm *vt, int alt)
+static void altscreen(VTermState *state, int alt)
 {
-  VTermState *state = vt->state;
-
   /* Only store that we're on the alternate screen if the usercode said it
    * switched */
-  if(!settermprop_bool(vt, VTERM_PROP_ALTSCREEN, alt))
+  if(!settermprop_bool(state, VTERM_PROP_ALTSCREEN, alt))
     return;
 
   state->mode.alt_screen = alt;
@@ -514,16 +495,16 @@ static void altscreen(VTerm *vt, int alt)
     VTermRect rect = {
       .start_row = 0,
       .start_col = 0,
-      .end_row = vt->rows,
-      .end_col = vt->cols,
+      .end_row = state->vt->rows,
+      .end_col = state->vt->cols,
     };
-    erase(vt, rect);
+    erase(state, rect);
   }
 }
 
-static int on_escape(VTerm *vt, const char *bytes, size_t len)
+static int on_escape(const char *bytes, size_t len, void *user)
 {
-  VTermState *state = vt->state;
+  VTermState *state = user;
 
   switch(bytes[0]) {
   case 0x28: case 0x29: case 0x2a: case 0x2b:
@@ -545,10 +526,8 @@ static int on_escape(VTerm *vt, const char *bytes, size_t len)
   }
 }
 
-static void set_dec_mode(VTerm *vt, int num, int val)
+static void set_dec_mode(VTermState *state, int num, int val)
 {
-  VTermState *state = vt->state;
-
   switch(num) {
   case 1:
     state->mode.cursor = val;
@@ -559,12 +538,12 @@ static void set_dec_mode(VTerm *vt, int num, int val)
     break;
 
   case 12:
-    settermprop_bool(vt, VTERM_PROP_CURSORBLINK, val);
+    settermprop_bool(state, VTERM_PROP_CURSORBLINK, val);
     break;
 
   case 25:
     state->mode.cursor_visible = val;
-    settermprop_bool(vt, VTERM_PROP_CURSORVISIBLE, val);
+    settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, val);
     break;
 
   case 1000:
@@ -573,22 +552,22 @@ static void set_dec_mode(VTerm *vt, int num, int val)
 
     for(int cb = 0; cb < 2; cb++)
       if(state->callbacks[cb] && state->callbacks[cb]->setmousefunc)
-        if((*state->callbacks[cb]->setmousefunc)(val ? mousefunc : NULL, vt, state->cbdata[cb]))
+        if((*state->callbacks[cb]->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata[cb]))
           break;
 
     break;
 
   case 1047:
-    altscreen(vt, val);
+    altscreen(state, val);
     break;
 
   case 1048:
-    savecursor(vt, val);
+    savecursor(state, val);
     break;
 
   case 1049:
-    altscreen(vt, val);
-    savecursor(vt, val);
+    altscreen(state, val);
+    savecursor(state, val);
     break;
 
   default:
@@ -597,17 +576,17 @@ static void set_dec_mode(VTerm *vt, int num, int val)
   }
 }
 
-static int on_csi_qmark(VTerm *vt, const long *args, int argcount, char command)
+static int on_csi_qmark(VTermState *state, const long *args, int argcount, char command)
 {
   switch(command) {
   case 0x68: // DEC private mode set
     if(!CSI_ARG_IS_MISSING(args[0]))
-      set_dec_mode(vt, CSI_ARG(args[0]), 1);
+      set_dec_mode(state, CSI_ARG(args[0]), 1);
     break;
 
   case 0x6c: // DEC private mode reset
     if(!CSI_ARG_IS_MISSING(args[0]))
-      set_dec_mode(vt, CSI_ARG(args[0]), 0);
+      set_dec_mode(state, CSI_ARG(args[0]), 0);
     break;
 
   default:
@@ -617,16 +596,16 @@ static int on_csi_qmark(VTerm *vt, const long *args, int argcount, char command)
   return 1;
 }
 
-static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcount, char command)
+static int on_csi(const char *intermed, const long args[], int argcount, char command, void *user)
 {
+  VTermState *state = user;
+
   if(intermed) {
     if(strcmp(intermed, "?") == 0)
-      return on_csi_qmark(vt, args, argcount, command);
+      return on_csi_qmark(state, args, argcount, command);
 
     return 0;
   }
-
-  VTermState *state = vt->state;
 
   VTermPos oldpos = state->pos;
 
@@ -645,9 +624,9 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
-    rect.end_col   = vt->cols;
+    rect.end_col   = state->vt->cols;
 
-    scroll(vt, rect, 0, -count);
+    scroll(state, rect, 0, -count);
 
     break;
 
@@ -660,13 +639,13 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
   case 0x42: // CUD - ECMA-48 8.3.19
     count = CSI_ARG_OR(args[0], 1);
     state->pos.row += count;
-    UBOUND(state->pos.row, vt->rows-1);
+    UBOUND(state->pos.row, state->vt->rows-1);
     break;
 
   case 0x43: // CUF - ECMA-48 8.3.20
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col += count;
-    UBOUND(state->pos.col, vt->cols-1);
+    UBOUND(state->pos.col, state->vt->cols-1);
     break;
 
   case 0x44: // CUB - ECMA-48 8.3.18
@@ -679,7 +658,7 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col = 0;
     state->pos.row += count;
-    UBOUND(state->pos.row, vt->rows-1);
+    UBOUND(state->pos.row, state->vt->rows-1);
     break;
 
   case 0x46: // CPL - ECMA-48 8.3.13
@@ -692,7 +671,7 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
   case 0x47: // CHA - ECMA-48 8.3.9
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col = count-1;
-    UBOUND(state->pos.col, vt->cols-1);
+    UBOUND(state->pos.col, state->vt->cols-1);
     break;
 
   case 0x48: // CUP - ECMA-48 8.3.21
@@ -700,14 +679,14 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
     // zero-based
     state->pos.row = row-1;
-    UBOUND(state->pos.row, vt->rows-1);
+    UBOUND(state->pos.row, state->vt->rows-1);
     state->pos.col = col-1;
-    UBOUND(state->pos.col, vt->cols-1);
+    UBOUND(state->pos.col, state->vt->cols-1);
     break;
 
   case 0x49: // CHT - ECMA-48 8.3.10
     count = CSI_ARG_OR(args[0], 1);
-    tab(vt, count, +1);
+    tab(state, count, +1);
     break;
 
   case 0x4a: // ED - ECMA-48 8.3.39
@@ -715,32 +694,32 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     case CSI_ARG_MISSING:
     case 0:
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
-      rect.start_col = state->pos.col; rect.end_col = vt->cols;
+      rect.start_col = state->pos.col; rect.end_col = state->vt->cols;
       if(rect.end_col > rect.start_col)
-        erase(vt, rect);
+        erase(state, rect);
 
-      rect.start_row = state->pos.row + 1; rect.end_row = vt->rows;
+      rect.start_row = state->pos.row + 1; rect.end_row = state->vt->rows;
       rect.start_col = 0;
       if(rect.end_row > rect.start_row)
-        erase(vt, rect);
+        erase(state, rect);
       break;
 
     case 1:
       rect.start_row = 0; rect.end_row = state->pos.row;
-      rect.start_col = 0; rect.end_col = vt->cols;
+      rect.start_col = 0; rect.end_col = state->vt->cols;
       if(rect.end_col > rect.start_col)
-        erase(vt, rect);
+        erase(state, rect);
 
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
                           rect.end_col = state->pos.col + 1;
       if(rect.end_row > rect.start_row)
-        erase(vt, rect);
+        erase(state, rect);
       break;
 
     case 2:
-      rect.start_row = 0; rect.end_row = vt->rows;
-      rect.start_col = 0; rect.end_col = vt->cols;
-      erase(vt, rect);
+      rect.start_row = 0; rect.end_row = state->vt->rows;
+      rect.start_col = 0; rect.end_col = state->vt->cols;
+      erase(state, rect);
       break;
     }
 
@@ -751,17 +730,17 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     switch(CSI_ARG(args[0])) {
     case CSI_ARG_MISSING:
     case 0:
-      rect.start_col = state->pos.col; rect.end_col = vt->cols; break;
+      rect.start_col = state->pos.col; rect.end_col = state->vt->cols; break;
     case 1:
       rect.start_col = 0; rect.end_col = state->pos.col + 1; break;
     case 2:
-      rect.start_col = 0; rect.end_col = vt->cols; break;
+      rect.start_col = 0; rect.end_col = state->vt->cols; break;
     default:
       return 0;
     }
 
     if(rect.end_col > rect.start_col)
-      erase(vt, rect);
+      erase(state, rect);
 
     break;
 
@@ -771,9 +750,9 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     rect.start_row = state->pos.row;
     rect.end_row   = state->scrollregion_end;
     rect.start_col = 0;
-    rect.end_col   = vt->cols;
+    rect.end_col   = state->vt->cols;
 
-    scroll(vt, rect, -count, 0);
+    scroll(state, rect, -count, 0);
 
     break;
 
@@ -783,9 +762,9 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     rect.start_row = state->pos.row;
     rect.end_row   = state->scrollregion_end;
     rect.start_col = 0;
-    rect.end_col   = vt->cols;
+    rect.end_col   = state->vt->cols;
 
-    scroll(vt, rect, count, 0);
+    scroll(state, rect, count, 0);
 
     break;
 
@@ -795,33 +774,33 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
-    rect.end_col   = vt->cols;
+    rect.end_col   = state->vt->cols;
 
-    scroll(vt, rect, 0, count);
+    scroll(state, rect, 0, count);
 
     break;
 
   case 0x53: // SU - ECMA-48 8.3.147
     count = CSI_ARG_OR(args[0], 1);
 
-    rect.start_row = state->scrollregion_start,
-    rect.end_row   = state->scrollregion_end,
-    rect.start_col = 0,
-    rect.end_col   = vt->cols,
+    rect.start_row = state->scrollregion_start;
+    rect.end_row   = state->scrollregion_end;
+    rect.start_col = 0;
+    rect.end_col   = state->vt->cols;
 
-    scroll(vt, rect, count, 0);
+    scroll(state, rect, count, 0);
 
     break;
 
   case 0x54: // SD - ECMA-48 8.3.113
     count = CSI_ARG_OR(args[0], 1);
 
-    rect.start_row = state->scrollregion_start,
-    rect.end_row   = state->scrollregion_end,
-    rect.start_col = 0,
-    rect.end_col   = vt->cols,
+    rect.start_row = state->scrollregion_start;
+    rect.end_row   = state->scrollregion_end;
+    rect.start_col = 0;
+    rect.end_col   = state->vt->cols;
 
-    scroll(vt, rect, -count, 0);
+    scroll(state, rect, -count, 0);
 
     break;
 
@@ -833,36 +812,36 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     rect.start_col = state->pos.col;
     rect.end_col   = state->pos.col + count;
 
-    erase(vt, rect);
+    erase(state, rect);
     break;
 
   case 0x5a: // CBT - ECMA-48 8.3.7
     count = CSI_ARG_OR(args[0], 1);
-    tab(vt, count, -1);
+    tab(state, count, -1);
     break;
 
   case 0x60: // HPA - ECMA-48 8.3.57
     col = CSI_ARG_OR(args[0], 1);
     state->pos.col = col-1;
-    UBOUND(state->pos.col, vt->cols-1);
+    UBOUND(state->pos.col, state->vt->cols-1);
     break;
 
   case 0x61: // HPR - ECMA-48 8.3.59
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col += count;
-    UBOUND(state->pos.col, vt->cols-1);
+    UBOUND(state->pos.col, state->vt->cols-1);
     break;
 
   case 0x64: // VPA - ECMA-48 8.3.158
     row = CSI_ARG_OR(args[0], 1);
     state->pos.row = row-1;
-    UBOUND(state->pos.row, vt->rows-1);
+    UBOUND(state->pos.row, state->vt->rows-1);
     break;
 
   case 0x65: // VPR - ECMA-48 8.3.160
     count = CSI_ARG_OR(args[0], 1);
     state->pos.row += count;
-    UBOUND(state->pos.row, vt->rows-1);
+    UBOUND(state->pos.row, state->vt->rows-1);
     break;
 
   case 0x66: // HVP - ECMA-48 8.3.63
@@ -870,9 +849,9 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
     // zero-based
     state->pos.row = row-1;
-    UBOUND(state->pos.row, vt->rows-1);
+    UBOUND(state->pos.row, state->vt->rows-1);
     state->pos.col = col-1;
-    UBOUND(state->pos.col, vt->cols-1);
+    UBOUND(state->pos.col, state->vt->cols-1);
     break;
 
   case 0x6a: // HPB - ECMA-48 8.3.58
@@ -888,39 +867,41 @@ static int on_csi(VTerm *vt, const char *intermed, const long args[], int argcou
     break;
 
   case 0x6d: // SGR - ECMA-48 8.3.117
-    vterm_state_setpen(vt, args, argcount);
+    vterm_state_setpen(state, args, argcount);
     break;
 
   case 0x72: // DECSTBM - DEC custom
     state->scrollregion_start = CSI_ARG_OR(args[0], 1) - 1;
-    state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? vt->rows : CSI_ARG(args[1]);
+    state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? state->vt->rows : CSI_ARG(args[1]);
     break;
 
   default:
     return 0;
   }
 
-  updatecursor(vt, state, &oldpos);
+  updatecursor(state, &oldpos);
 
   return 1;
 }
 
-static int on_osc(VTerm *vt, const char *command, size_t cmdlen)
+static int on_osc(const char *command, size_t cmdlen, void *user)
 {
+  VTermState *state = user;
+
   if(cmdlen < 2)
     return 0;
 
   if(strncmp(command, "0;", 2) == 0) {
-    settermprop_string(vt, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
-    settermprop_string(vt, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
+    settermprop_string(state, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
+    settermprop_string(state, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
     return 1;
   }
   else if(strncmp(command, "1;", 2) == 0) {
-    settermprop_string(vt, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
+    settermprop_string(state, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
     return 1;
   }
   else if(strncmp(command, "2;", 2) == 0) {
-    settermprop_string(vt, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
+    settermprop_string(state, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
     return 1;
   }
 
@@ -940,14 +921,17 @@ void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, 
   if(callbacks) {
     if(!vt->state) {
       vt->state = vterm_state_new();
+      vt->state->vt = vt;
     }
     vt->state->callbacks[0] = callbacks;
     vt->state->cbdata[0] = user;
+
     vt->parser_callbacks[1] = &parser_callbacks;
+    vt->cbdata[1] = vt->state;
 
     // Initialise the props
-    settermprop_bool(vt, VTERM_PROP_CURSORBLINK, 1);
-    settermprop_bool(vt, VTERM_PROP_CURSORVISIBLE, 1);
+    settermprop_bool(vt->state, VTERM_PROP_CURSORBLINK, 1);
+    settermprop_bool(vt->state, VTERM_PROP_CURSORVISIBLE, 1);
 
     // Initialise the modes
     vt->state->mode.autowrap = 1;
@@ -959,5 +943,6 @@ void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, 
     }
 
     vt->parser_callbacks[1] = NULL;
+    vt->cbdata[1] = NULL;
   }
 }
