@@ -15,7 +15,7 @@ static void putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos)
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->putglyph)
-      if((*state->callbacks[cb]->putglyph)(vt, chars, width, pos, state->pen))
+      if((*state->callbacks[cb]->putglyph)(chars, width, pos, state->cbdata[cb]))
         return;
 
   fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
@@ -28,7 +28,7 @@ static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->movecursor)
-      if((*state->callbacks[cb]->movecursor)(vt, state->pos, *oldpos, state->mode.cursor_visible))
+      if((*state->callbacks[cb]->movecursor)(state->pos, *oldpos, state->mode.cursor_visible, state->cbdata[cb]))
         return;
 }
 
@@ -38,7 +38,7 @@ static void erase(VTerm *vt, VTermRect rect)
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->erase)
-      if((*state->callbacks[cb]->erase)(vt, rect, state->pen))
+      if((*state->callbacks[cb]->erase)(rect, state->cbdata[cb]))
         return;
 }
 
@@ -73,11 +73,9 @@ void vterm_state_initialise(VTerm *vt)
   state->scrollregion_start = 0;
   state->scrollregion_end = vt->rows;
 
-  state->pen = NULL;
-
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->initpen)
-      (*state->callbacks[cb]->initpen)(vt, &state->pen);
+      (*state->callbacks[cb]->initpen)(state->cbdata[cb]);
 
   VTermRect rect = { 0, vt->rows, 0, vt->cols };
   erase(vt, rect);
@@ -146,7 +144,7 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->copyrect)
-      if((*state->callbacks[cb]->copyrect)(vt, dest, src)) {
+      if((*state->callbacks[cb]->copyrect)(dest, src, state->cbdata[cb])) {
         done = 1;
         break;
       }
@@ -193,7 +191,7 @@ static void scroll(VTerm *vt, VTermRect rect, int downward, int rightward)
         VTermPos srcpos = { pos.row + downward, pos.col + rightward };
         for(int cb = 0; cb < 2; cb++)
           if(state->callbacks[cb] && state->callbacks[cb]->copycell)
-            if((*state->callbacks[cb]->copycell)(vt, pos, srcpos))
+            if((*state->callbacks[cb]->copycell)(pos, srcpos, state->cbdata[cb]))
               break;
       }
 
@@ -462,7 +460,7 @@ static int settermprop_bool(VTerm *vt, VTermProp prop, int v)
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->settermprop)
-      if((*state->callbacks[cb]->settermprop)(vt, prop, &val))
+      if((*state->callbacks[cb]->settermprop)(prop, &val, state->cbdata[cb]))
         return 1;
 
   return 0;
@@ -481,7 +479,7 @@ static int settermprop_string(VTerm *vt, VTermProp prop, const char *str, size_t
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->settermprop)
-      if((*state->callbacks[cb]->settermprop)(vt, prop, &val))
+      if((*state->callbacks[cb]->settermprop)(prop, &val, state->cbdata[cb]))
         return 1;
 
   return 0;
@@ -575,7 +573,7 @@ static void set_dec_mode(VTerm *vt, int num, int val)
 
     for(int cb = 0; cb < 2; cb++)
       if(state->callbacks[cb] && state->callbacks[cb]->setmousefunc)
-        if((*state->callbacks[cb]->setmousefunc)(vt, val ? mousefunc : NULL, vt))
+        if((*state->callbacks[cb]->setmousefunc)(val ? mousefunc : NULL, vt, state->cbdata[cb]))
           break;
 
     break;
@@ -937,13 +935,14 @@ static const VTermParserCallbacks parser_callbacks = {
   .osc     = on_osc,
 };
 
-void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
+void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, void *user)
 {
   if(callbacks) {
     if(!vt->state) {
       vt->state = vterm_state_new();
     }
     vt->state->callbacks[0] = callbacks;
+    vt->state->cbdata[0] = user;
     vt->parser_callbacks[1] = &parser_callbacks;
 
     // Initialise the props

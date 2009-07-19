@@ -92,7 +92,7 @@ static void setpenattr(VTerm *vt, VTermAttr attr, VTermValue *val)
 
   for(int cb = 0; cb < 2; cb++)
   if(state->callbacks[cb] && state->callbacks[cb]->setpenattr)
-    (*state->callbacks[cb]->setpenattr)(vt, attr, val, &state->pen);
+    (*state->callbacks[cb]->setpenattr)(attr, val, state->cbdata[cb]);
 }
 
 static void setpenattr_bool(VTerm *vt, VTermAttr attr, int boolean)

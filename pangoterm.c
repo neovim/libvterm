@@ -317,9 +317,9 @@ gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
   return FALSE;
 }
 
-int term_putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos, void *pen_p)
+int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
-  term_pen *pen = pen_p;
+  term_pen *pen = user;
 
   cells[pos.row][pos.col].fg_col = pen->reverse ? pen->bg_col : pen->fg_col;
   GdkColor bg = cells[pos.row][pos.col].bg_col = pen->reverse ? pen->fg_col : pen->bg_col;
@@ -357,7 +357,7 @@ int term_putglyph(VTerm *vt, const uint32_t chars[], int width, VTermPos pos, vo
   return 1;
 }
 
-int term_movecursor(VTerm *vt, VTermPos pos, VTermPos oldpos, int visible)
+int term_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   GdkRectangle destarea = {
     .x      = oldpos.col * cell_width,
@@ -401,7 +401,7 @@ gboolean cursor_blink(gpointer data)
   return TRUE;
 }
 
-int term_copyrect(VTerm *vt, VTermRect dest, VTermRect src)
+int term_copyrect(VTermRect dest, VTermRect src, void *user)
 {
   flush_glyphs();
 
@@ -429,7 +429,7 @@ int term_copyrect(VTerm *vt, VTermRect dest, VTermRect src)
   return 0; // Because we still need to get copycell to move the metadata
 }
 
-int term_copycell(VTerm *vt, VTermPos destpos, VTermPos srcpos)
+int term_copycell(VTermPos destpos, VTermPos srcpos, void *user)
 {
   cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
   cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
@@ -437,11 +437,11 @@ int term_copycell(VTerm *vt, VTermPos destpos, VTermPos srcpos)
   return 1;
 }
 
-int term_erase(VTerm *vt, VTermRect rect, void *pen_p)
+int term_erase(VTermRect rect, void *user)
 {
   flush_glyphs();
 
-  term_pen *pen = pen_p;
+  term_pen *pen = user;
 
   GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
   gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
@@ -474,25 +474,7 @@ int term_erase(VTerm *vt, VTermRect rect, void *pen_p)
   return 1;
 }
 
-int term_initpen(VTerm *vt, void **penstore)
-{
-  term_pen *pen = *penstore;
-
-  if(!*penstore) {
-    pen = g_new0(term_pen, 1);
-    *penstore = pen;
-    pen->attrs = pango_attr_list_new();
-    pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
-    pango_layout_set_font_description(pen->layout, fontdesc);
-    gdk_color_parse(default_fg, &pen->fg_col);
-    gdk_color_parse(default_bg, &pen->bg_col);
-    return 1;
-  }
-
-  return 0;
-}
-
-int term_setpenattr(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore)
+int term_setpenattr(VTermAttr attr, VTermValue *val, void *user)
 {
   flush_glyphs();
 
@@ -504,7 +486,7 @@ int term_setpenattr(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore)
     pango_attr_list_change(pen->attrs, newattr); \
   } while(0)
 
-  term_pen *pen = *penstore;
+  term_pen *pen = user;
 
   switch(attr) {
   case VTERM_ATTR_BOLD:
@@ -553,7 +535,7 @@ int term_setpenattr(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore)
   return 1;
 }
 
-int term_settermprop(VTerm *vt, VTermProp prop, VTermValue *val)
+int term_settermprop(VTermProp prop, VTermValue *val, void *user)
 {
   switch(prop) {
   case VTERM_PROP_CURSORVISIBLE:
@@ -604,7 +586,7 @@ int term_settermprop(VTerm *vt, VTermProp prop, VTermValue *val)
   return 1;
 }
 
-int term_setmousefunc(VTerm *vt, VTermMouseFunc func, void *data)
+int term_setmousefunc(VTermMouseFunc func, void *data, void *user)
 {
   mousefunc = func;
   mousedata = data;
@@ -621,7 +603,7 @@ int term_setmousefunc(VTerm *vt, VTermMouseFunc func, void *data)
   return 1;
 }
 
-int term_bell(VTerm *vt)
+int term_bell(void *user)
 {
   gtk_widget_error_bell(GTK_WIDGET(termwin));
   return 1;
@@ -633,7 +615,6 @@ static VTermStateCallbacks cb = {
   .copyrect     = term_copyrect,
   .copycell     = term_copycell,
   .erase        = term_erase,
-  .initpen      = term_initpen,
   .setpenattr   = term_setpenattr,
   .settermprop  = term_settermprop,
   .setmousefunc = term_setmousefunc,
@@ -719,7 +700,14 @@ int main(int argc, char *argv[])
 
   gtk_widget_realize(window);
 
-  vterm_set_state_callbacks(vt, &cb);
+  term_pen *pen = g_new0(term_pen, 1);
+  pen->attrs = pango_attr_list_new();
+  pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
+  pango_layout_set_font_description(pen->layout, fontdesc);
+  gdk_color_parse(default_fg, &pen->fg_col);
+  gdk_color_parse(default_bg, &pen->bg_col);
+
+  vterm_set_state_callbacks(vt, &cb, pen);
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);

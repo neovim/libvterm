@@ -82,16 +82,16 @@ typedef enum {
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
 
 typedef struct {
-  int (*putglyph)(VTerm *vt, const uint32_t chars[], int width, VTermPos pos, void *pen);
-  int (*movecursor)(VTerm *vt, VTermPos pos, VTermPos oldpos, int visible);
-  int (*copyrect)(VTerm *vt, VTermRect dest, VTermRect src);
-  int (*copycell)(VTerm *vt, VTermPos dest, VTermPos src);
-  int (*erase)(VTerm *vt, VTermRect rect, void *pen);
-  int (*initpen)(VTerm *vt, void **penstore);
-  int (*setpenattr)(VTerm *vt, VTermAttr attr, VTermValue *val, void **penstore);
-  int (*settermprop)(VTerm *vt, VTermProp prop, VTermValue *val);
-  int (*setmousefunc)(VTerm *vt, VTermMouseFunc func, void *data);
-  int (*bell)(VTerm *vt);
+  int (*putglyph)(const uint32_t chars[], int width, VTermPos pos, void *user);
+  int (*movecursor)(VTermPos pos, VTermPos oldpos, int visible, void *user);
+  int (*copyrect)(VTermRect dest, VTermRect src, void *user);
+  int (*copycell)(VTermPos dest, VTermPos src, void *user);
+  int (*erase)(VTermRect rect, void *user);
+  int (*initpen)(void *user);
+  int (*setpenattr)(VTermAttr attr, VTermValue *val, void *user);
+  int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
+  int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
+  int (*bell)(void *user);
 } VTermStateCallbacks;
 
 VTerm *vterm_new(int rows, int cols);
@@ -99,7 +99,7 @@ void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 
 void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks);
-void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks);
+void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks, void *user);
 
 void vterm_state_initialise(VTerm *vt);
 void vterm_state_get_cursorpos(VTerm *vt, VTermPos *cursorpos);
