@@ -48,9 +48,8 @@ struct _VTerm
 
   int is_utf8;
 
-  /* [0] for user code, [1] for state engine */
-  const VTermParserCallbacks *parser_callbacks[2];
-  void *cbdata[2];
+  const VTermParserCallbacks *parser_callbacks;
+  void *cbdata;
 
   GString *inbuffer;
   GString *outbuffer;
