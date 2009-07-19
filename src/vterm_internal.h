@@ -9,9 +9,8 @@ struct _VTermState
 {
   VTerm *vt;
 
-  /* [0] for user code, [1] for buffer engine */
-  const VTermStateCallbacks *callbacks[2];
-  void *cbdata[2];
+  const VTermStateCallbacks *callbacks;
+  void *cbdata;
 
   /* Current cursor position */
   VTermPos pos;
