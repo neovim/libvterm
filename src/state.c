@@ -28,7 +28,7 @@ static void updatecursor(VTerm *vt, VTermState *state, VTermPos *oldpos)
 
   for(int cb = 0; cb < 2; cb++)
     if(state->callbacks[cb] && state->callbacks[cb]->movecursor)
-      if((*state->callbacks[cb]->movecursor)(vt, state->pos, *oldpos, vt->mode.cursor_visible))
+      if((*state->callbacks[cb]->movecursor)(vt, state->pos, *oldpos, state->mode.cursor_visible))
         return;
 }
 
@@ -355,7 +355,7 @@ static int on_text(VTerm *vt, const int codepoints[], int npoints)
     state->pos.col += width;
 
     if(state->pos.col >= vt->cols) {
-      if(vt->mode.autowrap) {
+      if(state->mode.autowrap) {
         linefeed(vt);
         state->pos.col = 0;
       }
@@ -491,7 +491,7 @@ static void savecursor(VTerm *vt, int save)
 {
   VTermState *state = vt->state;
 
-  vt->mode.saved_cursor = save;
+  state->mode.saved_cursor = save;
   if(save) {
     state->saved_pos = state->pos;
   }
@@ -504,12 +504,14 @@ static void savecursor(VTerm *vt, int save)
 
 static void altscreen(VTerm *vt, int alt)
 {
+  VTermState *state = vt->state;
+
   /* Only store that we're on the alternate screen if the usercode said it
    * switched */
   if(!settermprop_bool(vt, VTERM_PROP_ALTSCREEN, alt))
     return;
 
-  vt->mode.alt_screen = alt;
+  state->mode.alt_screen = alt;
   if(alt) {
     VTermRect rect = {
       .start_row = 0,
@@ -523,6 +525,8 @@ static void altscreen(VTerm *vt, int alt)
 
 static int on_escape(VTerm *vt, const char *bytes, size_t len)
 {
+  VTermState *state = vt->state;
+
   switch(bytes[0]) {
   case 0x28: case 0x29: case 0x2a: case 0x2b:
     if(len < 2)
@@ -531,11 +535,11 @@ static int on_escape(VTerm *vt, const char *bytes, size_t len)
     return 2;
 
   case 0x3d:
-    vt->mode.keypad = 1;
+    state->mode.keypad = 1;
     return 1;
 
   case 0x3e:
-    vt->mode.keypad = 0;
+    state->mode.keypad = 0;
     return 1;
 
   default:
@@ -549,11 +553,11 @@ static void set_dec_mode(VTerm *vt, int num, int val)
 
   switch(num) {
   case 1:
-    vt->mode.cursor = val;
+    state->mode.cursor = val;
     break;
 
   case 7:
-    vt->mode.autowrap = val;
+    state->mode.autowrap = val;
     break;
 
   case 12:
@@ -561,7 +565,7 @@ static void set_dec_mode(VTerm *vt, int num, int val)
     break;
 
   case 25:
-    vt->mode.cursor_visible = val;
+    state->mode.cursor_visible = val;
     settermprop_bool(vt, VTERM_PROP_CURSORVISIBLE, val);
     break;
 
@@ -947,7 +951,7 @@ void vterm_set_state_callbacks(VTerm *vt, const VTermStateCallbacks *callbacks)
     settermprop_bool(vt, VTERM_PROP_CURSORVISIBLE, 1);
 
     // Initialise the modes
-    vt->mode.autowrap = 1;
+    vt->state->mode.autowrap = 1;
   }
   else {
     if(vt->state) {
