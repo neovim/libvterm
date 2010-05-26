@@ -1,11 +1,24 @@
 #include <errno.h>
 #include <poll.h>
-#include <pty.h>
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+/* suck up the non-standard openpty/forkpty */
+#if defined(__FreeBSD__)
+# include <libutil.h>
+# include <termios.h>
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
+# include <termios.h>
+# include <util.h>
+#else
+# include <pty.h>
+#endif
 
 #include "vterm.h"
 
