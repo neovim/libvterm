@@ -204,7 +204,7 @@ static void tab(VTermState *state, int count, int direction)
     }
 }
 
-static int on_text(const int codepoints[], int npoints, void *user)
+static int on_text(const uint32_t codepoints[], int npoints, void *user)
 {
   VTermState *state = user;
 
