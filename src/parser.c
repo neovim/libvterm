@@ -11,7 +11,7 @@
 
 #include <glib.h>
 
-static void on_text(VTerm *vt, int codepoints[], int npoints)
+static void on_text(VTerm *vt, uint32_t codepoints[], int npoints)
 {
   if(vt->parser_callbacks && vt->parser_callbacks->text)
     if((*vt->parser_callbacks->text)(codepoints, npoints, vt->cbdata))
@@ -120,7 +120,7 @@ static void on_osc(VTerm *vt, const char *command, size_t cmdlen)
   fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
 }
 
-static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
+static int interpret_utf8(uint32_t cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
 {
   // number of bytes remaining in this codepoint
   int bytes_remaining = 0;
@@ -128,7 +128,7 @@ static int interpret_utf8(int cp[], int *cpi, const char bytes[], size_t *pos, s
   // (for detecting overlongs)
   int bytes_total     = 0;
 
-  int this_cp;
+  uint32_t this_cp;
 
   for( ; *pos < len; (*pos)++) {
     unsigned char c = bytes[*pos];
@@ -348,7 +348,7 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
       else {
         // We'll have at most (len - pos) codepoints. Doesn't matter
         // if we overallocate this
-        int *cp = g_alloca((len - pos) * sizeof(int));
+        uint32_t *cp = g_alloca((len - pos) * sizeof(uint32_t));
         int cpi = 0;
 
 #ifdef DEBUG_PRINT_UTF8
