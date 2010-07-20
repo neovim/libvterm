@@ -22,7 +22,7 @@ HFILES_INT=$(wildcard src/*.h) $(HFILES)
 TEST_CFILES=$(wildcard t/*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
 
-LIBPIECES=vterm parser state input pen unicode
+LIBPIECES=vterm parser encoding state input pen unicode
 
 all: pangoterm
 

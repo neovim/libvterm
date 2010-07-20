@@ -58,6 +58,14 @@ struct _VTerm
   VTermState *state;
 };
 
+typedef struct _VTermEncoding VTermEncoding;
+struct _VTermEncoding {
+  int (*decode)(VTermEncoding *enc, uint32_t cp[], int *cpi, const char bytes[], size_t *pos, size_t len);
+};
+
+extern VTermEncoding encoding_utf8;
+extern VTermEncoding encoding_usascii;
+
 size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len);
 
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len);
