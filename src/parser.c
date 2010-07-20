@@ -11,7 +11,7 @@
 
 #include <glib.h>
 
-static void vterm_on_parser_text(VTerm *vt, int codepoints[], int npoints)
+static void on_text(VTerm *vt, int codepoints[], int npoints)
 {
   if(vt->parser_callbacks && vt->parser_callbacks->text)
     if((*vt->parser_callbacks->text)(codepoints, npoints, vt->cbdata))
@@ -20,7 +20,7 @@ static void vterm_on_parser_text(VTerm *vt, int codepoints[], int npoints)
   fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
 }
 
-static void vterm_on_parser_control(VTerm *vt, unsigned char control)
+static void on_control(VTerm *vt, unsigned char control)
 {
   if(vt->parser_callbacks && vt->parser_callbacks->control)
     if((*vt->parser_callbacks->control)(control, vt->cbdata))
@@ -29,7 +29,7 @@ static void vterm_on_parser_control(VTerm *vt, unsigned char control)
   fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
 
-static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
+static size_t on_escape(VTerm *vt, const char bytes[], size_t len)
 {
   size_t eaten;
 
@@ -41,7 +41,7 @@ static size_t vterm_on_parser_escape(VTerm *vt, const char bytes[], size_t len)
   return 0;
 }
 
-static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char command)
+static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
   if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3e) {
     int i;
@@ -111,7 +111,7 @@ static void vterm_on_parser_csi(VTerm *vt, const char *args, size_t arglen, char
   fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
 
-static void vterm_on_parser_osc(VTerm *vt, const char *command, size_t cmdlen)
+static void on_osc(VTerm *vt, const char *command, size_t cmdlen)
 {
   if(vt->parser_callbacks && vt->parser_callbacks->osc)
     if((*vt->parser_callbacks->osc)(command, cmdlen, vt->cbdata))
@@ -290,10 +290,10 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
         if(c >= 0x40 && c < 0x60) {
           // C1 emulations using 7bit clean
           // ESC 0x40 == 0x80
-          vterm_on_parser_control(vt, c + 0x40);
+          on_control(vt, c + 0x40);
         }
         else {
-          size_t esc_eaten = vterm_on_parser_escape(vt, bytes + pos, len - pos);
+          size_t esc_eaten = on_escape(vt, bytes + pos, len - pos);
           if(esc_eaten < 0)
             return eaten;
           if(esc_eaten > 0)
@@ -306,7 +306,7 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
 
     case CSI:
       if(c >= 0x40 && c <= 0x7f) {
-        vterm_on_parser_csi(vt, bytes + string_start, pos - string_start, c);
+        on_csi(vt, bytes + string_start, pos - string_start, c);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -314,12 +314,12 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
 
     case OSC:
       if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
-        vterm_on_parser_osc(vt, bytes + string_start, pos - string_start);
+        on_osc(vt, bytes + string_start, pos - string_start);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        vterm_on_parser_osc(vt, bytes + string_start, pos - string_start - 1);
+        on_osc(vt, bytes + string_start, pos - string_start - 1);
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -340,7 +340,7 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
           string_start = pos + 1;
           break;
         default:
-          vterm_on_parser_control(vt, c);
+          on_control(vt, c);
           eaten = pos + 1;
           break;
         }
@@ -372,7 +372,7 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
           }
         }
 
-        vterm_on_parser_text(vt, cp, cpi);
+        on_text(vt, cp, cpi);
 
         if(finished)
           return pos;
