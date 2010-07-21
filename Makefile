@@ -54,9 +54,13 @@ t/test: libvterm.so t/test.o $(TEST_OFILES)
 	t/test.c.sh
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS) -lcunit
 
+t/harness: t/harness.c $(HFILES) libvterm.so
+	gcc -o $@ $< $(CCFLAGS) libvterm.so
+
 .PHONY: test
-test: libvterm.so t/test
+test: libvterm.so t/test t/harness
 	LD_LIBRARY_PATH=. t/test
+	for T in $(wildcard t/[0-9]*.test); do echo "** $$T **"; perl t/run-test.pl $$T || exit 1; done
 
 .PHONY: clean
 clean:
