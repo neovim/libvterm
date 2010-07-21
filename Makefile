@@ -19,7 +19,7 @@ HFILES=$(wildcard include/*.h)
 
 HFILES_INT=$(wildcard src/*.h) $(HFILES)
 
-TEST_CFILES=$(wildcard t/*.c)
+TEST_CFILES=$(wildcard t/[0-9]*.c)
 TEST_OFILES=$(TEST_CFILES:.c=.o)
 
 LIBPIECES=vterm parser encoding state input pen unicode
@@ -50,7 +50,7 @@ t/test.o: t/test.c t/extern.h t/suites.h
 t/extern.h: t
 	t/test.c.sh
 
-t/test: libvterm.so $(TEST_OFILES)
+t/test: libvterm.so t/test.o $(TEST_OFILES)
 	t/test.c.sh
 	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS) -lcunit
 
