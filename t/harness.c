@@ -83,7 +83,7 @@ static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void 
   printf("putglyph ");
   for(int i = 0; chars[i]; i++)
     printf(i ? ",%x" : "%x", chars[i]);
-  printf(" %d %d,%d\n", width, pos.col, pos.row);
+  printf(" %d %d,%d\n", width, pos.row, pos.col);
 
   return 1;
 }
