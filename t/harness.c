@@ -12,7 +12,7 @@ static int parser_text(const uint32_t codepoints[], int npoints, void *user)
 {
   printf("text ");
   for(int i = 0; i < npoints; i++)
-    printf("%04x", codepoints[i]);
+    printf(i ? ",%x" : "%x", codepoints[i]);
   printf("\n");
 
   return 1;
