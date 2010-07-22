@@ -7,6 +7,7 @@
 #define strstartswith(a,b) (!strncmp(a,b,strlen(b)))
 
 static VTerm *vt;
+static VTermState *state;
 
 static int parser_text(const uint32_t codepoints[], int npoints, void *user)
 {
@@ -73,6 +74,20 @@ static VTermParserCallbacks parser_cbs = {
   .osc     = parser_osc,
 };
 
+static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
+{
+  printf("putglyph ");
+  for(int i = 0; chars[i]; i++)
+    printf(i ? ",%x" : "%x", chars[i]);
+  printf(" %d %d,%d\n", width, pos.col, pos.row);
+
+  return 1;
+}
+
+VTermStateCallbacks state_cbs = {
+  .putglyph = state_putglyph,
+};
+
 int main(int argc, char **argv)
 {
   char line[1024];
@@ -98,8 +113,19 @@ int main(int argc, char **argv)
       vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
     }
 
+    else if(streq(line, "WANTSTATE")) {
+      if(!state)
+        state = vterm_obtain_state(vt);
+      vterm_state_set_callbacks(state, &state_cbs, NULL);
+    }
+
     else if(sscanf(line, "UTF8 %d", &flag)) {
       vterm_parser_set_utf8(vt, flag);
+    }
+
+    else if(streq(line, "RESET")) {
+      if(state)
+        vterm_state_reset(state);
     }
 
     else if(strstartswith(line, "PUSH ")) {
