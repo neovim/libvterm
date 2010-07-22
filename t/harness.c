@@ -74,8 +74,12 @@ static VTermParserCallbacks parser_cbs = {
   .osc     = parser_osc,
 };
 
+static int want_state_putglyph = 0;
 static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
+  if(!want_state_putglyph)
+    return 1;
+
   printf("putglyph ");
   for(int i = 0; chars[i]; i++)
     printf(i ? ",%x" : "%x", chars[i]);
@@ -113,10 +117,22 @@ int main(int argc, char **argv)
       vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
     }
 
-    else if(streq(line, "WANTSTATE")) {
+    else if(strstartswith(line, "WANTSTATE") && (line[9] == '\0' || line[9] == ' ')) {
       if(!state)
         state = vterm_obtain_state(vt);
       vterm_state_set_callbacks(state, &state_cbs, NULL);
+
+      int i = 9;
+      while(line[i] == ' ')
+        i++;
+      for( ; line[i]; i++)
+        switch(line[i]) {
+        case 'g':
+          want_state_putglyph = 1;
+          break;
+        default:
+          fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
+        }
     }
 
     else if(sscanf(line, "UTF8 %d", &flag)) {
