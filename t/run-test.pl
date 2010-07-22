@@ -96,6 +96,9 @@ while( my $line = <$test> ) {
       elsif( $line =~ m/^osc (.*)$/ ) {
          $line = "osc " . join "", map sprintf("%02x", $_), unpack "C*", eval($1);
       }
+      elsif( $line =~ m/^putglyph (\S+) (.*)$/ ) {
+         $line = "putglyph " . join( ",", map sprintf("%x", $_), eval($1) ) . " $2";
+      }
       else {
          warn "Unrecognised test expectation '$line'\n";
       }
