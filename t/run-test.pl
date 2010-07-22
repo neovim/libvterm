@@ -82,7 +82,7 @@ while( my $line = <$test> ) {
    elsif( $line =~ m/^([a-z]+)/ ) {
       # Convenience formatting
       if( $line =~ m/^text (.*)$/ ) {
-         $line = "text " . join "", map sprintf("%04x", $_), eval($1);
+         $line = "text " . join ",", map sprintf("%x", $_), eval($1);
       }
       elsif( $line =~ m/^control (.*)$/ ) {
          $line = sprintf "control %02x", eval($1);
