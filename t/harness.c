@@ -95,9 +95,36 @@ static int state_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *us
   return 1;
 }
 
+static int want_state_copyrect = 0;
+static int state_copyrect(VTermRect dest, VTermRect src, void *user)
+{
+  if(!want_state_copyrect)
+    return 1;
+
+  printf("copyrect %d..%d,%d..%d -> %d..%d,%d..%d\n",
+      src.start_row,  src.end_row,  src.start_col,  src.end_col,
+      dest.start_row, dest.end_row, dest.start_col, dest.end_col);
+
+  return 1;
+}
+
+static int want_state_erase = 0;
+static int state_erase(VTermRect rect, void *user)
+{
+  if(!want_state_erase)
+    return 1;
+
+  printf("erase %d..%d,%d..%d\n",
+      rect.start_row, rect.end_row, rect.start_col, rect.end_col);
+
+  return 1;
+}
+
 VTermStateCallbacks state_cbs = {
   .putglyph   = state_putglyph,
   .movecursor = state_movecursor,
+  .copyrect   = state_copyrect,
+  .erase      = state_erase,
 };
 
 int main(int argc, char **argv)
@@ -138,6 +165,12 @@ int main(int argc, char **argv)
         case 'g':
           want_state_putglyph = 1;
           break;
+        case 'c':
+          want_state_copyrect = 1;
+          break;
+        case 'e':
+          want_state_erase = 1;
+          break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
         }
@@ -148,8 +181,10 @@ int main(int argc, char **argv)
     }
 
     else if(streq(line, "RESET")) {
-      if(state)
+      if(state) {
         vterm_state_reset(state);
+        vterm_state_get_cursorpos(state, &state_pos);
+      }
     }
 
     else if(strstartswith(line, "PUSH ")) {
