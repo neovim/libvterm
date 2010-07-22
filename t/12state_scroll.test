@@ -1,0 +1,77 @@
+INIT
+UTF8 1
+WANTSTATE ce
+
+!Linefeed
+PUSH "\n"x24
+  ?cursor 24,0
+PUSH "\n"
+  copyrect 1..25,0..80 -> 0..24,0..80
+  erase 24..25,0..80
+  ?cursor 24,0
+
+RESET
+  erase 0..25,0..80
+
+!Index
+PUSH "\e[25H"
+PUSH "\eD"
+  copyrect 1..25,0..80 -> 0..24,0..80
+  erase 24..25,0..80
+
+RESET
+  erase 0..25,0..80
+
+!Reverse Index
+PUSH "\eM"
+  copyrect 0..24,0..80 -> 1..25,0..80
+  erase 0..1,0..80
+
+RESET
+  erase 0..25,0..80
+
+!DEC scrolling region
+PUSH "\e[1;10r"
+  ?cursor 0,0
+PUSH "\n"x9
+  ?cursor 9,0
+PUSH "\n"
+  copyrect 1..10,0..80 -> 0..9,0..80
+  erase 9..10,0..80
+  ?cursor 9,0
+
+PUSH "\e[9;10r"
+PUSH "\eM"
+  ?cursor 8,0
+PUSH "\eM"
+  copyrect 8..9,0..80 -> 9..10,0..80
+  erase 8..9,0..80
+
+PUSH "\e[25H"
+  ?cursor 24,0
+PUSH "\n"
+  # no copyrect or erase
+  ?cursor 24,0
+
+RESET
+  erase 0..25,0..80
+
+!Scroll Down
+PUSH "\e[S"
+  copyrect 1..25,0..80 -> 0..24,0..80
+  erase 24..25,0..80
+  ?cursor 0,0
+PUSH "\e[2S"
+  copyrect 2..25,0..80 -> 0..23,0..80
+  erase 23..25,0..80
+  ?cursor 0,0
+
+!Scroll Up
+PUSH "\e[T"
+  copyrect 0..24,0..80 -> 1..25,0..80
+  erase 0..1,0..80
+  ?cursor 0,0
+PUSH "\e[2T"
+  copyrect 0..23,0..80 -> 2..25,0..80
+  erase 0..2,0..80
+  ?cursor 0,0
