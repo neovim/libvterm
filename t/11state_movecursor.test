@@ -1,0 +1,192 @@
+INIT
+UTF8 1
+WANTSTATE
+
+!Implicit
+PUSH "ABC"
+  ?cursor 0,3
+!Backspace
+PUSH "\b"
+  ?cursor 0,2
+!Horizontal Tab
+PUSH "\t"
+  ?cursor 0,8
+!Carriage Return
+PUSH "\r"
+  ?cursor 0,0
+!Linefeed
+PUSH "\n"
+  ?cursor 1,0
+
+RESET
+
+!Index
+PUSH "ABC\eD"
+  ?cursor 1,3
+!Reverse Index
+PUSH "\eM"
+  ?cursor 0,3
+!Newline
+PUSH "\eE"
+  ?cursor 1,0
+
+RESET
+
+!Cursor Forward
+PUSH "\e[B"
+  ?cursor 1,0
+PUSH "\e[3B"
+  ?cursor 4,0
+
+!Cursor Down
+PUSH "\e[C"
+  ?cursor 4,1
+PUSH "\e[3C"
+  ?cursor 4,4
+
+!Cursor Up
+PUSH "\e[A"
+  ?cursor 3,4
+PUSH "\e[3A"
+  ?cursor 0,4
+
+!Cursor Backward
+PUSH "\e[D"
+  ?cursor 0,3
+PUSH "\e[3D"
+  ?cursor 0,0
+
+!Cursor Next Line
+PUSH "   "
+  ?cursor 0,3
+PUSH "\e[E"
+  ?cursor 1,0
+PUSH "   "
+  ?cursor 1,3
+PUSH "\e[2E"
+  ?cursor 3,0
+
+!Cursor Previous Line
+PUSH "   "
+  ?cursor 3,3
+PUSH "\e[F"
+  ?cursor 2,0
+PUSH "   "
+  ?cursor 2,3
+PUSH "\e[2F"
+  ?cursor 0,0
+
+!Cursor Horizonal Absolute
+PUSH "\n"
+  ?cursor 1,0
+PUSH "\e[20G"
+  ?cursor 1,19
+PUSH "\e[G"
+  ?cursor 1,0
+
+!Cursor Position
+PUSH "\e[10;5H"
+  ?cursor 9,4
+PUSH "\e[8H"
+  ?cursor 7,0
+PUSH "\e[H"
+  ?cursor 0,0
+
+RESET
+
+!Bounds Checking
+PUSH "\e[A"
+  ?cursor 0,0
+PUSH "\e[D"
+  ?cursor 0,0
+PUSH "\e[25;80H"
+  ?cursor 24,79
+PUSH "\e[B"
+  ?cursor 24,79
+PUSH "\e[C"
+  ?cursor 24,79
+PUSH "\e[E"
+  ?cursor 24,0
+PUSH "\e[H"
+  ?cursor 0,0
+PUSH "\e[F"
+  ?cursor 0,0
+PUSH "\e[999G"
+  ?cursor 0,79
+PUSH "\e[99;99H"
+  ?cursor 24,79
+
+RESET
+
+!Horizontal Position Absolute
+PUSH "\e[5`"
+  ?cursor 0,4
+
+!Horizontal Position Relative
+PUSH "\e[3a"
+  ?cursor 0,7
+
+!Horizontal Position Backward
+PUSH "\e[3j"
+  ?cursor 0,4
+
+!Horizontal and Vertical Position
+PUSH "\e[3;3f"
+  ?cursor 2,2
+
+!Vertical Position Absolute
+PUSH "\e[5d"
+  ?cursor 4,2
+
+!Vertical Position Relative
+PUSH "\e[2e"
+  ?cursor 6,2
+
+!Vertical Position Backward
+PUSH "\e[2k"
+  ?cursor 4,2
+
+RESET
+
+!Horizontal Tab
+PUSH "\t"
+  ?cursor 0,8
+PUSH "   "
+  ?cursor 0,11
+PUSH "\t"
+  ?cursor 0,16
+PUSH "       "
+  ?cursor 0,23
+PUSH "\t"
+  ?cursor 0,24
+PUSH "        "
+  ?cursor 0,32
+PUSH "\t"
+  ?cursor 0,40
+
+!Cursor Horizontal Tab
+PUSH "\e[I"
+  ?cursor 0,48
+PUSH "\e[2I"
+  ?cursor 0,64
+
+!Cursor Backward Tab
+PUSH "\e[Z"
+  ?cursor 0,56
+PUSH "\e[2Z"
+  ?cursor 0,40
+
+RESET
+
+!Implicit Wrapping
+PUSH "x"x79
+  ?cursor 0,79
+PUSH "x"
+  ?cursor 1,0
+
+!DEC Auto Wrap Mode
+PUSH "\e[?7l"
+PUSH "x"x79
+  ?cursor 1,79
+PUSH "x"
+  ?cursor 1,79
