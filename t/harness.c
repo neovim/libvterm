@@ -88,8 +88,16 @@ static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void 
   return 1;
 }
 
+static VTermPos state_pos;
+static int state_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
+{
+  state_pos = pos;
+  return 1;
+}
+
 VTermStateCallbacks state_cbs = {
-  .putglyph = state_putglyph,
+  .putglyph   = state_putglyph,
+  .movecursor = state_movecursor,
 };
 
 int main(int argc, char **argv)
@@ -156,6 +164,15 @@ int main(int argc, char **argv)
       }
 
       vterm_push_bytes(vt, bytes, outpos - bytes);
+    }
+
+    else if(line[0] == '?') {
+      if(streq(line, "?cursor"))
+        printf("%d,%d\n", state_pos.row, state_pos.col);
+      else
+        printf("?\n");
+
+      continue;
     }
 
     else
