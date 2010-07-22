@@ -19,6 +19,7 @@ my @expect;
 sub do_onetest
 {
    $hin->print( "$command\n" );
+   undef $command;
 
    my $fail_printed = 0;
 
@@ -104,6 +105,21 @@ while( my $line = <$test> ) {
       }
 
       push @expect, $line;
+   }
+   # Assertions start with '?'
+   elsif( $line =~ s/^\?([a-z]+)\s+// ) {
+      do_onetest if defined $command;
+
+      $hin->print( "\?$1\n" );
+      my $response = <$hout>;
+      chomp $response;
+
+      if( $response ne $line ) {
+         print "# Assert $1 failed:\n" .
+               "# Expected: $line\n" .
+               "# Actual:   $response\n";
+         $exitcode = 1;
+      }
    }
 }
 
