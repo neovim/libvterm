@@ -110,19 +110,24 @@ while( my $line = <$test> ) {
       push @expect, $line;
    }
    # Assertions start with '?'
-   elsif( $line =~ s/^\?([a-z]+)\s+// ) {
+   elsif( $line =~ s/^\?([a-z]+.*?=)\s+// ) {
       do_onetest if defined $command;
 
-      $hin->print( "\?$1\n" );
+      my ( $assertion ) = $1 =~ m/^(.*)\s+=/;
+
+      $hin->print( "\?$assertion\n" );
       my $response = <$hout>;
       chomp $response;
 
       if( $response ne $line ) {
-         print "# Assert $1 failed:\n" .
+         print "# Assert $assertion failed:\n" .
                "# Expected: $line\n" .
                "# Actual:   $response\n";
          $exitcode = 1;
       }
+   }
+   else {
+      die "Unrecognised TEST line $line\n";
    }
 }
 
