@@ -676,6 +676,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
       erase(state, rect);
       break;
     }
+    break;
 
   case 0x4b: // EL - ECMA-48 8.3.41
     rect.start_row = state->pos.row;
