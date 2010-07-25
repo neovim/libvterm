@@ -19,9 +19,6 @@ HFILES=$(wildcard include/*.h)
 
 HFILES_INT=$(wildcard src/*.h) $(HFILES)
 
-TEST_CFILES=$(wildcard t/[0-9]*.c)
-TEST_OFILES=$(TEST_CFILES:.c=.o)
-
 LIBPIECES=vterm parser encoding state input pen unicode
 
 all: pangoterm
@@ -41,27 +38,13 @@ src/%.o: src/%.c $(HFILES_INT)
 t/%.o: t/%.c t/%.inc $(HFILES)
 	gcc -c -o $@ $< $(CCFLAGS)
 
-t/%.inc: t/%.c
-	t/gen-test.inc.sh $< >$@
-
-t/test.o: t/test.c t/extern.h t/suites.h
-	gcc -c -o $@ $< $(CCFLAGS)
-
-t/extern.h: t
-	t/test.c.sh
-
-t/test: libvterm.so t/test.o $(TEST_OFILES)
-	t/test.c.sh
-	gcc -o $@ $^ $(CCFLAGS) $(LDFLAGS) -lcunit
-
 t/harness: t/harness.c $(HFILES) libvterm.so
 	gcc -o $@ $< $(CCFLAGS) libvterm.so
 
 .PHONY: test
-test: libvterm.so t/test t/harness
-	LD_LIBRARY_PATH=. t/test
+test: libvterm.so t/harness
 	for T in $(wildcard t/[0-9]*.test); do echo "** $$T **"; perl t/run-test.pl $$T || exit 1; done
 
 .PHONY: clean
 clean:
-	rm -f $(DEBUGS) $(OFILES) $(TEST_OFILES) $(TEST_CFILES:.c=.inc) libvterm.so
+	rm -f $(DEBUGS) $(OFILES) libvterm.so
