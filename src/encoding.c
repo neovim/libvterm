@@ -149,7 +149,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
   return 1;
 }
 
-VTermEncoding encoding_utf8 = {
+static VTermEncoding encoding_utf8 = {
   .decode = &decode_utf8,
 };
 
@@ -168,6 +168,25 @@ static int decode_usascii(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen
   return 1;
 }
 
-VTermEncoding encoding_usascii = {
+static VTermEncoding encoding_usascii = {
   .decode = &decode_usascii,
 };
+
+static struct {
+  VTermEncodingType type;
+  char designation;
+  VTermEncoding *enc;
+}
+encodings[] = {
+  { ENC_UTF8,      'u', &encoding_utf8 },
+  { ENC_SINGLE_94, 'B', &encoding_usascii },
+  { 0, 0 },
+};
+
+VTermEncoding *vterm_lookup_encoding(VTermEncodingType type, char designation)
+{
+  for(int i = 0; encodings[i].designation; i++)
+    if(encodings[i].type == type && encodings[i].designation == designation)
+      return encodings[i].enc;
+  return NULL;
+}

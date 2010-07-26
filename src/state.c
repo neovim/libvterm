@@ -215,14 +215,14 @@ static int on_text(const char bytes[], size_t len, void *user)
   int npoints = 0;
   size_t eaten = 0;
 
-  VTermEncoding *enc;
+  while(eaten < len) {
+    VTermEncoding *enc = bytes[eaten] < 0x80 ? state->encoding[state->gl_set] :
+                         state->vt->is_utf8  ? vterm_lookup_encoding(ENC_UTF8, 'u') :
+                                               state->encoding[state->gr_set];
 
-  if(state->vt->is_utf8)
-    enc = &encoding_utf8;
-  else
-    enc = &encoding_usascii;
-
-  (*enc->decode)(enc, codepoints, &npoints, len, bytes, &eaten, len);
+    if(!(*enc->decode)(enc, codepoints, &npoints, len, bytes, &eaten, len))
+      break;
+  }
 
   int i = 0;
 
@@ -480,7 +480,15 @@ static int on_escape(const char *bytes, size_t len, void *user)
   case 0x28: case 0x29: case 0x2a: case 0x2b:
     if(len < 2)
       return -1;
-    // TODO: "Designate G%d charset %c\n", bytes[0] - 0x28, bytes[1];
+
+    {
+      int setnum = bytes[0] - 0x28;
+      VTermEncoding *newenc = vterm_lookup_encoding(ENC_SINGLE_94, bytes[1]);
+
+      if(newenc)
+        state->encoding[setnum] = newenc;
+    }
+
     return 2;
 
   case 0x3d:
@@ -931,6 +939,16 @@ void vterm_state_reset(VTermState *state)
 
   VTermRect rect = { 0, state->rows, 0, state->cols };
   erase(state, rect);
+
+  VTermEncoding *default_enc = state->vt->is_utf8 ?
+      vterm_lookup_encoding(ENC_UTF8,      'u') :
+      vterm_lookup_encoding(ENC_SINGLE_94, 'B');
+
+  for(int i = 0; i < 4; i++)
+    state->encoding[i] = default_enc;
+
+  state->gl_set = 0;
+  state->gr_set = 0;
 }
 
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)
