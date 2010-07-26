@@ -1,0 +1,14 @@
+INIT
+UTF8 1
+WANTSTATE g
+
+!Default
+RESET
+PUSH '$'
+  putglyph 0x23 1 0,0
+
+!Designate G0=UK
+RESET
+PUSH "\e(A"
+PUSH '$'
+  putglyph 0x00a3 1 0,0
