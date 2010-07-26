@@ -1,4 +1,5 @@
 #include "vterm.h"
+#include "../src/vterm_internal.h" // We pull in some internal bits too
 
 #include <stdio.h>
 #include <string.h>
@@ -9,14 +10,21 @@
 static VTerm *vt;
 static VTermState *state;
 
-static int parser_text(const uint32_t codepoints[], int npoints, void *user)
+static VTermEncoding *encoding;
+
+static int parser_text(const char bytes[], size_t len, void *user)
 {
   printf("text ");
-  for(int i = 0; i < npoints; i++)
-    printf(i ? ",%x" : "%x", codepoints[i]);
+  int i;
+  for(i = 0; i < len; i++) {
+    unsigned char b = bytes[i];
+    if(b < 0x20 || (b >= 0x80 && b < 0xa0))
+      break;
+    printf(i ? ",%x" : "%x", b);
+  }
   printf("\n");
 
-  return 1;
+  return i;
 }
 
 static int parser_control(unsigned char control, void *user)
@@ -208,6 +216,37 @@ int main(int argc, char **argv)
         printf("?\n");
 
       continue;
+    }
+
+    else if(streq(line, "WANTENCODING")) {
+      /* This isn't really external API but it's hard to get this out any
+       * other way
+       */
+      encoding = &encoding_utf8;
+    }
+
+    else if(strstartswith(line, "ENCIN ")) {
+      /* Convert hex chars inplace */
+      char *outpos, *inpos, *bytes;
+      bytes = inpos = outpos = line + 6;
+      while(*inpos) {
+        int ch;
+        sscanf(inpos, "%2x", &ch);
+        *outpos = ch;
+        outpos += 1; inpos += 2;
+      }
+
+      uint32_t cp[outpos - bytes];
+      int cpi = 0;
+      size_t pos = 0;
+
+      (*encoding->decode)(encoding, cp, &cpi, bytes, &pos, outpos - bytes);
+
+      printf("encout ");
+      for(int i = 0; i < cpi; i++) {
+        printf(i ? ",%x" : "%x", cp[i]);
+      }
+      printf("\n");
     }
 
     else
