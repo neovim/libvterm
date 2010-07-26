@@ -42,7 +42,7 @@ typedef struct {
 #define CSI_ARG_OR(a,def)     (CSI_ARG(a) == CSI_ARG_MISSING ? (def) : CSI_ARG(a))
 
 typedef struct {
-  int (*text)(const uint32_t codepoints[], int npoints, void *user);
+  int (*text)(const char *bytes, size_t len, void *user);
   int (*control)(unsigned char control, void *user);
   int (*escape)(const char *bytes, size_t len, void *user);
   int (*csi)(const char *intermed, const long args[], int argcount, char command, void *user);

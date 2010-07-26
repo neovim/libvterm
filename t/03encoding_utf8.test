@@ -1,10 +1,8 @@
-INIT
-UTF8 1
-WANTPARSER
+WANTENCODING
 
 !Low
-PUSH "123"
-  text 0x31, 0x32, 0x33
+ENCIN "123"
+  encout 0x31,0x32,0x33
 
 # We want to prove the UTF-8 parser correctly handles all the sequences.
 # Easy way to do this is to check it does low/high boundary cases, as that
@@ -32,40 +30,40 @@ PUSH "123"
 #                                    => 11110111 10111111 10111111 10111111 = F7 BF BF BF
 
 !2 byte
-PUSH "\xC2\x80\xDF\xBF"
-  text 0x0080, 0x07FF
+ENCIN "\xC2\x80\xDF\xBF"
+  encout 0x0080, 0x07FF
 
 !3 byte
-PUSH "\xE0\xA0\x80\xEF\xBF\xBD"
-  text 0x0800,0xFFFD
+ENCIN "\xE0\xA0\x80\xEF\xBF\xBD"
+  encout 0x0800,0xFFFD
 
 !4 byte
-PUSH "\xF0\x90\x80\x80\xF7\xBF\xBF\xBF"
-  text 0x10000,0x1fffff
+ENCIN "\xF0\x90\x80\x80\xF7\xBF\xBF\xBF"
+  encout 0x10000,0x1fffff
 
 # Next up, we check some invalid sequences
 #  + Early termination (back to low bytes too soon)
 #  + Early restart (another sequence introduction before the previous one was finished)
 
 !Early termination
-PUSH "\xC2!"
-  text 0xfffd,0x21
+ENCIN "\xC2!"
+  encout 0xfffd,0x21
 
-PUSH "\xE0!\xE0\xA0!"
-  text 0xfffd,0x21,0xfffd,0x21
+ENCIN "\xE0!\xE0\xA0!"
+  encout 0xfffd,0x21,0xfffd,0x21
 
-PUSH "\xF0!\xF0\x90!\xF0\x90\x80!"
-  text 0xfffd,0x21,0xfffd,0x21,0xfffd,0x21
+ENCIN "\xF0!\xF0\x90!\xF0\x90\x80!"
+  encout 0xfffd,0x21,0xfffd,0x21,0xfffd,0x21
 
 !Early restart
-PUSH "\xC2\xC2\x90"
-  text 0xfffd,0x0090
+ENCIN "\xC2\xC2\x90"
+  encout 0xfffd,0x0090
 
-PUSH "\xE0\xC2\x90\xE0\xA0\xC2\x90"
-  text 0xfffd,0x0090,0xfffd,0x0090
+ENCIN "\xE0\xC2\x90\xE0\xA0\xC2\x90"
+  encout 0xfffd,0x0090,0xfffd,0x0090
 
-PUSH "\xF0\xC2\x90\xF0\x90\xC2\x90\xF0\x90\x80\xC2\x90"
-  text 0xfffd,0x0090,0xfffd,0x0090,0xfffd,0x0090
+ENCIN "\xF0\xC2\x90\xF0\x90\xC2\x90\xF0\x90\x80\xC2\x90"
+  encout 0xfffd,0x0090,0xfffd,0x0090,0xfffd,0x0090
 
 # Test the overlong sequences by giving an overlong encoding of U+0000 and
 # an encoding of the highest codepoint still too short
@@ -86,16 +84,16 @@ PUSH "\xF0\xC2\x90\xF0\x90\xC2\x90\xF0\x90\x80\xC2\x90"
 #                            => 11110000 10001111 10111111 10111111 = F0 8F BF BF
 
 !Overlong
-PUSH "\xC0\x80\xC1\xBF"
-  text 0xfffd,0xfffd
+ENCIN "\xC0\x80\xC1\xBF"
+  encout 0xfffd,0xfffd
 
-PUSH "\xE0\x80\x80\xE0\x9F\xBF"
-  text 0xfffd,0xfffd
+ENCIN "\xE0\x80\x80\xE0\x9F\xBF"
+  encout 0xfffd,0xfffd
 
-PUSH "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF"
-  text 0xfffd,0xfffd
+ENCIN "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF"
+  encout 0xfffd,0xfffd
 
 # UTF-16 surrogates U+D800 and U+DFFF
 !UTF-16 Surrogates
-PUSH "\xED\xA0\x80\xED\xBF\xBF"
-  text 0xfffd,0xfffd
+ENCIN "\xED\xA0\x80\xED\xBF\xBF"
+  encout 0xfffd,0xfffd
