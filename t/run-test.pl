@@ -62,6 +62,7 @@ while( my $line = <$test> ) {
    chomp $line;
 
    if( $line =~ m/^!(.*)/ ) {
+      do_onetest if defined $command;
       print "> $1\n";
    }
 
