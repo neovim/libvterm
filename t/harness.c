@@ -222,7 +222,7 @@ int main(int argc, char **argv)
       /* This isn't really external API but it's hard to get this out any
        * other way
        */
-      encoding = &encoding_utf8;
+      encoding = vterm_lookup_encoding(ENC_UTF8, 'u');
     }
 
     else if(strstartswith(line, "ENCIN ")) {
