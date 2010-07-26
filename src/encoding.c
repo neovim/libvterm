@@ -172,6 +172,38 @@ static VTermEncoding encoding_usascii = {
   .decode = &decode_usascii,
 };
 
+struct StaticTableEncoding {
+  const VTermEncoding enc;
+  const uint32_t chars[128];
+};
+
+static int decode_table(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+                        const char bytes[], size_t *pos, size_t bytelen)
+{
+  struct StaticTableEncoding *table = (struct StaticTableEncoding *)enc;
+
+  for(; *pos < bytelen; (*pos)++) {
+    unsigned char c = (bytes[*pos]) & 0x7f;
+
+    if(c < 0x20)
+      return 0;
+
+    if(table->chars[c])
+      cp[(*cpi)++] = table->chars[c];
+    else
+      cp[(*cpi)++] = c;
+  }
+
+  return 1;
+}
+
+static const struct StaticTableEncoding encoding_uk = {
+  { .decode = &decode_table },
+  {
+    ['$'] = 0x00a3,
+  }
+};
+
 static struct {
   VTermEncodingType type;
   char designation;
@@ -179,6 +211,7 @@ static struct {
 }
 encodings[] = {
   { ENC_UTF8,      'u', &encoding_utf8 },
+  { ENC_SINGLE_94, 'A', (VTermEncoding*)&encoding_uk },
   { ENC_SINGLE_94, 'B', &encoding_usascii },
   { 0, 0 },
 };
