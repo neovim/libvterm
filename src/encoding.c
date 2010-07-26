@@ -6,7 +6,8 @@
 # define DEBUG_PRINT_UTF8
 #endif
 
-static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
+static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+                       const char bytes[], size_t *pos, size_t bytelen)
 {
   // number of bytes remaining in this codepoint
   int bytes_remaining = 0;
@@ -20,7 +21,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
   printf("BEGIN UTF-8\n");
 #endif
 
-  for( ; *pos < len; (*pos)++) {
+  for( ; *pos < bytelen; (*pos)++) {
     unsigned char c = bytes[*pos];
 
 #ifdef DEBUG_PRINT_UTF8
@@ -53,7 +54,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
 
       if(!bytes_remaining) {
 #ifdef DEBUG_PRINT_UTF8
-        printf(" UTF-8 raw char U+%04x len=%d ", this_cp, bytes_total);
+        printf(" UTF-8 raw char U+%04x bytelen=%d ", this_cp, bytes_total);
 #endif
         // Check for overlong sequences
         switch(bytes_total) {
@@ -84,7 +85,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
       if(bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(len - *pos < 2)
+      if(bytelen - *pos < 2)
         return 1;
 
       this_cp = c & 0x1f;
@@ -96,7 +97,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
       if(bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(len - *pos < 3)
+      if(bytelen - *pos < 3)
         return 1;
 
       this_cp = c & 0x0f;
@@ -108,7 +109,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
       if(bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(len - *pos < 4)
+      if(bytelen - *pos < 4)
         return 1;
 
       this_cp = c & 0x07;
@@ -120,7 +121,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
       if(bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(len - *pos < 5)
+      if(bytelen - *pos < 5)
         return 1;
 
       this_cp = c & 0x03;
@@ -132,7 +133,7 @@ static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, const char b
       if(bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(len - *pos < 6)
+      if(bytelen - *pos < 6)
         return 1;
 
       this_cp = c & 0x01;
@@ -152,9 +153,10 @@ VTermEncoding encoding_utf8 = {
   .decode = &decode_utf8,
 };
 
-static int decode_usascii(VTermEncoding *enc, uint32_t cp[], int *cpi, const char bytes[], size_t *pos, size_t len)
+static int decode_usascii(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+                          const char bytes[], size_t *pos, size_t bytelen)
 {
-  for(; *pos < len; (*pos)++) {
+  for(; *pos < bytelen; (*pos)++) {
     unsigned char c = bytes[*pos];
 
     if(c < 0x20 || (c >= 0x80 && c < 0xa0))

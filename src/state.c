@@ -222,7 +222,7 @@ static int on_text(const char bytes[], size_t len, void *user)
   else
     enc = &encoding_usascii;
 
-  (*enc->decode)(enc, codepoints, &npoints, bytes, &eaten, len);
+  (*enc->decode)(enc, codepoints, &npoints, len, bytes, &eaten, len);
 
   int i = 0;
 
