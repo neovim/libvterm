@@ -236,11 +236,13 @@ int main(int argc, char **argv)
         outpos += 1; inpos += 2;
       }
 
-      uint32_t cp[outpos - bytes];
+      int maxchars = outpos - bytes;
+
+      uint32_t cp[maxchars];
       int cpi = 0;
       size_t pos = 0;
 
-      (*encoding->decode)(encoding, cp, &cpi, bytes, &pos, outpos - bytes);
+      (*encoding->decode)(encoding, cp, &cpi, maxchars, bytes, &pos, outpos - bytes);
 
       printf("encout ");
       for(int i = 0; i < cpi; i++) {

@@ -60,7 +60,8 @@ struct _VTerm
 
 typedef struct _VTermEncoding VTermEncoding;
 struct _VTermEncoding {
-  int (*decode)(VTermEncoding *enc, uint32_t cp[], int *cpi, const char bytes[], size_t *pos, size_t len);
+  int (*decode)(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+                  const char bytes[], size_t *pos, size_t len);
 };
 
 extern VTermEncoding encoding_utf8;
