@@ -5,13 +5,16 @@
 
 #include <glib.h>
 
-static void on_text(VTerm *vt, uint32_t codepoints[], int npoints)
+static size_t on_text(VTerm *vt, const char bytes[], size_t len)
 {
-  if(vt->parser_callbacks && vt->parser_callbacks->text)
-    if((*vt->parser_callbacks->text)(codepoints, npoints, vt->cbdata))
-      return;
+  size_t eaten;
 
-  fprintf(stderr, "libvterm: Unhandled text (%d chars)", npoints);
+  if(vt->parser_callbacks && vt->parser_callbacks->text)
+    if((eaten = (*vt->parser_callbacks->text)(bytes, len, vt->cbdata)))
+      return eaten;
+
+  fprintf(stderr, "libvterm: Unhandled text (%d chars)\n", len);
+  return 0;
 }
 
 static void on_control(VTerm *vt, unsigned char control)
@@ -202,29 +205,16 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
         }
       }
       else {
-        // We'll have at most (len - pos) codepoints. Doesn't matter
-        // if we overallocate this
-        uint32_t *cp = g_alloca((len - pos) * sizeof(uint32_t));
-        int cpi = 0;
+        size_t text_eaten = on_text(vt, bytes + pos, len - pos);
 
-        VTermEncoding *enc;
-
-        if(vt->is_utf8)
-          enc = &encoding_utf8;
-        else
-          enc = &encoding_usascii;
-
-        int finished = (*enc->decode)(enc, cp, &cpi, bytes, &pos, len);
-
-        on_text(vt, cp, cpi);
-
-        if(finished)
+        if(text_eaten == 0)
           return pos;
+
+        pos += text_eaten;
+        eaten = pos;
 
         // pos is now the first character we didn't like
         pos--;
-
-        eaten = pos + 1;
       }
       break;
 

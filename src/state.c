@@ -204,11 +204,25 @@ static void tab(VTermState *state, int count, int direction)
     }
 }
 
-static int on_text(const uint32_t codepoints[], int npoints, void *user)
+static int on_text(const char bytes[], size_t len, void *user)
 {
   VTermState *state = user;
 
   VTermPos oldpos = state->pos;
+
+  // We'll have at most len codepoints
+  uint32_t codepoints[len];
+  int npoints = 0;
+  size_t eaten = 0;
+
+  VTermEncoding *enc;
+
+  if(state->vt->is_utf8)
+    enc = &encoding_utf8;
+  else
+    enc = &encoding_usascii;
+
+  (*enc->decode)(enc, codepoints, &npoints, bytes, &eaten, len);
 
   int i = 0;
 
@@ -315,7 +329,7 @@ static int on_text(const uint32_t codepoints[], int npoints, void *user)
 
   updatecursor(state, &oldpos);
 
-  return 1;
+  return eaten;
 }
 
 static int on_control(unsigned char control, void *user)
