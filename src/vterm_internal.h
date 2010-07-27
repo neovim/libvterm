@@ -22,6 +22,8 @@ struct _VTermState
   /* Saved cursor position under DEC mode 1048/1049 */
   VTermPos saved_pos;
 
+  int at_phantom; /* True if we're on the "81st" phantom column to defer a wraparound */
+
   int scrollregion_start;
   int scrollregion_end;
 
