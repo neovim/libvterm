@@ -4,11 +4,11 @@ WANTSTATE g
 
 !Default
 RESET
-PUSH '$'
+PUSH "#"
   putglyph 0x23 1 0,0
 
 !Designate G0=UK
 RESET
 PUSH "\e(A"
-PUSH '$'
+PUSH "#"
   putglyph 0x00a3 1 0,0
