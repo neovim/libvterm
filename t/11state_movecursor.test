@@ -175,18 +175,3 @@ PUSH "\e[Z"
   ?cursor = 0,56
 PUSH "\e[2Z"
   ?cursor = 0,40
-
-RESET
-
-!Implicit Wrapping
-PUSH "x"x79
-  ?cursor = 0,79
-PUSH "x"
-  ?cursor = 1,0
-
-!DEC Auto Wrap Mode
-PUSH "\e[?7l"
-PUSH "x"x79
-  ?cursor = 1,79
-PUSH "x"
-  ?cursor = 1,79

@@ -215,6 +215,12 @@ static int on_text(const char bytes[], size_t len, void *user)
   int npoints = 0;
   size_t eaten = 0;
 
+  if(state->at_phantom) {
+    linefeed(state);
+    state->pos.col = 0;
+    state->at_phantom = 0;
+  }
+
   while(eaten < len) {
     VTermEncoding *enc = bytes[eaten] < 0x80 ? state->encoding[state->gl_set] :
                          state->vt->is_utf8  ? vterm_lookup_encoding(ENC_UTF8, 'u') :
@@ -327,16 +333,12 @@ static int on_text(const char bytes[], size_t len, void *user)
       state->combine_pos = state->pos;
     }
 
-    state->pos.col += width;
-
-    if(state->pos.col >= state->cols) {
-      if(state->mode.autowrap) {
-        linefeed(state);
-        state->pos.col = 0;
-      }
-      else {
-        state->pos.col = state->cols - 1;
-      }
+    if(state->pos.col + width >= state->cols) {
+      if(state->mode.autowrap)
+        state->at_phantom = 1;
+    }
+    else {
+      state->pos.col += width;
     }
   }
 
@@ -976,6 +978,7 @@ void vterm_state_reset(VTermState *state)
 {
   state->pos.row = 0;
   state->pos.col = 0;
+  state->at_phantom = 0;
 
   state->combine_chars_size = 16;
   state->combine_chars = g_new0(uint32_t, state->combine_chars_size);

@@ -1,0 +1,183 @@
+INIT
+UTF8 1
+WANTSTATE g
+
+!79th Column
+PUSH "A"x79
+  putglyph 0x41 1 0,0
+  putglyph 0x41 1 0,1
+  putglyph 0x41 1 0,2
+  putglyph 0x41 1 0,3
+  putglyph 0x41 1 0,4
+  putglyph 0x41 1 0,5
+  putglyph 0x41 1 0,6
+  putglyph 0x41 1 0,7
+  putglyph 0x41 1 0,8
+  putglyph 0x41 1 0,9
+  putglyph 0x41 1 0,10
+  putglyph 0x41 1 0,11
+  putglyph 0x41 1 0,12
+  putglyph 0x41 1 0,13
+  putglyph 0x41 1 0,14
+  putglyph 0x41 1 0,15
+  putglyph 0x41 1 0,16
+  putglyph 0x41 1 0,17
+  putglyph 0x41 1 0,18
+  putglyph 0x41 1 0,19
+  putglyph 0x41 1 0,20
+  putglyph 0x41 1 0,21
+  putglyph 0x41 1 0,22
+  putglyph 0x41 1 0,23
+  putglyph 0x41 1 0,24
+  putglyph 0x41 1 0,25
+  putglyph 0x41 1 0,26
+  putglyph 0x41 1 0,27
+  putglyph 0x41 1 0,28
+  putglyph 0x41 1 0,29
+  putglyph 0x41 1 0,30
+  putglyph 0x41 1 0,31
+  putglyph 0x41 1 0,32
+  putglyph 0x41 1 0,33
+  putglyph 0x41 1 0,34
+  putglyph 0x41 1 0,35
+  putglyph 0x41 1 0,36
+  putglyph 0x41 1 0,37
+  putglyph 0x41 1 0,38
+  putglyph 0x41 1 0,39
+  putglyph 0x41 1 0,40
+  putglyph 0x41 1 0,41
+  putglyph 0x41 1 0,42
+  putglyph 0x41 1 0,43
+  putglyph 0x41 1 0,44
+  putglyph 0x41 1 0,45
+  putglyph 0x41 1 0,46
+  putglyph 0x41 1 0,47
+  putglyph 0x41 1 0,48
+  putglyph 0x41 1 0,49
+  putglyph 0x41 1 0,50
+  putglyph 0x41 1 0,51
+  putglyph 0x41 1 0,52
+  putglyph 0x41 1 0,53
+  putglyph 0x41 1 0,54
+  putglyph 0x41 1 0,55
+  putglyph 0x41 1 0,56
+  putglyph 0x41 1 0,57
+  putglyph 0x41 1 0,58
+  putglyph 0x41 1 0,59
+  putglyph 0x41 1 0,60
+  putglyph 0x41 1 0,61
+  putglyph 0x41 1 0,62
+  putglyph 0x41 1 0,63
+  putglyph 0x41 1 0,64
+  putglyph 0x41 1 0,65
+  putglyph 0x41 1 0,66
+  putglyph 0x41 1 0,67
+  putglyph 0x41 1 0,68
+  putglyph 0x41 1 0,69
+  putglyph 0x41 1 0,70
+  putglyph 0x41 1 0,71
+  putglyph 0x41 1 0,72
+  putglyph 0x41 1 0,73
+  putglyph 0x41 1 0,74
+  putglyph 0x41 1 0,75
+  putglyph 0x41 1 0,76
+  putglyph 0x41 1 0,77
+  putglyph 0x41 1 0,78
+  ?cursor = 0,79
+
+!80th Column Phantom
+PUSH "A"
+  putglyph 0x41 1 0,79
+  ?cursor = 0,79
+
+!Line Wraparound
+PUSH "B"
+  putglyph 0x42 1 1,0
+  ?cursor = 1,1
+
+!DEC Auto Wrap Mode
+PUSH "\e[?7l"
+PUSH "B"x79
+  putglyph 0x42 1 1,1
+  putglyph 0x42 1 1,2
+  putglyph 0x42 1 1,3
+  putglyph 0x42 1 1,4
+  putglyph 0x42 1 1,5
+  putglyph 0x42 1 1,6
+  putglyph 0x42 1 1,7
+  putglyph 0x42 1 1,8
+  putglyph 0x42 1 1,9
+  putglyph 0x42 1 1,10
+  putglyph 0x42 1 1,11
+  putglyph 0x42 1 1,12
+  putglyph 0x42 1 1,13
+  putglyph 0x42 1 1,14
+  putglyph 0x42 1 1,15
+  putglyph 0x42 1 1,16
+  putglyph 0x42 1 1,17
+  putglyph 0x42 1 1,18
+  putglyph 0x42 1 1,19
+  putglyph 0x42 1 1,20
+  putglyph 0x42 1 1,21
+  putglyph 0x42 1 1,22
+  putglyph 0x42 1 1,23
+  putglyph 0x42 1 1,24
+  putglyph 0x42 1 1,25
+  putglyph 0x42 1 1,26
+  putglyph 0x42 1 1,27
+  putglyph 0x42 1 1,28
+  putglyph 0x42 1 1,29
+  putglyph 0x42 1 1,30
+  putglyph 0x42 1 1,31
+  putglyph 0x42 1 1,32
+  putglyph 0x42 1 1,33
+  putglyph 0x42 1 1,34
+  putglyph 0x42 1 1,35
+  putglyph 0x42 1 1,36
+  putglyph 0x42 1 1,37
+  putglyph 0x42 1 1,38
+  putglyph 0x42 1 1,39
+  putglyph 0x42 1 1,40
+  putglyph 0x42 1 1,41
+  putglyph 0x42 1 1,42
+  putglyph 0x42 1 1,43
+  putglyph 0x42 1 1,44
+  putglyph 0x42 1 1,45
+  putglyph 0x42 1 1,46
+  putglyph 0x42 1 1,47
+  putglyph 0x42 1 1,48
+  putglyph 0x42 1 1,49
+  putglyph 0x42 1 1,50
+  putglyph 0x42 1 1,51
+  putglyph 0x42 1 1,52
+  putglyph 0x42 1 1,53
+  putglyph 0x42 1 1,54
+  putglyph 0x42 1 1,55
+  putglyph 0x42 1 1,56
+  putglyph 0x42 1 1,57
+  putglyph 0x42 1 1,58
+  putglyph 0x42 1 1,59
+  putglyph 0x42 1 1,60
+  putglyph 0x42 1 1,61
+  putglyph 0x42 1 1,62
+  putglyph 0x42 1 1,63
+  putglyph 0x42 1 1,64
+  putglyph 0x42 1 1,65
+  putglyph 0x42 1 1,66
+  putglyph 0x42 1 1,67
+  putglyph 0x42 1 1,68
+  putglyph 0x42 1 1,69
+  putglyph 0x42 1 1,70
+  putglyph 0x42 1 1,71
+  putglyph 0x42 1 1,72
+  putglyph 0x42 1 1,73
+  putglyph 0x42 1 1,74
+  putglyph 0x42 1 1,75
+  putglyph 0x42 1 1,76
+  putglyph 0x42 1 1,77
+  putglyph 0x42 1 1,78
+  putglyph 0x42 1 1,79
+  ?cursor = 1,79
+PUSH "B"
+  putglyph 0x42 1 1,79
+  ?cursor = 1,79
