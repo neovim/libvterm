@@ -230,6 +230,16 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
       setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
       break;
 
+    case 90: case 91: case 92: case 93:
+    case 94: case 95: case 96: case 97: // Foreground colour high-intensity palette
+      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 90 + 8);
+      break;
+
+    case 100: case 101: case 102: case 103:
+    case 104: case 105: case 106: case 107: // Background colour high-intensity palette
+      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 100 + 8);
+      break;
+
     default:
       done = 0;
       break;
