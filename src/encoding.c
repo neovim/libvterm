@@ -197,12 +197,7 @@ static int decode_table(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
   return 1;
 }
 
-static const struct StaticTableEncoding encoding_uk = {
-  { .decode = &decode_table },
-  {
-    ['$'] = 0x00a3,
-  }
-};
+#include "encoding/uk.inc"
 
 static struct {
   VTermEncodingType type;
