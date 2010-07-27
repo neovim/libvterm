@@ -2,6 +2,28 @@
 
 #include <stdio.h>
 
+static const VTermColor ansi_colors[] = {
+  /* R    G    B */
+  {   0,   0,   0 }, // black
+  { 255,   0,   0 }, // red
+  {   0, 255,   0 }, // green
+  { 255, 255,   0 }, // yellow
+  {  64,  64, 255 }, // blue - make it more visible
+  { 255,   0, 255 }, // magenta
+  {   0, 255, 255 }, // cyan
+  { 240, 240, 240 }, // white == 90% grey
+
+  // high intensity
+  { 128, 128, 128 }, // black
+  { 255, 128, 128 }, // red
+  { 128, 255, 128 }, // green
+  { 255, 255, 128 }, // yellow
+  { 160, 160, 255 }, // blue - make it more visible
+  { 255, 128, 255 }, // magenta
+  { 128, 255, 255 }, // cyan
+  { 255, 255, 255 }, // white == 90% grey
+};
+
 /* Attempt at some gamma ramps */
 static int gamma6[] = {
   0, 105, 149, 182, 209, 233, 255
@@ -22,10 +44,8 @@ static void lookup_colour_ansi(long index, char is_bg, VTermColor *col)
       // 90% grey so that pure white is brighter
       col->red = col->green = col->blue = 240;
   }
-  else if(index >= 0 && index < 8) {
-    col->red   = (index & 1) ? 0xff : 0;
-    col->green = (index & 2) ? 0xff : 0;
-    col->blue  = (index & 4) ? 0xff : 0;
+  else if(index >= 0 && index < 16) {
+    *col = ansi_colors[index];
   }
 }
 
@@ -47,17 +67,9 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
   case 5: // XTerm 256-colour mode
     index = argcount ? CSI_ARG_OR(args[0], -1) : -1;
 
-    if(index >= 0 && index < 8)
-      // Normal 8 colours - parse as palette 0
+    if(index >= 0 && index < 16) {
+      // Normal 8 colours or high intensity - parse as palette 0
       lookup_colour_ansi(index, is_bg, col);
-    else if(index >= 8 && index < 16) {
-      // High intensity - bump up the 0s
-      index -= 8;
-
-      lookup_colour_ansi(index, is_bg, col);
-      (col->red   == 0) && (col->red   = 0x7f);
-      (col->green == 0) && (col->green = 0x7f);
-      (col->blue  == 0) && (col->blue  = 0x7f);
     }
     else if(index >= 16 && index < 232) {
       // 216-colour cube
