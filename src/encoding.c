@@ -197,6 +197,7 @@ static int decode_table(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
   return 1;
 }
 
+#include "encoding/DECdrawing.inc"
 #include "encoding/uk.inc"
 
 static struct {
@@ -206,6 +207,7 @@ static struct {
 }
 encodings[] = {
   { ENC_UTF8,      'u', &encoding_utf8 },
+  { ENC_SINGLE_94, '0', (VTermEncoding*)&encoding_DECdrawing },
   { ENC_SINGLE_94, 'A', (VTermEncoding*)&encoding_uk },
   { ENC_SINGLE_94, 'B', &encoding_usascii },
   { 0, 0 },
