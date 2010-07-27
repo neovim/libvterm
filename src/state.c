@@ -296,6 +296,19 @@ static int on_text(const char bytes[], size_t len, void *user)
     printf("}, onscreen width %d\n", width);
 #endif
 
+    if(state->mode.insert) {
+      /* TODO: This will be a little inefficient for large bodies of text, as
+       * it'll have to 'ICH' effectively before every glyph. We should scan
+       * ahead and ICH as many times as required
+       */
+      VTermRect rect = {
+        .start_row = state->pos.row,
+        .end_row   = state->pos.row + 1,
+        .start_col = state->pos.col,
+        .end_col   = state->cols,
+      };
+      scroll(state, rect, 0, -1);
+    }
     putglyph(state, chars, width, state->pos);
 
     if(i == npoints - 1) {
@@ -517,6 +530,19 @@ static int on_escape(const char *bytes, size_t len, void *user)
 
   default:
     return 0;
+  }
+}
+
+static void set_mode(VTermState *state, int num, int val)
+{
+  switch(num) {
+  case 4: // IRM - ECMA-48 7.2.10
+    state->mode.insert = val;
+    break;
+
+  default:
+    fprintf(stderr, "libvterm: Unknown mode %d\n", num);
+    return;
   }
 }
 
@@ -847,6 +873,11 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     UBOUND(state->pos.col, state->cols-1);
     break;
 
+  case 0x68: // SM - ECMA-48 8.3.125
+    if(!CSI_ARG_IS_MISSING(args[0]))
+      set_mode(state, CSI_ARG(args[0]), 1);
+    break;
+
   case 0x6a: // HPB - ECMA-48 8.3.58
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col -= count;
@@ -857,6 +888,11 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     count = CSI_ARG_OR(args[0], 1);
     state->pos.row -= count;
     LBOUND(state->pos.row, 0);
+    break;
+
+  case 0x6c: // RM - ECMA-48 8.3.106
+    if(!CSI_ARG_IS_MISSING(args[0]))
+      set_mode(state, CSI_ARG(args[0]), 0);
     break;
 
   case 0x6d: // SGR - ECMA-48 8.3.117

@@ -39,6 +39,7 @@ struct _VTermState
     int keypad:1;
     int cursor:1;
     int autowrap:1;
+    int insert:1;
     int cursor_visible:1;
     int alt_screen:1;
     int saved_cursor:1;
