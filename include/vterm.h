@@ -68,8 +68,8 @@ typedef enum {
   VTERM_ATTR_ITALIC,     // bool:   3, 23
   VTERM_ATTR_REVERSE,    // bool:   7, 27
   VTERM_ATTR_FONT,       // number: 10-19
-  VTERM_ATTR_FOREGROUND, // color:  30-39
-  VTERM_ATTR_BACKGROUND, // color:  40-49
+  VTERM_ATTR_FOREGROUND, // color:  30-39 90-97
+  VTERM_ATTR_BACKGROUND, // color:  40-49 100-107
 } VTermAttr;
 
 typedef enum {
