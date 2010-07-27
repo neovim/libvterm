@@ -17,6 +17,9 @@ CFILES=$(wildcard src/*.c)
 OFILES=$(CFILES:.c=.o)
 HFILES=$(wildcard include/*.h)
 
+TBLFILES=$(wildcard src/encoding/*.tbl)
+INCFILES=$(TBLFILES:.tbl=.inc)
+
 HFILES_INT=$(wildcard src/*.h) $(HFILES)
 
 LIBPIECES=vterm parser encoding state input pen unicode
@@ -31,6 +34,11 @@ libvterm.so: $(addprefix src/, $(addsuffix .o, $(LIBPIECES)))
 
 src/%.o: src/%.c $(HFILES_INT)
 	gcc -fPIC -o $@ -c $< $(CCFLAGS)
+
+src/encoding/%.inc: src/encoding/%.tbl
+	perl -C tbl2inc_c.pl $< >$@
+
+src/encoding.o: $(INCFILES)
 
 # Need first to cancel the implict rule
 %.o: %.c

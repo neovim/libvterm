@@ -2,3 +2,4 @@ t/test
 t/suites.h
 t/externs.h
 t/harness
+src/encoding/*.inc
