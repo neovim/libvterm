@@ -361,6 +361,14 @@ static int on_control(unsigned char control, void *user)
     state->pos.col = 0;
     break;
 
+  case 0x0e: // LS1 - ECMA-48 8.3.76
+    state->gl_set = 1;
+    break;
+
+  case 0x0f: // LS0 - ECMA-48 8.3.75
+    state->gl_set = 0;
+    break;
+
   case 0x84: // IND - DEPRECATED but implemented for completeness
     linefeed(state);
     break;
@@ -497,6 +505,14 @@ static int on_escape(const char *bytes, size_t len, void *user)
 
   case 0x3e:
     state->mode.keypad = 0;
+    return 1;
+
+  case 0x6e: // LS2 - ECMA-48 8.3.78
+    state->gl_set = 2;
+    return 1;
+
+  case 0x6f: // LS3 - ECMA-48 8.3.80
+    state->gl_set = 3;
     return 1;
 
   default:
