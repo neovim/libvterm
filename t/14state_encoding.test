@@ -18,3 +18,38 @@ RESET
 PUSH "\e(0"
 PUSH "a"
   putglyph 0x2592 1 0,0
+
+!Designate G1 + LS1
+RESET
+PUSH "\e)0"
+PUSH "a"
+  putglyph 0x61 1 0,0
+PUSH "\x0e"
+PUSH "a"
+  putglyph 0x2592 1 0,1
+!LS0
+PUSH "\x0f"
+PUSH "a"
+  putglyph 0x61 1 0,2
+
+!Designate G2 + LS2
+PUSH "\e*0"
+PUSH "a"
+  putglyph 0x61 1 0,3
+PUSH "\en"
+PUSH "a"
+  putglyph 0x2592 1 0,4
+PUSH "\x0f"
+PUSH "a"
+  putglyph 0x61 1 0,5
+
+!Designate G3 + LS3
+PUSH "\e+0"
+PUSH "a"
+  putglyph 0x61 1 0,6
+PUSH "\eo"
+PUSH "a"
+  putglyph 0x2592 1 0,7
+PUSH "\x0f"
+PUSH "a"
+  putglyph 0x61 1 0,8
