@@ -221,14 +221,11 @@ static int on_text(const char bytes[], size_t len, void *user)
     state->at_phantom = 0;
   }
 
-  while(eaten < len) {
-    VTermEncoding *enc = bytes[eaten] < 0x80 ? state->encoding[state->gl_set] :
-                         state->vt->is_utf8  ? vterm_lookup_encoding(ENC_UTF8, 'u') :
-                                               state->encoding[state->gr_set];
+  VTermEncoding *enc = bytes[eaten] < 0x80 ? state->encoding[state->gl_set] :
+                       state->vt->is_utf8  ? vterm_lookup_encoding(ENC_UTF8, 'u') :
+                                             state->encoding[state->gr_set];
 
-    if(!(*enc->decode)(enc, codepoints, &npoints, len, bytes, &eaten, len))
-      break;
-  }
+  (*enc->decode)(enc, codepoints, &npoints, len, bytes, &eaten, len);
 
   int i = 0;
 
