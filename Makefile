@@ -67,3 +67,16 @@ clean:
 	$(LIBTOOL) --mode=clean rm -f t/harness.lo t/harness
 	$(LIBTOOL) --mode=clean rm -f pangoterm
 	$(LIBTOOL) --mode=clean rm -f $(LIBRARY)
+
+.PHONY: install
+install: install-inc install-lib
+
+install-inc:
+	install -d $(DESTDIR)$(INCDIR)
+	install -m644 $(HFILES) $(DESTDIR)$(INCDIR)
+	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
+	sed "s,@PREFIX@,$(PREFIX)," <vterm.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/vterm.pc
+
+install-lib:
+	install -d $(DESTDIR)$(LIBDIR)
+	$(LIBTOOL) --mode=install cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/libvterm.la
