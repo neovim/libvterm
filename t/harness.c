@@ -128,11 +128,56 @@ static int state_erase(VTermRect rect, void *user)
   return 1;
 }
 
+static struct {
+  int bold;
+  int underline;
+  int italic;
+  int blink;
+  int reverse;
+  int font;
+  VTermColor foreground;
+  VTermColor background;
+} state_pen;
+static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
+{
+  switch(attr) {
+  case VTERM_ATTR_NONE:
+    break;
+  case VTERM_ATTR_BOLD:
+    state_pen.bold = val->boolean;
+    break;
+  case VTERM_ATTR_UNDERLINE:
+    state_pen.underline = val->number;
+    break;
+  case VTERM_ATTR_ITALIC:
+    state_pen.italic = val->boolean;
+    break;
+  case VTERM_ATTR_BLINK:
+    state_pen.blink = val->boolean;
+    break;
+  case VTERM_ATTR_REVERSE:
+    state_pen.reverse = val->boolean;
+    break;
+  case VTERM_ATTR_FONT:
+    state_pen.font = val->number;
+    break;
+  case VTERM_ATTR_FOREGROUND:
+    state_pen.foreground = val->color;
+    break;
+  case VTERM_ATTR_BACKGROUND:
+    state_pen.background = val->color;
+    break;
+  }
+
+  return 1;
+}
+
 VTermStateCallbacks state_cbs = {
   .putglyph   = state_putglyph,
   .movecursor = state_movecursor,
   .copyrect   = state_copyrect,
   .erase      = state_erase,
+  .setpenattr = state_setpenattr,
 };
 
 int main(int argc, char **argv)
@@ -212,6 +257,30 @@ int main(int argc, char **argv)
     else if(line[0] == '?') {
       if(streq(line, "?cursor"))
         printf("%d,%d\n", state_pos.row, state_pos.col);
+      else if(strstartswith(line, "?pen ")) {
+        char *linep = line + 5;
+        while(linep[0] == ' ')
+          linep++;
+
+        if(streq(linep, "bold"))
+          printf(state_pen.bold ? "on\n" : "off\n");
+        else if(streq(linep, "underline"))
+          printf("%d\n", state_pen.underline);
+        else if(streq(linep, "italic"))
+          printf(state_pen.italic ? "on\n" : "off\n");
+        else if(streq(linep, "blink"))
+          printf(state_pen.blink ? "on\n" : "off\n");
+        else if(streq(linep, "reverse"))
+          printf(state_pen.reverse ? "on\n" : "off\n");
+        else if(streq(linep, "font"))
+          printf("%d\n", state_pen.font);
+        else if(streq(linep, "foreground"))
+          printf("rgb(%d,%d,%d)\n", state_pen.foreground.red, state_pen.foreground.green, state_pen.foreground.blue);
+        else if(streq(linep, "background"))
+          printf("rgb(%d,%d,%d)\n", state_pen.background.red, state_pen.background.green, state_pen.background.blue);
+        else
+          printf("?\n");
+      }
       else
         printf("?\n");
 
