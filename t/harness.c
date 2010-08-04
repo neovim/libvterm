@@ -305,22 +305,63 @@ int main(int argc, char **argv)
         while(linep[0] == ' ')
           linep++;
 
-        if(streq(linep, "bold"))
-          printf(state_pen.bold ? "on\n" : "off\n");
-        else if(streq(linep, "underline"))
-          printf("%d\n", state_pen.underline);
-        else if(streq(linep, "italic"))
-          printf(state_pen.italic ? "on\n" : "off\n");
-        else if(streq(linep, "blink"))
-          printf(state_pen.blink ? "on\n" : "off\n");
-        else if(streq(linep, "reverse"))
-          printf(state_pen.reverse ? "on\n" : "off\n");
-        else if(streq(linep, "font"))
-          printf("%d\n", state_pen.font);
-        else if(streq(linep, "foreground"))
+        VTermValue val;
+#define BOOLSTR(v) ((v) ? "on" : "off")
+
+        if(streq(linep, "bold")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_BOLD, &val);
+          if(val.boolean != state_pen.bold)
+            printf("! pen bold mismatch; state=%s, event=%s\n",
+                BOOLSTR(val.boolean), BOOLSTR(state_pen.bold));
+          else
+            printf("%s\n", BOOLSTR(state_pen.bold));
+        }
+        else if(streq(linep, "underline")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_UNDERLINE, &val);
+          if(val.boolean != state_pen.underline)
+            printf("! pen underline mismatch; state=%d, event=%d\n",
+                val.boolean, state_pen.underline);
+          else
+            printf("%d\n", state_pen.underline);
+        }
+        else if(streq(linep, "italic")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_ITALIC, &val);
+          if(val.boolean != state_pen.italic)
+            printf("! pen italic mismatch; state=%s, event=%s\n",
+                BOOLSTR(val.boolean), BOOLSTR(state_pen.italic));
+          else
+            printf("%s\n", BOOLSTR(state_pen.italic));
+        }
+        else if(streq(linep, "blink")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_BLINK, &val);
+          if(val.boolean != state_pen.blink)
+            printf("! pen blink mismatch; state=%s, event=%s\n",
+                BOOLSTR(val.boolean), BOOLSTR(state_pen.blink));
+          else
+            printf("%s\n", BOOLSTR(state_pen.blink));
+        }
+        else if(streq(linep, "reverse")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_REVERSE, &val);
+          if(val.boolean != state_pen.reverse)
+            printf("! pen reverse mismatch; state=%s, event=%s\n",
+                BOOLSTR(val.boolean), BOOLSTR(state_pen.reverse));
+          else
+            printf("%s\n", BOOLSTR(state_pen.reverse));
+        }
+        else if(streq(linep, "font")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_FONT, &val);
+          if(val.boolean != state_pen.font)
+            printf("! pen font mismatch; state=%d, event=%d\n",
+                val.boolean, state_pen.font);
+          else
+            printf("%d\n", state_pen.font);
+        }
+        else if(streq(linep, "foreground")) {
           printf("rgb(%d,%d,%d)\n", state_pen.foreground.red, state_pen.foreground.green, state_pen.foreground.blue);
-        else if(streq(linep, "background"))
+        }
+        else if(streq(linep, "background")) {
           printf("rgb(%d,%d,%d)\n", state_pen.background.red, state_pen.background.green, state_pen.background.blue);
+        }
         else
           printf("?\n");
       }

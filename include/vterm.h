@@ -109,6 +109,7 @@ VTermState *vterm_obtain_state(VTerm *vt);
 void vterm_state_reset(VTermState *state);
 void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
+int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val);
 
 void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
