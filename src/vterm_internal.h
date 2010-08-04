@@ -49,6 +49,15 @@ struct _VTermState
 
   VTermEncoding *encoding[4];
   int gl_set, gr_set;
+
+  struct {
+    unsigned int bold:1;
+    unsigned int underline:2;
+    unsigned int italic:1;
+    unsigned int blink:1;
+    unsigned int reverse:1;
+    unsigned int font:4; /* To store 0-9 */
+  } pen;
 };
 
 struct _VTerm
