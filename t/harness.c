@@ -254,39 +254,6 @@ int main(int argc, char **argv)
       vterm_push_bytes(vt, bytes, outpos - bytes);
     }
 
-    else if(line[0] == '?') {
-      if(streq(line, "?cursor"))
-        printf("%d,%d\n", state_pos.row, state_pos.col);
-      else if(strstartswith(line, "?pen ")) {
-        char *linep = line + 5;
-        while(linep[0] == ' ')
-          linep++;
-
-        if(streq(linep, "bold"))
-          printf(state_pen.bold ? "on\n" : "off\n");
-        else if(streq(linep, "underline"))
-          printf("%d\n", state_pen.underline);
-        else if(streq(linep, "italic"))
-          printf(state_pen.italic ? "on\n" : "off\n");
-        else if(streq(linep, "blink"))
-          printf(state_pen.blink ? "on\n" : "off\n");
-        else if(streq(linep, "reverse"))
-          printf(state_pen.reverse ? "on\n" : "off\n");
-        else if(streq(linep, "font"))
-          printf("%d\n", state_pen.font);
-        else if(streq(linep, "foreground"))
-          printf("rgb(%d,%d,%d)\n", state_pen.foreground.red, state_pen.foreground.green, state_pen.foreground.blue);
-        else if(streq(linep, "background"))
-          printf("rgb(%d,%d,%d)\n", state_pen.background.red, state_pen.background.green, state_pen.background.blue);
-        else
-          printf("?\n");
-      }
-      else
-        printf("?\n");
-
-      continue;
-    }
-
     else if(streq(line, "WANTENCODING")) {
       /* This isn't really external API but it's hard to get this out any
        * other way
@@ -318,6 +285,49 @@ int main(int argc, char **argv)
         printf(i ? ",%x" : "%x", cp[i]);
       }
       printf("\n");
+    }
+
+    else if(line[0] == '?') {
+      if(streq(line, "?cursor")) {
+        VTermPos pos;
+        vterm_state_get_cursorpos(state, &pos);
+        if(pos.row != state_pos.row)
+          printf("! row mismatch: state=%d,%d event=%d,%d\n",
+              pos.row, pos.col, state_pos.row, state_pos.col);
+        else if(pos.col != state_pos.col)
+          printf("! col mismatch: state=%d,%d event=%d,%d\n",
+              pos.row, pos.col, state_pos.row, state_pos.col);
+        else
+          printf("%d,%d\n", state_pos.row, state_pos.col);
+      }
+      else if(strstartswith(line, "?pen ")) {
+        char *linep = line + 5;
+        while(linep[0] == ' ')
+          linep++;
+
+        if(streq(linep, "bold"))
+          printf(state_pen.bold ? "on\n" : "off\n");
+        else if(streq(linep, "underline"))
+          printf("%d\n", state_pen.underline);
+        else if(streq(linep, "italic"))
+          printf(state_pen.italic ? "on\n" : "off\n");
+        else if(streq(linep, "blink"))
+          printf(state_pen.blink ? "on\n" : "off\n");
+        else if(streq(linep, "reverse"))
+          printf(state_pen.reverse ? "on\n" : "off\n");
+        else if(streq(linep, "font"))
+          printf("%d\n", state_pen.font);
+        else if(streq(linep, "foreground"))
+          printf("rgb(%d,%d,%d)\n", state_pen.foreground.red, state_pen.foreground.green, state_pen.foreground.blue);
+        else if(streq(linep, "background"))
+          printf("rgb(%d,%d,%d)\n", state_pen.background.red, state_pen.background.green, state_pen.background.blue);
+        else
+          printf("?\n");
+      }
+      else
+        printf("?\n");
+
+      continue;
     }
 
     else
