@@ -154,62 +154,75 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
     switch(arg = CSI_ARG(args[argi])) {
     case CSI_ARG_MISSING:
     case 0: // Reset
-      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
-      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 0);
-      setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
-      setpenattr_bool(state, VTERM_ATTR_BLINK, 0);
-      setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
-      setpenattr_int(state, VTERM_ATTR_FONT, 0);
+      state->pen.bold = 0;      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
+      state->pen.underline = 0; setpenattr_int( state, VTERM_ATTR_UNDERLINE, 0);
+      state->pen.italic = 0;    setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
+      state->pen.blink = 0;     setpenattr_bool(state, VTERM_ATTR_BLINK, 0);
+      state->pen.reverse = 0;   setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
+      state->pen.font = 0;      setpenattr_int( state, VTERM_ATTR_FONT, 0);
+
       setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
       setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
       break;
 
     case 1: // Bold on
+      state->pen.bold = 1;
       setpenattr_bool(state, VTERM_ATTR_BOLD, 1);
       break;
 
     case 3: // Italic on
+      state->pen.italic = 1;
       setpenattr_bool(state, VTERM_ATTR_ITALIC, 1);
       break;
 
     case 4: // Underline single
+      state->pen.underline = 1;
       setpenattr_int(state, VTERM_ATTR_UNDERLINE, 1);
       break;
 
     case 5: // Blink
+      state->pen.blink = 1;
       setpenattr_bool(state, VTERM_ATTR_BLINK, 1);
       break;
 
     case 7: // Reverse on
+      state->pen.reverse = 1;
       setpenattr_bool(state, VTERM_ATTR_REVERSE, 1);
       break;
 
     case 10: case 11: case 12: case 13: case 14:
     case 15: case 16: case 17: case 18: case 19: // Select font
-      setpenattr_int(state, VTERM_ATTR_FONT, CSI_ARG(args[argi]) - 10);
+      state->pen.font = CSI_ARG(args[argi]) - 10;
+      setpenattr_int(state, VTERM_ATTR_FONT, state->pen.font);
       break;
 
     case 21: // Underline double
+      state->pen.underline = 2;
       setpenattr_int(state, VTERM_ATTR_UNDERLINE, 2);
       break;
 
     case 22: // Bold off
+      state->pen.bold = 0;
       setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
       break;
 
     case 23: // Italic and Gothic (currently unsupported) off
+      state->pen.italic = 0;
       setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
       break;
 
     case 24: // Underline off
+      state->pen.underline = 0;
       setpenattr_int(state, VTERM_ATTR_UNDERLINE, 0);
       break;
 
     case 25: // Blink off
+      state->pen.blink = 0;
       setpenattr_bool(state, VTERM_ATTR_BLINK, 0);
       break;
 
     case 27: // Reverse off
+      state->pen.reverse = 0;
       setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
       break;
 
@@ -259,4 +272,38 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 
     while(CSI_ARG_HAS_MORE(args[argi++]));
   }
+}
+
+int vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
+{
+  switch(attr) {
+  case VTERM_ATTR_NONE:
+    return 0;
+
+  case VTERM_ATTR_BOLD:
+    val->boolean = state->pen.bold;
+    return 1;
+
+  case VTERM_ATTR_UNDERLINE:
+    val->number = state->pen.underline;
+    return 1;
+
+  case VTERM_ATTR_ITALIC:
+    val->boolean = state->pen.italic;
+    return 1;
+
+  case VTERM_ATTR_BLINK:
+    val->boolean = state->pen.blink;
+    return 1;
+
+  case VTERM_ATTR_REVERSE:
+    val->boolean = state->pen.reverse;
+    return 1;
+
+  case VTERM_ATTR_FONT:
+    val->number = state->pen.font;
+    return 1;
+  }
+
+  return 0;
 }
