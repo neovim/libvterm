@@ -18,10 +18,13 @@ static void putglyph(VTermState *state, const uint32_t chars[], int width, VTerm
   fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
 }
 
-static void updatecursor(VTermState *state, VTermPos *oldpos)
+static void updatecursor(VTermState *state, VTermPos *oldpos, int cancel_phantom)
 {
   if(state->pos.col == oldpos->col && state->pos.row == oldpos->row)
     return;
+
+  if(cancel_phantom)
+    state->at_phantom = 0;
 
   if(state->callbacks && state->callbacks->movecursor)
     if((*state->callbacks->movecursor)(state->pos, *oldpos, state->mode.cursor_visible, state->cbdata))
@@ -339,7 +342,7 @@ static int on_text(const char bytes[], size_t len, void *user)
     }
   }
 
-  updatecursor(state, &oldpos);
+  updatecursor(state, &oldpos, 0);
 
   return eaten;
 }
@@ -409,7 +412,7 @@ static int on_control(unsigned char control, void *user)
     return 0;
   }
 
-  updatecursor(state, &oldpos);
+  updatecursor(state, &oldpos, 1);
 
   return 1;
 }
@@ -469,7 +472,7 @@ static void savecursor(VTermState *state, int save)
   else {
     VTermPos oldpos = state->pos;
     state->pos = state->saved_pos;
-    updatecursor(state, &oldpos);
+    updatecursor(state, &oldpos, 1);
   }
 }
 
@@ -907,7 +910,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     return 0;
   }
 
-  updatecursor(state, &oldpos);
+  updatecursor(state, &oldpos, 1);
 
   return 1;
 }
