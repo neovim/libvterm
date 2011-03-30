@@ -98,22 +98,22 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
 
 // Some conveniences
 
-static void setpenattr(VTermState *state, VTermAttr attr, VTermValue *val)
+static void setpenattr(VTermState *state, VTermAttr attr, VTermValueType type, VTermValue *val)
 {
   if(state->callbacks && state->callbacks->setpenattr)
-    (*state->callbacks->setpenattr)(attr, val, state->cbdata);
+    (*state->callbacks->setpenattr)(attr, type, val, state->cbdata);
 }
 
 static void setpenattr_bool(VTermState *state, VTermAttr attr, int boolean)
 {
   VTermValue val = { .boolean = boolean };
-  setpenattr(state, attr, &val);
+  setpenattr(state, attr, VTERM_VALUETYPE_BOOL, &val);
 }
 
 static void setpenattr_int(VTermState *state, VTermAttr attr, int number)
 {
   VTermValue val = { .number = number };
-  setpenattr(state, attr, &val);
+  setpenattr(state, attr, VTERM_VALUETYPE_INT, &val);
 }
 
 static void setpenattr_col_ansi(VTermState *state, VTermAttr attr, long col)
@@ -122,7 +122,7 @@ static void setpenattr_col_ansi(VTermState *state, VTermAttr attr, long col)
 
   lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
-  setpenattr(state, attr, &val);
+  setpenattr(state, attr, VTERM_VALUETYPE_COLOR, &val);
 }
 
 static int setpenattr_col_palette(VTermState *state, VTermAttr attr, const long args[], int argcount)
@@ -134,7 +134,7 @@ static int setpenattr_col_palette(VTermState *state, VTermAttr attr, const long 
 
   int eaten = lookup_colour(CSI_ARG(args[0]), args + 1, argcount - 1, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
-  setpenattr(state, attr, &val);
+  setpenattr(state, attr, VTERM_VALUETYPE_COLOR, &val);
 
   return eaten + 1; // we ate palette
 }
