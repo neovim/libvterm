@@ -1,6 +1,6 @@
 INIT
 UTF8 1
-WANTSTATE g
+WANTSTATE gc
 
 !79th Column
 PUSH "A"x79
@@ -181,3 +181,23 @@ PUSH "B"x79
 PUSH "B"
   putglyph 0x42 1 1,79
   ?cursor = 1,79
+PUSH "\e[?7h"
+
+!80th column causes linefeed on wraparound
+PUSH "\e[25;78HABC"
+  putglyph 0x41 1 24,77
+  putglyph 0x42 1 24,78
+  putglyph 0x43 1 24,79
+  ?cursor = 24,79
+PUSH "D"
+  copyrect 1..25,0..80 -> 0..24,0..80
+  putglyph 0x44 1 24,0
+
+!80th column phantom linefeed phantom cancelled by explicit cursor move
+PUSH "\e[25;78HABC"
+  putglyph 0x41 1 24,77
+  putglyph 0x42 1 24,78
+  putglyph 0x43 1 24,79
+  ?cursor = 24,79
+PUSH "\e[25;1HD"
+  putglyph 0x44 1 24,0
