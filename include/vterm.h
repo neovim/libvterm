@@ -54,6 +54,14 @@ typedef struct {
   uint8_t red, green, blue;
 } VTermColor;
 
+typedef enum {
+  VTERM_VALUETYPE_NONE,
+  VTERM_VALUETYPE_BOOL,
+  VTERM_VALUETYPE_INT,
+  VTERM_VALUETYPE_STRING,
+  VTERM_VALUETYPE_COLOR,
+} VTermValueType;
+
 typedef union {
   int boolean;
   int number;
@@ -91,8 +99,8 @@ typedef struct {
   int (*copycell)(VTermPos dest, VTermPos src, void *user);
   int (*erase)(VTermRect rect, void *user);
   int (*initpen)(void *user);
-  int (*setpenattr)(VTermAttr attr, VTermValue *val, void *user);
-  int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
+  int (*setpenattr)(VTermAttr attr, VTermValueType type, VTermValue *val, void *user);
+  int (*settermprop)(VTermProp prop, VTermValueType type, VTermValue *val, void *user);
   int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
   int (*bell)(void *user);
   int (*resize)(int rows, int cols, void *user);

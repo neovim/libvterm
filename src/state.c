@@ -438,7 +438,7 @@ static int settermprop_bool(VTermState *state, VTermProp prop, int v)
   val.boolean = v;
 
   if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
+    if((*state->callbacks->settermprop)(prop, VTERM_VALUETYPE_BOOL, &val, state->cbdata))
       return 1;
 
   return 0;
@@ -454,7 +454,7 @@ static int settermprop_string(VTermState *state, VTermProp prop, const char *str
   val.string = strvalue;
 
   if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
+    if((*state->callbacks->settermprop)(prop, VTERM_VALUETYPE_STRING, &val, state->cbdata))
       return 1;
 
   return 0;
