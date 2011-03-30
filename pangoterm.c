@@ -38,6 +38,7 @@ int cell_height;
 
 GdkRectangle invalid_area;
 int cursor_visible;
+int cursor_blinkstate;
 GdkRectangle cursor_area;
 
 guint cursor_timer_id;
@@ -246,7 +247,7 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
 {
   repaint_area(&event->area);
 
-  if(cursor_visible && gdk_rectangle_intersect(&cursor_area, &event->area, NULL))
+  if(cursor_visible && cursor_blinkstate && gdk_rectangle_intersect(&cursor_area, &event->area, NULL))
     gdk_draw_rectangle(termwin->window,
         cursor_gc,
         FALSE,
@@ -396,13 +397,13 @@ gboolean cursor_blink(gpointer data)
   invalid_area.width = 0;
   invalid_area.height = 0;
 
-  cursor_visible = !cursor_visible;
+  cursor_blinkstate = !cursor_blinkstate;
   gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
 
   if(invalid_area.width && invalid_area.height)
     repaint_area(&invalid_area);
 
-  if(cursor_visible)
+  if(cursor_visible && cursor_blinkstate)
     gdk_draw_rectangle(termwin->window,
         cursor_gc,
         FALSE,
