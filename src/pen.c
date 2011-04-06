@@ -277,9 +277,6 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 int vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
 {
   switch(attr) {
-  case VTERM_ATTR_NONE:
-    return 0;
-
   case VTERM_ATTR_BOLD:
     val->boolean = state->pen.bold;
     return 1;
