@@ -141,8 +141,6 @@ static struct {
 static int state_setpenattr(VTermAttr attr, VTermValueType type, VTermValue *val, void *user)
 {
   switch(attr) {
-  case VTERM_ATTR_NONE:
-    break;
   case VTERM_ATTR_BOLD:
     state_pen.bold = val->boolean;
     break;

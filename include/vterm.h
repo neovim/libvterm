@@ -55,8 +55,8 @@ typedef struct {
 } VTermColor;
 
 typedef enum {
-  VTERM_VALUETYPE_NONE,
-  VTERM_VALUETYPE_BOOL,
+  /* VTERM_VALUETYPE_NONE = 0 */
+  VTERM_VALUETYPE_BOOL = 1,
   VTERM_VALUETYPE_INT,
   VTERM_VALUETYPE_STRING,
   VTERM_VALUETYPE_COLOR,
@@ -70,8 +70,8 @@ typedef union {
 } VTermValue;
 
 typedef enum {
-  VTERM_ATTR_NONE,
-  VTERM_ATTR_BOLD,       // bool:   1, 22
+  /* VTERM_ATTR_NONE = 0 */
+  VTERM_ATTR_BOLD = 1,   // bool:   1, 22
   VTERM_ATTR_UNDERLINE,  // number: 4, 21, 24
   VTERM_ATTR_ITALIC,     // bool:   3, 23
   VTERM_ATTR_BLINK,      // bool:   5, 25
@@ -82,12 +82,12 @@ typedef enum {
 } VTermAttr;
 
 typedef enum {
-  VTERM_PROP_NONE,
-  VTERM_PROP_CURSORVISIBLE, // bool
-  VTERM_PROP_CURSORBLINK,   // bool
-  VTERM_PROP_ALTSCREEN,     // bool
-  VTERM_PROP_TITLE,         // string
-  VTERM_PROP_ICONNAME,      // string
+  /* VTERM_PROP_NONE = 0 */
+  VTERM_PROP_CURSORVISIBLE = 1, // bool
+  VTERM_PROP_CURSORBLINK,       // bool
+  VTERM_PROP_ALTSCREEN,         // bool
+  VTERM_PROP_TITLE,             // string
+  VTERM_PROP_ICONNAME,          // string
 } VTermProp;
 
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
