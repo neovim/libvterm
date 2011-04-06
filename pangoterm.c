@@ -488,7 +488,7 @@ int term_erase(VTermRect rect, void *user)
   return 1;
 }
 
-int term_setpenattr(VTermAttr attr, VTermValueType type, VTermValue *val, void *user)
+int term_setpenattr(VTermAttr attr, VTermValue *val, void *user)
 {
   flush_glyphs();
 
@@ -549,7 +549,7 @@ int term_setpenattr(VTermAttr attr, VTermValueType type, VTermValue *val, void *
   return 1;
 }
 
-int term_settermprop(VTermProp prop, VTermValueType type, VTermValue *val, void *user)
+int term_settermprop(VTermProp prop, VTermValue *val, void *user)
 {
   switch(prop) {
   case VTERM_PROP_CURSORVISIBLE:
