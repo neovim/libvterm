@@ -99,3 +99,28 @@ size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len)
 
   return len;
 }
+
+VTermValueType vterm_get_attr_type(VTermAttr attr)
+{
+  switch(attr) {
+    case VTERM_ATTR_BOLD:       return VTERM_VALUETYPE_BOOL;
+    case VTERM_ATTR_UNDERLINE:  return VTERM_VALUETYPE_INT;
+    case VTERM_ATTR_ITALIC:     return VTERM_VALUETYPE_BOOL;
+    case VTERM_ATTR_BLINK:      return VTERM_VALUETYPE_BOOL;
+    case VTERM_ATTR_REVERSE:    return VTERM_VALUETYPE_BOOL;
+    case VTERM_ATTR_FONT:       return VTERM_VALUETYPE_INT;
+    case VTERM_ATTR_FOREGROUND: return VTERM_VALUETYPE_COLOR;
+    case VTERM_ATTR_BACKGROUND: return VTERM_VALUETYPE_COLOR;
+  }
+}
+
+VTermValueType vterm_get_prop_type(VTermProp prop)
+{
+  switch(prop) {
+    case VTERM_PROP_CURSORVISIBLE: return VTERM_VALUETYPE_BOOL;
+    case VTERM_PROP_CURSORBLINK:   return VTERM_VALUETYPE_BOOL;
+    case VTERM_PROP_ALTSCREEN:     return VTERM_VALUETYPE_BOOL;
+    case VTERM_PROP_TITLE:         return VTERM_VALUETYPE_STRING;
+    case VTERM_PROP_ICONNAME:      return VTERM_VALUETYPE_STRING;
+  }
+}

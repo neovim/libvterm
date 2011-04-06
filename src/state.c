@@ -440,8 +440,16 @@ static int settermprop_bool(VTermState *state, VTermProp prop, int v)
   VTermValue val;
   val.boolean = v;
 
+#ifdef DEBUG
+  if(VTERM_VALUETYPE_BOOL != vterm_get_prop_type(prop)) {
+    fprintf(stderr, "Cannot set prop %d as it has type %d, not type BOOL\n",
+        prop, vterm_get_prop_type(prop));
+    return;
+  }
+#endif
+
   if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, VTERM_VALUETYPE_BOOL, &val, state->cbdata))
+    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
       return 1;
 
   return 0;
@@ -456,8 +464,16 @@ static int settermprop_string(VTermState *state, VTermProp prop, const char *str
   VTermValue val;
   val.string = strvalue;
 
+#ifdef DEBUG
+  if(VTERM_VALUETYPE_STRING != vterm_get_prop_type(prop)) {
+    fprintf(stderr, "Cannot set prop %d as it has type %d, not type STRING\n",
+        prop, vterm_get_prop_type(prop));
+    return;
+  }
+#endif
+
   if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, VTERM_VALUETYPE_STRING, &val, state->cbdata))
+    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
       return 1;
 
   return 0;

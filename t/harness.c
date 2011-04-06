@@ -138,7 +138,7 @@ static struct {
   VTermColor foreground;
   VTermColor background;
 } state_pen;
-static int state_setpenattr(VTermAttr attr, VTermValueType type, VTermValue *val, void *user)
+static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
 {
   switch(attr) {
   case VTERM_ATTR_BOLD:

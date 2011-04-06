@@ -99,8 +99,8 @@ typedef struct {
   int (*copycell)(VTermPos dest, VTermPos src, void *user);
   int (*erase)(VTermRect rect, void *user);
   int (*initpen)(void *user);
-  int (*setpenattr)(VTermAttr attr, VTermValueType type, VTermValue *val, void *user);
-  int (*settermprop)(VTermProp prop, VTermValueType type, VTermValue *val, void *user);
+  int (*setpenattr)(VTermAttr attr, VTermValue *val, void *user);
+  int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
   int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
   int (*bell)(void *user);
   int (*resize)(int rows, int cols, void *user);
@@ -118,6 +118,9 @@ void vterm_state_reset(VTermState *state);
 void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
 int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val);
+
+VTermValueType vterm_get_attr_type(VTermAttr attr);
+VTermValueType vterm_get_prop_type(VTermProp prop);
 
 void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);

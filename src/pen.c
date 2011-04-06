@@ -100,8 +100,15 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
 
 static void setpenattr(VTermState *state, VTermAttr attr, VTermValueType type, VTermValue *val)
 {
+#ifdef DEBUG
+  if(type != vterm_get_attr_type(attr)) {
+    fprintf(stderr, "Cannot set attr %d as it has type %d, not type %d\n",
+        attr, vterm_get_attr_type(attr), type);
+    return;
+  }
+#endif
   if(state->callbacks && state->callbacks->setpenattr)
-    (*state->callbacks->setpenattr)(attr, type, val, state->cbdata);
+    (*state->callbacks->setpenattr)(attr, val, state->cbdata);
 }
 
 static void setpenattr_bool(VTermState *state, VTermAttr attr, int boolean)
