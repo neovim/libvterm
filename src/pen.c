@@ -307,6 +307,12 @@ int vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
   case VTERM_ATTR_FONT:
     val->number = state->pen.font;
     return 1;
+
+  case VTERM_ATTR_FOREGROUND:
+  case VTERM_ATTR_BACKGROUND:
+    /* For now we don't store these.
+     * TODO: Think about whether we should store index, or RGB value, or what... */
+    return 0;
   }
 
   return 0;
