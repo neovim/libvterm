@@ -112,6 +112,7 @@ VTermValueType vterm_get_attr_type(VTermAttr attr)
     case VTERM_ATTR_FOREGROUND: return VTERM_VALUETYPE_COLOR;
     case VTERM_ATTR_BACKGROUND: return VTERM_VALUETYPE_COLOR;
   }
+  return 0; /* UNREACHABLE */
 }
 
 VTermValueType vterm_get_prop_type(VTermProp prop)
@@ -123,4 +124,5 @@ VTermValueType vterm_get_prop_type(VTermProp prop)
     case VTERM_PROP_TITLE:         return VTERM_VALUETYPE_STRING;
     case VTERM_PROP_ICONNAME:      return VTERM_VALUETYPE_STRING;
   }
+  return 0; /* UNREACHABLE */
 }
