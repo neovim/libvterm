@@ -13,7 +13,7 @@ static size_t on_text(VTerm *vt, const char bytes[], size_t len)
     if((eaten = (*vt->parser_callbacks->text)(bytes, len, vt->cbdata)))
       return eaten;
 
-  fprintf(stderr, "libvterm: Unhandled text (%d chars)\n", len);
+  fprintf(stderr, "libvterm: Unhandled text (%zu chars)\n", len);
   return 0;
 }
 
