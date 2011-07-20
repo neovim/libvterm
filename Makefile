@@ -1,7 +1,15 @@
-LIBTOOL=libtool
+ifeq ($(shell uname),Darwin)
+    LIBTOOL ?= glibtool
+else
+    LIBTOOL ?= libtool
+endif
 
-CFLAGS =-Wall -Iinclude -std=c99
-LDFLAGS=-lutil
+ifneq ($(VERBOSE),1)
+    LIBTOOL +=--quiet
+endif
+
+CFLAGS  +=-Wall -Iinclude -std=c99
+LDFLAGS +=-lutil
 
 ifeq ($(DEBUG),1)
   CFLAGS +=-ggdb -DDEBUG
@@ -38,24 +46,30 @@ MAN3DIR=$(MANDIR)/man3
 all: pangoterm
 
 pangoterm: pangoterm.c $(LIBRARY)
-	$(LIBTOOL) --mode=link --tag=CC gcc $(CFLAGS) -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
+	@echo LINK $@
+	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 
 $(LIBRARY): $(OBJECTS)
-	$(LIBTOOL) --mode=link --tag=CC gcc -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -o $@ $^
+	@echo LINK $@
+	@$(LIBTOOL) --mode=link --tag=CC $(CC) -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -o $@ $^
 
 src/%.lo: src/%.c $(HFILES_INT)
-	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $<
+	@echo CC $<
+	@$(LIBTOOL) --mode=compile --tag=CC $(CC) $(CFLAGS) -o $@ -c $<
 
 src/encoding/%.inc: src/encoding/%.tbl
-	perl -C tbl2inc_c.pl $< >$@
+	@echo TBL $<
+	@perl -C tbl2inc_c.pl $< >$@
 
 src/encoding.lo: $(INCFILES)
 
 t/harness.lo: t/harness.c $(HFILES)
-	$(LIBTOOL) --mode=compile --tag=CC gcc $(CFLAGS) -o $@ -c $<
+	@echo CC $<
+	@$(LIBTOOL) --mode=compile --tag=CC $(CC) $(CFLAGS) -o $@ -c $<
 
 t/harness: t/harness.lo $(LIBRARY)
-	$(LIBTOOL) --mode=link --tag=CC gcc $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo LINK $@
+	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 .PHONY: test
 test: $(LIBRARY) t/harness
