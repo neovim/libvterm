@@ -1,0 +1,29 @@
+INIT
+WANTSCREEN
+
+!Get
+RESET
+PUSH "ABC"
+  ?screen_chars 0,0,1,3 = 0x41,0x42,0x43
+  ?screen_chars 0,0,1,80 = 0x41,0x42,0x43
+PUSH "\e[H"
+  ?screen_chars 0,0,1,80 = 0x41,0x42,0x43
+PUSH "E"
+  ?screen_chars 0,0,1,80 = 0x45,0x42,0x43
+
+!Erase
+RESET
+PUSH "ABCDE\e[H\e[K"
+  ?screen_chars 0,0,1,80 = 
+
+!Copycell
+RESET
+PUSH "ABC\e[H\e[@"
+PUSH "1"
+  ?screen_chars 0,0,1,80 = 0x31,0x41,0x42,0x43
+
+RESET
+PUSH "ABC\e[H\e[P"
+  ?screen_chars 0,0,1,1 = 0x42
+  ?screen_chars 0,1,1,2 = 0x43
+  ?screen_chars 0,0,1,80 = 0x42,0x43

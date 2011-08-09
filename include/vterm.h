@@ -8,6 +8,7 @@
 
 typedef struct _VTerm VTerm;
 typedef struct _VTermState VTermState;
+typedef struct _VTermScreen VTermScreen;
 
 typedef struct {
   int row;
@@ -121,6 +122,11 @@ int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
 
 VTermValueType vterm_get_attr_type(VTermAttr attr);
 VTermValueType vterm_get_prop_type(VTermProp prop);
+
+VTermScreen *vterm_initialise_screen(VTerm *vt);
+
+void   vterm_screen_reset(VTermScreen *screen);
+size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
 
 void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
