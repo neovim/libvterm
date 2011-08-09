@@ -9,6 +9,7 @@
 
 static VTerm *vt;
 static VTermState *state;
+static VTermScreen *screen;
 
 static VTermEncoding *encoding;
 
@@ -227,6 +228,11 @@ int main(int argc, char **argv)
         }
     }
 
+    else if(strstartswith(line, "WANTSCREEN") && (line[10] == '\0' || line[10] == ' ')) {
+      if(!screen)
+        screen = vterm_initialise_screen(vt);
+    }
+
     else if(sscanf(line, "UTF8 %d", &flag)) {
       vterm_parser_set_utf8(vt, flag);
     }
@@ -235,6 +241,9 @@ int main(int argc, char **argv)
       if(state) {
         vterm_state_reset(state);
         vterm_state_get_cursorpos(state, &state_pos);
+      }
+      if(screen) {
+        vterm_screen_reset(screen);
       }
     }
 
@@ -363,6 +372,30 @@ int main(int argc, char **argv)
         else
           printf("?\n");
       }
+      else if(strstartswith(line, "?screen_chars ")) {
+        char *linep = line + 13;
+        VTermRect rect;
+        size_t len;
+        while(linep[0] == ' ')
+          linep++;
+        if(sscanf(linep, "%d,%d,%d,%d", &rect.start_row, &rect.start_col, &rect.end_row, &rect.end_col) < 4) {
+          printf("! screen_chars unrecognised input\n");
+          goto abort_line;
+        }
+        len = vterm_screen_get_chars(screen, NULL, 0, rect);
+        if(len == (size_t)-1)
+          printf("! screen_chars error\n");
+        else if(len == 0)
+          printf("\n");
+        else {
+          uint32_t *chars = malloc(sizeof(uint32_t) * len);
+          vterm_screen_get_chars(screen, chars, len, rect);
+          for(size_t i = 0; i < len; i++) {
+            printf("0x%x%s", chars[i], i < len-1 ? "," : "\n");
+          }
+          free(chars);
+        }
+      }
       else
         printf("?\n");
 
@@ -370,7 +403,7 @@ int main(int argc, char **argv)
     }
 
     else
-      err = 1;
+      abort_line: err = 1;
 
     printf(err ? "?\n" : "DONE\n");
   }

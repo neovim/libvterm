@@ -73,6 +73,7 @@ struct _VTerm
   GString *inbuffer;
   GString *outbuffer;
   VTermState *state;
+  VTermScreen *screen;
 };
 
 struct _VTermEncoding {
