@@ -3,6 +3,7 @@
 #define MAX_CHARS_PER_CELL 6
 
 #define UNICODE_SPACE 0x20
+#define UNICODE_LINEFEED 0x13
 
 typedef struct
 {
@@ -115,6 +116,11 @@ size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, 
           PUT(cell->chars[i]);
         }
       }
+    }
+
+    if(row < rect.end_row - 1) {
+      PUT(UNICODE_LINEFEED);
+      padding = 0;
     }
   }
 
