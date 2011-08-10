@@ -2,6 +2,8 @@
 
 #define MAX_CHARS_PER_CELL 6
 
+#define UNICODE_SPACE 0x20
+
 typedef struct
 {
   uint32_t chars[MAX_CHARS_PER_CELL];
@@ -33,7 +35,7 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
     cell->chars[i] = 0;
 
   for(int col = 1; col < width; col++)
-    getcell(screen, pos.row, pos.col + col)->chars[0] = 0;
+    getcell(screen, pos.row, pos.col + col)->chars[0] = (uint32_t)-1;
 
   return 1;
 }
@@ -91,14 +93,27 @@ void vterm_screen_reset(VTermScreen *screen)
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
 {
   size_t outpos = 0;
+  int padding = 0;
+#define PUT(c) (chars && outpos < len) ? chars[outpos++] = (c) : outpos++
 
   for(int row = rect.start_row; row < rect.end_row; row++) {
     for(int col = rect.start_col; col < rect.end_col; col++) {
       VTermScreenCell *cell = getcell(screen, row, col);
-      for(int i = 0; i < MAX_CHARS_PER_CELL && cell->chars[i]; i++) {
-        if(chars && outpos < len)
-          chars[outpos] = cell->chars[i];
-        outpos++;
+
+      if(cell->chars[0] == 0)
+        // Erased cell, might need a space
+        padding++;
+      else if(cell->chars[0] == (uint32_t)-1)
+        // Gap behind a double-width char, do nothing
+        ;
+      else {
+        while(padding) {
+          PUT(UNICODE_SPACE);
+          padding--;
+        }
+        for(int i = 0; i < MAX_CHARS_PER_CELL && cell->chars[i]; i++) {
+          PUT(cell->chars[i]);
+        }
       }
     }
   }
