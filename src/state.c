@@ -218,12 +218,6 @@ static int on_text(const char bytes[], size_t len, void *user)
   int npoints = 0;
   size_t eaten = 0;
 
-  if(state->at_phantom) {
-    linefeed(state);
-    state->pos.col = 0;
-    state->at_phantom = 0;
-  }
-
   VTermEncoding *enc = !(bytes[eaten] & 0x80) ? state->encoding[state->gl_set] :
                        state->vt->is_utf8     ? vterm_lookup_encoding(ENC_UTF8, 'u') :
                                                 state->encoding[state->gr_set];
@@ -301,6 +295,12 @@ static int on_text(const char bytes[], size_t len, void *user)
       printf("U+%04x ", chars[printpos]);
     printf("}, onscreen width %d\n", width);
 #endif
+
+    if(state->at_phantom) {
+      linefeed(state);
+      state->pos.col = 0;
+      state->at_phantom = 0;
+    }
 
     if(state->mode.insert) {
       /* TODO: This will be a little inefficient for large bodies of text, as
