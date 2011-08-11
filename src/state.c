@@ -968,6 +968,11 @@ static int on_resize(int rows, int cols, void *user)
   if(state->pos.col >= cols)
     state->pos.col = cols - 1;
 
+  if(state->at_phantom && state->pos.col < cols-1) {
+    state->at_phantom = 0;
+    state->pos.col++;
+  }
+
   if(state->callbacks && state->callbacks->resize)
     (*state->callbacks->resize)(rows, cols, state->cbdata);
 
