@@ -71,6 +71,9 @@ static gint cursor_blink_interval = 500;
 static char *default_font = "DejaVu Sans Mono";
 static int default_size = 9;
 
+static int lines = 25;
+static int cols  = 80;
+
 static char *alt_fonts[] = {
   "Courier 10 Pitch",
 };
@@ -83,6 +86,9 @@ static GOptionEntry option_entries[] = {
 
   { "font",       0,   0, G_OPTION_ARG_STRING, &default_font, "Font name", "FONT" },
   { "size",       's', 0, G_OPTION_ARG_INT,    &default_size, "Font size", "INT" },
+
+  { "lines",      0,   0, G_OPTION_ARG_INT,    &lines, "Number of lines", "LINES" },
+  { "cols",       0,   0, G_OPTION_ARG_INT,    &cols,  "Number of columns", "COLS" },
 
   { NULL },
 };
@@ -701,7 +707,7 @@ int main(int argc, char *argv[])
 
   gtk_init(&argc, &argv);
 
-  struct winsize size = { 25, 80, 0, 0 };
+  struct winsize size = { lines, cols, 0, 0 };
 
   vt = vterm_new(size.ws_row, size.ws_col);
   vterm_parser_set_utf8(vt, 1);
