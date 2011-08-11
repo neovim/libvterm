@@ -1,5 +1,7 @@
 #include "vterm_internal.h"
 
+#include <stdio.h>
+
 #define MAX_CHARS_PER_CELL 6
 
 #define UNICODE_SPACE 0x20
@@ -14,6 +16,7 @@ struct _VTermScreen
 {
   VTerm *vt;
 
+  int rows;
   int cols;
   VTermScreenCell *buffer;
 };
@@ -63,10 +66,38 @@ static int erase(VTermRect rect, void *user)
   return 1;
 }
 
+static int resize(int new_rows, int new_cols, void *user)
+{
+  VTermScreen *screen = user;
+
+  VTermScreenCell *new_buffer = g_new0(VTermScreenCell, new_rows * new_cols);
+
+  for(int row = 0; row < new_rows; row++) {
+    for(int col = 0; col < new_cols; col++) {
+      VTermScreenCell *new_cell = new_buffer + row*new_cols + col;
+
+      if(row < screen->rows && col < screen->cols)
+        *new_cell = *(getcell(screen, row, col));
+      else
+        new_cell->chars[0] = 0;
+    }
+  }
+
+  if(screen->buffer)
+    free(screen->buffer);
+
+  screen->rows = new_rows;
+  screen->cols = new_cols;
+  screen->buffer = new_buffer;
+
+  return 1;
+}
+
 static VTermStateCallbacks state_cbs = {
   .putglyph = &putglyph,
   .copycell = &copycell,
   .erase    = &erase,
+  .resize   = &resize,
 };
 
 static VTermScreen *screen_new(VTerm *vt)
@@ -78,8 +109,10 @@ static VTermScreen *screen_new(VTerm *vt)
 
   screen->vt = vt;
 
-  screen->cols = cols;
-  screen->buffer = g_new0(VTermScreenCell, rows * cols);
+  screen->cols = 0;
+  screen->buffer = NULL;
+
+  resize(rows, cols, screen);
 
   vterm_state_set_callbacks(vterm_obtain_state(vt), &state_cbs, screen);
 
