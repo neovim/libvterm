@@ -958,12 +958,20 @@ static int on_osc(const char *command, size_t cmdlen, void *user)
 static int on_resize(int rows, int cols, void *user)
 {
   VTermState *state = user;
+  VTermPos oldpos = state->pos;
 
   state->rows = rows;
   state->cols = cols;
 
+  if(state->pos.row >= rows)
+    state->pos.row = rows - 1;
+  if(state->pos.col >= cols)
+    state->pos.col = cols - 1;
+
   if(state->callbacks && state->callbacks->resize)
     (*state->callbacks->resize)(rows, cols, state->cbdata);
+
+  updatecursor(state, &oldpos, 1);
 
   return 1;
 }

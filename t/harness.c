@@ -247,6 +247,15 @@ int main(int argc, char **argv)
       }
     }
 
+    else if(strstartswith(line, "RESIZE ")) {
+      int rows, cols;
+      char *linep = line + 7;
+      while(linep[0] == ' ')
+        linep++;
+      sscanf(linep, "%d, %d", &rows, &cols);
+      vterm_set_size(vt, rows, cols);
+    }
+
     else if(strstartswith(line, "PUSH ")) {
       /* Convert hex chars inplace */
       char *outpos, *inpos, *bytes;
