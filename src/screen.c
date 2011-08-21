@@ -16,6 +16,9 @@ struct _VTermScreen
 {
   VTerm *vt;
 
+  const VTermScreenCallbacks *callbacks;
+  void *cbdata;
+
   int rows;
   int cols;
   VTermScreenCell *buffer;
@@ -25,6 +28,24 @@ static inline VTermScreenCell *getcell(VTermScreen *screen, int row, int col)
 {
   /* TODO: Bounds checking */
   return screen->buffer + (screen->cols * row) + col;
+}
+
+static void damagerect(VTermScreen *screen, VTermRect rect)
+{
+  if(screen->callbacks && screen->callbacks->damage)
+    (*screen->callbacks->damage)(rect, screen->cbdata);
+}
+
+static void damagecell(VTermScreen *screen, int row, int col)
+{
+  VTermRect rect = {
+    .start_row = row,
+    .end_row   = row+1,
+    .start_col = col,
+    .end_col   = col+1,
+  };
+
+  damagerect(screen, rect);
 }
 
 static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
@@ -41,6 +62,15 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   for(int col = 1; col < width; col++)
     getcell(screen, pos.row, pos.col + col)->chars[0] = (uint32_t)-1;
 
+  VTermRect rect = {
+    .start_row = pos.row,
+    .end_row   = pos.row+1,
+    .start_col = pos.col,
+    .end_col   = pos.col+width,
+  };
+
+  damagerect(screen, rect);
+
   return 1;
 }
 
@@ -52,6 +82,8 @@ static int copycell(VTermPos dest, VTermPos src, void *user)
 
   *destcell = *srccell;
 
+  damagecell(screen, dest.row, dest.col);
+
   return 1;
 }
 
@@ -62,6 +94,8 @@ static int erase(VTermRect rect, void *user)
   for(int row = rect.start_row; row < rect.end_row; row++)
     for(int col = rect.start_col; col < rect.end_col; col++)
       getcell(screen, row, col)->chars[0] = 0;
+
+  damagerect(screen, rect);
 
   return 1;
 }
@@ -85,6 +119,26 @@ static int resize(int new_rows, int new_cols, void *user)
 
   if(screen->buffer)
     free(screen->buffer);
+
+  if(new_cols > screen->cols) {
+    VTermRect rect = {
+      .start_row = 0,
+      .end_row   = screen->rows,
+      .start_col = screen->cols,
+      .end_col   = new_cols,
+    };
+    damagerect(screen, rect);
+  }
+
+  if(new_rows > screen->rows) {
+    VTermRect rect = {
+      .start_row = screen->rows,
+      .end_row   = new_rows,
+      .start_col = 0,
+      .end_col   = new_cols,
+    };
+    damagerect(screen, rect);
+  }
 
   screen->rows = new_rows;
   screen->cols = new_cols;
@@ -169,4 +223,10 @@ VTermScreen *vterm_initialise_screen(VTerm *vt)
   vt->screen = screen;
 
   return screen;
+}
+
+void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user)
+{
+  screen->callbacks = callbacks;
+  screen->cbdata = user;
 }
