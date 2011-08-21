@@ -104,13 +104,13 @@ static int state_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *us
   return 1;
 }
 
-static int want_state_copyrect = 0;
-static int state_copyrect(VTermRect dest, VTermRect src, void *user)
+static int want_state_moverect = 0;
+static int state_moverect(VTermRect dest, VTermRect src, void *user)
 {
-  if(!want_state_copyrect)
+  if(!want_state_moverect)
     return 1;
 
-  printf("copyrect %d..%d,%d..%d -> %d..%d,%d..%d\n",
+  printf("moverect %d..%d,%d..%d -> %d..%d,%d..%d\n",
       src.start_row,  src.end_row,  src.start_col,  src.end_col,
       dest.start_row, dest.end_row, dest.start_col, dest.end_col);
 
@@ -174,7 +174,7 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
 VTermStateCallbacks state_cbs = {
   .putglyph   = state_putglyph,
   .movecursor = state_movecursor,
-  .copyrect   = state_copyrect,
+  .moverect   = state_moverect,
   .erase      = state_erase,
   .setpenattr = state_setpenattr,
 };
@@ -233,8 +233,8 @@ int main(int argc, char **argv)
         case 'g':
           want_state_putglyph = 1;
           break;
-        case 'c':
-          want_state_copyrect = 1;
+        case 'm':
+          want_state_moverect = 1;
           break;
         case 'e':
           want_state_erase = 1;

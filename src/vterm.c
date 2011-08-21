@@ -126,3 +126,54 @@ VTermValueType vterm_get_prop_type(VTermProp prop)
   }
   return 0; /* UNREACHABLE */
 }
+
+void vterm_copy_cells(VTermRect dest,
+    VTermRect src,
+    void (*copycell)(VTermPos dest, VTermPos src, void *user),
+    void *user)
+{
+  int downward  = src.start_row - dest.start_row;
+  int rightward = src.start_col - dest.start_col;
+
+  int init_row, test_row, init_col, test_col;
+  int inc_row, inc_col;
+
+  if(downward < 0) {
+    init_row = dest.end_row - 1;
+    test_row = dest.start_row - 1;
+    inc_row = -1;
+  }
+  else if(downward == 0) {
+    init_row = dest.start_row;
+    test_row = dest.end_row;
+    inc_row = +1;
+  }
+  else /* downward > 0 */ {
+    init_row = dest.start_row;
+    test_row = dest.end_row;
+    inc_row = +1;
+  }
+
+  if(rightward < 0) {
+    init_col = dest.end_col - 1;
+    test_col = dest.start_col - 1;
+    inc_col = -1;
+  }
+  else if(rightward == 0) {
+    init_col = dest.start_col;
+    test_col = dest.end_col;
+    inc_col = +1;
+  }
+  else /* rightward > 0 */ {
+    init_col = dest.start_col;
+    test_col = dest.end_col;
+    inc_col = +1;
+  }
+
+  VTermPos pos;
+  for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
+    for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
+      VTermPos srcpos = { pos.row + downward, pos.col + rightward };
+      (*copycell)(pos, srcpos, user);
+    }
+}

@@ -74,7 +74,7 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   return 1;
 }
 
-static int copycell(VTermPos dest, VTermPos src, void *user)
+static void copycell(VTermPos dest, VTermPos src, void *user)
 {
   VTermScreen *screen = user;
   VTermScreenCell *destcell = getcell(screen, dest.row, dest.col);
@@ -83,7 +83,11 @@ static int copycell(VTermPos dest, VTermPos src, void *user)
   *destcell = *srccell;
 
   damagecell(screen, dest.row, dest.col);
+}
 
+static int moverect(VTermRect dest, VTermRect src, void *user)
+{
+  vterm_copy_cells(dest, src, &copycell, user);
   return 1;
 }
 
@@ -149,7 +153,7 @@ static int resize(int new_rows, int new_cols, void *user)
 
 static VTermStateCallbacks state_cbs = {
   .putglyph = &putglyph,
-  .copycell = &copycell,
+  .moverect = &moverect,
   .erase    = &erase,
   .resize   = &resize,
 };

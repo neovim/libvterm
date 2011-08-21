@@ -1,6 +1,6 @@
 INIT
 UTF8 1
-WANTSTATE gc
+WANTSTATE gm
 
 !79th Column
 PUSH "\e[75G"
@@ -56,7 +56,7 @@ PUSH "\e[25;78HABC"
   putglyph 0x43 1 24,79
   ?cursor = 24,79
 PUSH "D"
-  copyrect 1..25,0..80 -> 0..24,0..80
+  moverect 1..25,0..80 -> 0..24,0..80
   putglyph 0x44 1 24,0
 
 !80th column phantom linefeed phantom cancelled by explicit cursor move
