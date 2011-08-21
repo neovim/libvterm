@@ -36,18 +36,6 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
     (*screen->callbacks->damage)(rect, screen->cbdata);
 }
 
-static void damagecell(VTermScreen *screen, int row, int col)
-{
-  VTermRect rect = {
-    .start_row = row,
-    .end_row   = row+1,
-    .start_col = col,
-    .end_col   = col+1,
-  };
-
-  damagerect(screen, rect);
-}
-
 static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
   VTermScreen *screen = user;
@@ -81,13 +69,16 @@ static void copycell(VTermPos dest, VTermPos src, void *user)
   VTermScreenCell *srccell = getcell(screen, src.row, src.col);
 
   *destcell = *srccell;
-
-  damagecell(screen, dest.row, dest.col);
 }
 
 static int moverect(VTermRect dest, VTermRect src, void *user)
 {
+  VTermScreen *screen = user;
+
   vterm_copy_cells(dest, src, &copycell, user);
+
+  damagerect(screen, dest);
+
   return 1;
 }
 
