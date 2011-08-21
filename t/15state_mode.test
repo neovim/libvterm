@@ -1,6 +1,6 @@
 INIT
 UTF8 1
-WANTSTATE gce
+WANTSTATE gme
 
 !Insert/Replace Mode
 RESET
@@ -13,19 +13,19 @@ PUSH "AC\e[DB"
 PUSH "\e[4h"
 PUSH "\e[G"
 PUSH "AC\e[DB"
-  copyrect 0..1,0..79 -> 0..1,1..80
+  moverect 0..1,0..79 -> 0..1,1..80
   erase 0..1,0..1
   putglyph 0x41 1 0,0
-  copyrect 0..1,1..79 -> 0..1,2..80
+  moverect 0..1,1..79 -> 0..1,2..80
   erase 0..1,1..2
   putglyph 0x43 1 0,1
-  copyrect 0..1,1..79 -> 0..1,2..80
+  moverect 0..1,1..79 -> 0..1,2..80
   erase 0..1,1..2
   putglyph 0x42 1 0,1
 
 !Insert mode only happens once for UTF-8 combining
 PUSH "e"
-  copyrect 0..1,2..79 -> 0..1,3..80
+  moverect 0..1,2..79 -> 0..1,3..80
   erase 0..1,2..3
   putglyph 0x65 1 0,2
 PUSH "\xCC\x81"

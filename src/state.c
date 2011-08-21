@@ -62,8 +62,6 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
   if(!downward && !rightward)
     return;
 
-  int done = 0;
-
   VTermRect src;
   VTermRect dest;
 
@@ -103,57 +101,8 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
     src.end_row    = rect.end_row - upward;
   }
 
-  if(state->callbacks && state->callbacks->copyrect)
-    if((*state->callbacks->copyrect)(dest, src, state->cbdata)) {
-      done = 1;
-    }
-
-  if(!done) {
-    int init_row, test_row, init_col, test_col;
-    int inc_row, inc_col;
-
-    if(downward < 0) {
-      init_row = rect.end_row - 1;
-      test_row = rect.start_row - downward - 1;
-      inc_row = -1;
-    }
-    else if(downward == 0) {
-      init_row = rect.start_row;
-      test_row = rect.end_row;
-      inc_row = +1;
-    }
-    else /* downward > 0 */ {
-      init_row = rect.start_row;
-      test_row = rect.end_row - downward;
-      inc_row = +1;
-    }
-
-    if(rightward < 0) {
-      init_col = rect.end_col - 1;
-      test_col = rect.start_col - rightward - 1;
-      inc_col = -1;
-    }
-    else if(rightward == 0) {
-      init_col = rect.start_col;
-      test_col = rect.end_col;
-      inc_col = +1;
-    }
-    else /* rightward > 0 */ {
-      init_col = rect.start_col;
-      test_col = rect.end_col - rightward;
-      inc_col = +1;
-    }
-
-    VTermPos pos;
-    for(pos.row = init_row; pos.row != test_row; pos.row += inc_row)
-      for(pos.col = init_col; pos.col != test_col; pos.col += inc_col) {
-        VTermPos srcpos = { pos.row + downward, pos.col + rightward };
-        if(state->callbacks && state->callbacks->copycell)
-          (*state->callbacks->copycell)(pos, srcpos, state->cbdata);
-      }
-
-    done = 1;
-  }
+  if(state->callbacks && state->callbacks->moverect)
+    (*state->callbacks->moverect)(dest, src, state->cbdata);
 
   if(downward > 0)
     rect.start_row = rect.end_row - downward;
