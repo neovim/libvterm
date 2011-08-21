@@ -13,3 +13,13 @@ PUSH "123"
 PUSH "\e[H"
 PUSH "\e[3X"
   damage 0..1,0..3
+
+!Scroll damages entire line in two chunks
+PUSH "\e[H\e[5@"
+  damage 0..1,5..80
+  damage 0..1,0..5
+
+!Scroll down damages entire screen in two chunks
+PUSH "\e[T"
+  damage 1..25,0..80
+  damage 0..1,0..80
