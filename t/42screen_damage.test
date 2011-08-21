@@ -1,0 +1,15 @@
+INIT
+WANTSCREEN d
+
+!Putglyph
+RESET
+  damage 0..25,0..80
+PUSH "123"
+  damage 0..1,0..1
+  damage 0..1,1..2
+  damage 0..1,2..3
+
+!Erase
+PUSH "\e[H"
+PUSH "\e[3X"
+  damage 0..1,0..3

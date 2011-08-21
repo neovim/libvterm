@@ -179,6 +179,22 @@ VTermStateCallbacks state_cbs = {
   .setpenattr = state_setpenattr,
 };
 
+static int want_screen_damage = 0;
+static int screen_damage(VTermRect rect, void *user)
+{
+  if(!want_screen_damage)
+    return 1;
+
+  printf("damage %d..%d,%d..%d\n",
+      rect.start_row, rect.end_row, rect.start_col, rect.end_col);
+
+  return 1;
+}
+
+VTermScreenCallbacks screen_cbs = {
+  .damage = screen_damage,
+};
+
 int main(int argc, char **argv)
 {
   char line[1024];
@@ -231,6 +247,19 @@ int main(int argc, char **argv)
     else if(strstartswith(line, "WANTSCREEN") && (line[10] == '\0' || line[10] == ' ')) {
       if(!screen)
         screen = vterm_initialise_screen(vt);
+      vterm_screen_set_callbacks(screen, &screen_cbs, NULL);
+
+      int i = 10;
+      while(line[i] == ' ')
+        i++;
+      for( ; line[i]; i++)
+        switch(line[i]) {
+        case 'd':
+          want_screen_damage = 1;
+          break;
+        default:
+          fprintf(stderr, "Unrecognised WANTSCREEN flag '%c'\n", line[i]);
+        }
     }
 
     else if(sscanf(line, "UTF8 %d", &flag)) {
