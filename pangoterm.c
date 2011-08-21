@@ -421,9 +421,17 @@ gboolean cursor_blink(gpointer data)
   return TRUE;
 }
 
-int term_copyrect(VTermRect dest, VTermRect src, void *user)
+static void copycell(VTermPos destpos, VTermPos srcpos, void *user)
+{
+  cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
+  cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
+}
+
+int term_moverect(VTermRect dest, VTermRect src, void *user)
 {
   flush_glyphs();
+
+  vterm_copy_cells(dest, src, &copycell, user);
 
   GdkRectangle destarea = {
     .x      = dest.start_col * cell_width,
@@ -445,14 +453,6 @@ int term_copyrect(VTermRect dest, VTermRect src, void *user)
       destarea.height);
 
   gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
-
-  return 0; // Because we still need to get copycell to move the metadata
-}
-
-int term_copycell(VTermPos destpos, VTermPos srcpos, void *user)
-{
-  cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
-  cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
 
   return 1;
 }
@@ -632,8 +632,7 @@ int term_bell(void *user)
 static VTermStateCallbacks cb = {
   .putglyph     = term_putglyph,
   .movecursor   = term_movecursor,
-  .copyrect     = term_copyrect,
-  .copycell     = term_copycell,
+  .moverect     = term_moverect,
   .erase        = term_erase,
   .setpenattr   = term_setpenattr,
   .settermprop  = term_settermprop,
