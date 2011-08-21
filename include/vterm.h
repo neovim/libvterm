@@ -107,6 +107,10 @@ typedef struct {
   int (*resize)(int rows, int cols, void *user);
 } VTermStateCallbacks;
 
+typedef struct {
+  int (*damage)(VTermRect rect, void *user);
+} VTermScreenCallbacks;
+
 VTerm *vterm_new(int rows, int cols);
 void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
@@ -124,6 +128,8 @@ VTermValueType vterm_get_attr_type(VTermAttr attr);
 VTermValueType vterm_get_prop_type(VTermProp prop);
 
 VTermScreen *vterm_initialise_screen(VTerm *vt);
+
+void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
 
 void   vterm_screen_reset(VTermScreen *screen);
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
