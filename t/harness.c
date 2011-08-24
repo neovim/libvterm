@@ -7,6 +7,20 @@
 #define streq(a,b) (!strcmp(a,b))
 #define strstartswith(a,b) (!strncmp(a,b,strlen(b)))
 
+static size_t inplace_hex2bytes(char *s)
+{
+  char *inpos = s, *outpos = s;
+
+  while(*inpos) {
+    int ch;
+    sscanf(inpos, "%2x", &ch);
+    *outpos = ch;
+    outpos += 1; inpos += 2;
+  }
+
+  return outpos - s;
+}
+
 static VTerm *vt;
 static VTermState *state;
 static VTermScreen *screen;
@@ -286,17 +300,9 @@ int main(int argc, char **argv)
     }
 
     else if(strstartswith(line, "PUSH ")) {
-      /* Convert hex chars inplace */
-      char *outpos, *inpos, *bytes;
-      bytes = inpos = outpos = line + 5;
-      while(*inpos) {
-        int ch;
-        sscanf(inpos, "%2x", &ch);
-        *outpos = ch;
-        outpos += 1; inpos += 2;
-      }
-
-      vterm_push_bytes(vt, bytes, outpos - bytes);
+      char *bytes = line + 5;
+      size_t len = inplace_hex2bytes(bytes);
+      vterm_push_bytes(vt, bytes, len);
     }
 
     else if(streq(line, "WANTENCODING")) {
@@ -307,23 +313,14 @@ int main(int argc, char **argv)
     }
 
     else if(strstartswith(line, "ENCIN ")) {
-      /* Convert hex chars inplace */
-      char *outpos, *inpos, *bytes;
-      bytes = inpos = outpos = line + 6;
-      while(*inpos) {
-        int ch;
-        sscanf(inpos, "%2x", &ch);
-        *outpos = ch;
-        outpos += 1; inpos += 2;
-      }
+      char *bytes = line + 6;
+      size_t len = inplace_hex2bytes(bytes);
 
-      int maxchars = outpos - bytes;
-
-      uint32_t cp[maxchars];
+      uint32_t cp[len];
       int cpi = 0;
       size_t pos = 0;
 
-      (*encoding->decode)(encoding, cp, &cpi, maxchars, bytes, &pos, outpos - bytes);
+      (*encoding->decode)(encoding, cp, &cpi, len, bytes, &pos, len);
 
       printf("encout ");
       for(int i = 0; i < cpi; i++) {
