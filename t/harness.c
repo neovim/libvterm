@@ -185,12 +185,29 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
   return 1;
 }
 
+static int want_state_mouse = 0;
+static VTermMouseFunc mousefunc;
+static void *mousedata;
+static int state_setmousefunc(VTermMouseFunc func, void *data, void *user)
+{
+  mousefunc = func;
+  mousedata = data;
+
+  if(!want_state_mouse)
+    return 1;
+
+  printf("setmousefunc %s\n", func ? "func" : "(null)");
+
+  return 1;
+}
+
 VTermStateCallbacks state_cbs = {
-  .putglyph   = state_putglyph,
-  .movecursor = state_movecursor,
-  .moverect   = state_moverect,
-  .erase      = state_erase,
-  .setpenattr = state_setpenattr,
+  .putglyph     = state_putglyph,
+  .movecursor   = state_movecursor,
+  .moverect     = state_moverect,
+  .erase        = state_erase,
+  .setpenattr   = state_setpenattr,
+  .setmousefunc = state_setmousefunc,
 };
 
 static int want_screen_damage = 0;
@@ -252,6 +269,9 @@ int main(int argc, char **argv)
           break;
         case 'e':
           want_state_erase = 1;
+          break;
+        case 'M':
+          want_state_mouse = 1;
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
@@ -340,6 +360,16 @@ int main(int argc, char **argv)
       len = inplace_hex2bytes(linep);
 
       vterm_input_push_str(vt, state, linep, len);
+    }
+
+    else if(strstartswith(line, "MOUSE ")) {
+      char *linep = line + 6;
+      int press, button, row, col;
+      while(linep[0] == ' ')
+        linep++;
+      sscanf(linep, "%d %d %d,%d", &press, &button, &row, &col);
+      if(mousefunc)
+        (*mousefunc)(col, row, button, press, mousedata);
     }
 
     else if(line[0] == '?') {
