@@ -329,6 +329,19 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
+    else if(strstartswith(line, "INSTR ")) {
+      char *linep = line + 6;
+      int state, len = 0;
+      while(linep[0] == ' ')
+        linep++;
+      sscanf(linep, "%d %n", &state, &len);
+      linep += len;
+
+      len = inplace_hex2bytes(linep);
+
+      vterm_input_push_str(vt, state, linep, len);
+    }
+
     else if(line[0] == '?') {
       if(streq(line, "?cursor")) {
         VTermPos pos;
@@ -439,6 +452,16 @@ int main(int argc, char **argv)
 
     else
       abort_line: err = 1;
+
+    size_t outlen = vterm_output_bufferlen(vt);
+    if(outlen > 0) {
+      char outbuff[outlen];
+      vterm_output_bufferread(vt, outbuff, outlen);
+
+      printf("output ");
+      for(int i = 0; i < outlen; i++)
+        printf("%x%s", outbuff[i], i < outlen-1 ? "," : "\n");
+    }
 
     printf(err ? "?\n" : "DONE\n");
   }

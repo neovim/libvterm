@@ -69,7 +69,7 @@ while( my $line = <$test> ) {
    # Commands have capitals
    elsif( $line =~ m/^([A-Z]+)/ ) {
       # Some convenience formatting
-      if( $line =~ m/^(PUSH|ENCIN) (.*)$/ ) {
+      if( $line =~ m/^(PUSH|ENCIN|INSTR \d) (.*)$/ ) {
          # we're evil
          my $string = eval($2);
          $line = "$1 " . unpack "H*", $string;
@@ -83,7 +83,7 @@ while( my $line = <$test> ) {
    # Expectations have lowercase
    elsif( $line =~ m/^([a-z]+)/ ) {
       # Convenience formatting
-      if( $line =~ m/^(text|encout) (.*)$/ ) {
+      if( $line =~ m/^(text|encout|output) (.*)$/ ) {
          $line = "$1 " . join ",", map sprintf("%x", $_), eval($2);
       }
       elsif( $line =~ m/^control (.*)$/ ) {
