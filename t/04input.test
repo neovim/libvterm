@@ -2,16 +2,16 @@ INIT
 
 !Unmodified ASCII
 INSTR 0 "ABC"
-  output 0x41,0x42,0x43
+  output "ABC"
 
 !Ctrl modifier on ASCII letters
 INSTR 4 "A"
-  output 0x01
+  output "\x01"
 
 !Alt modifier on ASCII letters
 INSTR 2 "A"
-  output 0x1b,0x41
+  output "\eA"
 
 !Ctrl-Alt modifier on ASCII letters
 INSTR 6 "A"
-  output 0x1b,0x01
+  output "\e\x01"
