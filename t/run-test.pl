@@ -83,8 +83,11 @@ while( my $line = <$test> ) {
    # Expectations have lowercase
    elsif( $line =~ m/^([a-z]+)/ ) {
       # Convenience formatting
-      if( $line =~ m/^(text|encout|output) (.*)$/ ) {
+      if( $line =~ m/^(text|encout) (.*)$/ ) {
          $line = "$1 " . join ",", map sprintf("%x", $_), eval($2);
+      }
+      elsif( $line =~ m/^(output) (.*)$/ ) {
+         $line = "$1 " . join ",", map sprintf("%x", $_), unpack "C*", eval($2);
       }
       elsif( $line =~ m/^control (.*)$/ ) {
          $line = sprintf "control %02x", eval($1);
