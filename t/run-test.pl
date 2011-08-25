@@ -104,7 +104,7 @@ while( my $line = <$test> ) {
       elsif( $line =~ m/^putglyph (\S+) (.*)$/ ) {
          $line = "putglyph " . join( ",", map sprintf("%x", $_), eval($1) ) . " $2";
       }
-      elsif( $line =~ m/^(?:moverect|erase|damage) / ) {
+      elsif( $line =~ m/^(?:moverect|erase|damage|setmousefunc) / ) {
          # no conversion
       }
       else {
