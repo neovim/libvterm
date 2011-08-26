@@ -97,6 +97,58 @@ static VTermParserCallbacks parser_cbs = {
   .osc     = parser_osc,
 };
 
+/* These callbacks are shared by State and Screen */
+
+static VTermPos state_pos;
+static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
+{
+  state_pos = pos;
+  return 1;
+}
+
+static int want_settermprop = 0;
+static int settermprop(VTermProp prop, VTermValue *val, void *user)
+{
+  if(!want_settermprop)
+    return 1;
+
+  VTermValueType type = vterm_get_prop_type(prop);
+  switch(type) {
+  case VTERM_VALUETYPE_BOOL:
+    printf("settermprop %d %s\n", prop, val->boolean ? "true" : "false");
+    return 1;
+  case VTERM_VALUETYPE_INT:
+    printf("settermprop %d %d\n", prop, val->number);
+    return 1;
+  case VTERM_VALUETYPE_STRING:
+    printf("settermprop %d \"%s\"\n", prop, val->string);
+    return 1;
+  case VTERM_VALUETYPE_COLOR:
+    printf("settermprop %d rgb(%d,%d,%d)\n", prop, val->color.red, val->color.green, val->color.blue);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int want_mouse = 0;
+static VTermMouseFunc mousefunc;
+static void *mousedata;
+static int setmousefunc(VTermMouseFunc func, void *data, void *user)
+{
+  mousefunc = func;
+  mousedata = data;
+
+  if(!want_mouse)
+    return 1;
+
+  printf("setmousefunc %s\n", func ? "func" : "(null)");
+
+  return 1;
+}
+
+/* These callbacks are for State */
+
 static int want_state_putglyph = 0;
 static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
@@ -108,13 +160,6 @@ static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void 
     printf(i ? ",%x" : "%x", chars[i]);
   printf(" %d %d,%d\n", width, pos.row, pos.col);
 
-  return 1;
-}
-
-static VTermPos state_pos;
-static int state_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
-{
-  state_pos = pos;
   return 1;
 }
 
@@ -185,55 +230,14 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
   return 1;
 }
 
-static int want_state_settermprop = 0;
-static int state_settermprop(VTermProp prop, VTermValue *val, void *user)
-{
-  if(!want_state_settermprop)
-    return 1;
-
-  VTermValueType type = vterm_get_prop_type(prop);
-  switch(type) {
-  case VTERM_VALUETYPE_BOOL:
-    printf("settermprop %d %s\n", prop, val->boolean ? "true" : "false");
-    return 1;
-  case VTERM_VALUETYPE_INT:
-    printf("settermprop %d %d\n", prop, val->number);
-    return 1;
-  case VTERM_VALUETYPE_STRING:
-    printf("settermprop %d \"%s\"\n", prop, val->string);
-    return 1;
-  case VTERM_VALUETYPE_COLOR:
-    printf("settermprop %d rgb(%d,%d,%d)\n", prop, val->color.red, val->color.green, val->color.blue);
-    return 1;
-  }
-
-  return 0;
-}
-
-static int want_state_mouse = 0;
-static VTermMouseFunc mousefunc;
-static void *mousedata;
-static int state_setmousefunc(VTermMouseFunc func, void *data, void *user)
-{
-  mousefunc = func;
-  mousedata = data;
-
-  if(!want_state_mouse)
-    return 1;
-
-  printf("setmousefunc %s\n", func ? "func" : "(null)");
-
-  return 1;
-}
-
 VTermStateCallbacks state_cbs = {
   .putglyph     = state_putglyph,
-  .movecursor   = state_movecursor,
+  .movecursor   = movecursor,
   .moverect     = state_moverect,
   .erase        = state_erase,
   .setpenattr   = state_setpenattr,
-  .settermprop  = state_settermprop,
-  .setmousefunc = state_setmousefunc,
+  .settermprop  = settermprop,
+  .setmousefunc = setmousefunc,
 };
 
 static int want_screen_damage = 0;
@@ -297,10 +301,10 @@ int main(int argc, char **argv)
           want_state_erase = 1;
           break;
         case 'p':
-          want_state_settermprop = 1;
+          want_settermprop = 1;
           break;
         case 'M':
-          want_state_mouse = 1;
+          want_mouse = 1;
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
