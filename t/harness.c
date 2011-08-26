@@ -99,10 +99,15 @@ static VTermParserCallbacks parser_cbs = {
 
 /* These callbacks are shared by State and Screen */
 
+static int want_movecursor = 0;
 static VTermPos state_pos;
 static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   state_pos = pos;
+
+  if(want_movecursor)
+    printf("movecursor %d,%d\n", pos.row, pos.col);
+
   return 1;
 }
 
@@ -139,10 +144,8 @@ static int setmousefunc(VTermMouseFunc func, void *data, void *user)
   mousefunc = func;
   mousedata = data;
 
-  if(!want_mouse)
-    return 1;
-
-  printf("setmousefunc %s\n", func ? "func" : "(null)");
+  if(want_mouse)
+    printf("setmousefunc %s\n", func ? "func" : "(null)");
 
   return 1;
 }
@@ -253,7 +256,10 @@ static int screen_damage(VTermRect rect, void *user)
 }
 
 VTermScreenCallbacks screen_cbs = {
-  .damage = screen_damage,
+  .damage       = screen_damage,
+  .movecursor   = movecursor,
+  .settermprop  = settermprop,
+  .setmousefunc = setmousefunc,
 };
 
 int main(int argc, char **argv)
@@ -317,12 +323,25 @@ int main(int argc, char **argv)
       vterm_screen_set_callbacks(screen, &screen_cbs, NULL);
 
       int i = 10;
+      int sense = 1;
       while(line[i] == ' ')
         i++;
       for( ; line[i]; i++)
         switch(line[i]) {
+        case '-':
+          sense = 0;
+          break;
         case 'd':
-          want_screen_damage = 1;
+          want_screen_damage = sense;
+          break;
+        case 'c':
+          want_movecursor = sense;
+          break;
+        case 'p':
+          want_settermprop = 1;
+          break;
+        case 'M':
+          want_mouse = sense;
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSCREEN flag '%c'\n", line[i]);

@@ -108,6 +108,11 @@ typedef struct {
 
 typedef struct {
   int (*damage)(VTermRect rect, void *user);
+  int (*movecursor)(VTermPos pos, VTermPos oldpos, int visible, void *user);
+  int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
+  int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
+  int (*bell)(void *user);
+  int (*resize)(int rows, int cols, void *user);
 } VTermScreenCallbacks;
 
 VTerm *vterm_new(int rows, int cols);
