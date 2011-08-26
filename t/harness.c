@@ -185,6 +185,31 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
   return 1;
 }
 
+static int want_state_settermprop = 0;
+static int state_settermprop(VTermProp prop, VTermValue *val, void *user)
+{
+  if(!want_state_settermprop)
+    return 1;
+
+  VTermValueType type = vterm_get_prop_type(prop);
+  switch(type) {
+  case VTERM_VALUETYPE_BOOL:
+    printf("settermprop %d %s\n", prop, val->boolean ? "true" : "false");
+    return 1;
+  case VTERM_VALUETYPE_INT:
+    printf("settermprop %d %d\n", prop, val->number);
+    return 1;
+  case VTERM_VALUETYPE_STRING:
+    printf("settermprop %d \"%s\"\n", prop, val->string);
+    return 1;
+  case VTERM_VALUETYPE_COLOR:
+    printf("settermprop %d rgb(%d,%d,%d)\n", prop, val->color.red, val->color.green, val->color.blue);
+    return 1;
+  }
+
+  return 0;
+}
+
 static int want_state_mouse = 0;
 static VTermMouseFunc mousefunc;
 static void *mousedata;
@@ -207,6 +232,7 @@ VTermStateCallbacks state_cbs = {
   .moverect     = state_moverect,
   .erase        = state_erase,
   .setpenattr   = state_setpenattr,
+  .settermprop  = state_settermprop,
   .setmousefunc = state_setmousefunc,
 };
 
@@ -269,6 +295,9 @@ int main(int argc, char **argv)
           break;
         case 'e':
           want_state_erase = 1;
+          break;
+        case 'p':
+          want_state_settermprop = 1;
           break;
         case 'M':
           want_state_mouse = 1;
