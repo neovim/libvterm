@@ -95,6 +95,46 @@ static int erase(VTermRect rect, void *user)
   return 1;
 }
 
+static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
+{
+  VTermScreen *screen = user;
+
+  if(screen->callbacks && screen->callbacks->movecursor)
+    return (*screen->callbacks->movecursor)(pos, oldpos, visible, screen->cbdata);
+
+  return 0;
+}
+
+static int settermprop(VTermProp prop, VTermValue *val, void *user)
+{
+  VTermScreen *screen = user;
+
+  if(screen->callbacks && screen->callbacks->settermprop)
+    return (*screen->callbacks->settermprop)(prop, val, screen->cbdata);
+
+  return 0;
+}
+
+static int setmousefunc(VTermMouseFunc func, void *data, void *user)
+{
+  VTermScreen *screen = user;
+
+  if(screen->callbacks && screen->callbacks->setmousefunc)
+    return (*screen->callbacks->setmousefunc)(func, data, screen->cbdata);
+
+  return 0;
+}
+
+static int bell(void *user)
+{
+  VTermScreen *screen = user;
+
+  if(screen->callbacks && screen->callbacks->bell)
+    return (*screen->callbacks->bell)(screen->cbdata);
+
+  return 0;
+}
+
 static int resize(int new_rows, int new_cols, void *user)
 {
   VTermScreen *screen = user;
@@ -139,14 +179,21 @@ static int resize(int new_rows, int new_cols, void *user)
   screen->cols = new_cols;
   screen->buffer = new_buffer;
 
+  if(screen->callbacks && screen->callbacks->resize)
+    return (*screen->callbacks->resize)(new_rows, new_cols, screen->cbdata);
+
   return 1;
 }
 
 static VTermStateCallbacks state_cbs = {
-  .putglyph = &putglyph,
-  .moverect = &moverect,
-  .erase    = &erase,
-  .resize   = &resize,
+  .putglyph     = &putglyph,
+  .movecursor   = &movecursor,
+  .moverect     = &moverect,
+  .erase        = &erase,
+  .settermprop  = &settermprop,
+  .setmousefunc = &setmousefunc,
+  .bell         = &bell,
+  .resize       = &resize,
 };
 
 static VTermScreen *screen_new(VTerm *vt)
