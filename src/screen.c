@@ -7,10 +7,11 @@
 #define UNICODE_SPACE 0x20
 #define UNICODE_LINEFEED 0x13
 
+/* Internal representation of a screen cell */
 typedef struct
 {
   uint32_t chars[MAX_CHARS_PER_CELL];
-} VTermScreenCell;
+} ScreenCell;
 
 struct _VTermScreen
 {
@@ -21,10 +22,10 @@ struct _VTermScreen
 
   int rows;
   int cols;
-  VTermScreenCell *buffer;
+  ScreenCell *buffer;
 };
 
-static inline VTermScreenCell *getcell(VTermScreen *screen, int row, int col)
+static inline ScreenCell *getcell(VTermScreen *screen, int row, int col)
 {
   /* TODO: Bounds checking */
   return screen->buffer + (screen->cols * row) + col;
@@ -39,7 +40,7 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
 static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
   VTermScreen *screen = user;
-  VTermScreenCell *cell = getcell(screen, pos.row, pos.col);
+  ScreenCell *cell = getcell(screen, pos.row, pos.col);
   int i;
 
   for(i = 0; i < MAX_CHARS_PER_CELL && chars[i]; i++)
@@ -65,8 +66,8 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 static void copycell(VTermPos dest, VTermPos src, void *user)
 {
   VTermScreen *screen = user;
-  VTermScreenCell *destcell = getcell(screen, dest.row, dest.col);
-  VTermScreenCell *srccell = getcell(screen, src.row, src.col);
+  ScreenCell *destcell = getcell(screen, dest.row, dest.col);
+  ScreenCell *srccell = getcell(screen, src.row, src.col);
 
   *destcell = *srccell;
 }
@@ -143,11 +144,11 @@ static int resize(int new_rows, int new_cols, void *user)
 {
   VTermScreen *screen = user;
 
-  VTermScreenCell *new_buffer = g_new0(VTermScreenCell, new_rows * new_cols);
+  ScreenCell *new_buffer = g_new0(ScreenCell, new_rows * new_cols);
 
   for(int row = 0; row < new_rows; row++) {
     for(int col = 0; col < new_cols; col++) {
-      VTermScreenCell *new_cell = new_buffer + row*new_cols + col;
+      ScreenCell *new_cell = new_buffer + row*new_cols + col;
 
       if(row < screen->rows && col < screen->cols)
         *new_cell = *(getcell(screen, row, col));
@@ -232,7 +233,7 @@ size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, 
 
   for(int row = rect.start_row; row < rect.end_row; row++) {
     for(int col = rect.start_col; col < rect.end_col; col++) {
-      VTermScreenCell *cell = getcell(screen, row, col);
+      ScreenCell *cell = getcell(screen, row, col);
 
       if(cell->chars[0] == 0)
         // Erased cell, might need a space
