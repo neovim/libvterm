@@ -8,6 +8,7 @@ WANTSCREEN
 RESET
 PUSH "\xC3\x81\xC3\xA9"
   ?screen_chars 0,0,1,80 = 0xc1,0xe9
+  ?screen_cell 0,0 = {0xc1} width=1
 
 !Wide char
 # U+FF10 = 0xEF 0xBC 0x90  name: FULLWIDTH DIGIT ZERO
@@ -15,6 +16,7 @@ RESET
 PUSH "0123\e[H"
 PUSH "\xEF\xBC\x90"
   ?screen_chars 0,0,1,80 = 0xff10,0x32,0x33
+  ?screen_cell 0,0 = {0xff10} width=2
 
 !Combining char
 # U+0301 = 0xCC 0x81  name: COMBINING ACUTE
@@ -22,3 +24,4 @@ RESET
 PUSH "0123\e[H"
 PUSH "e\xCC\x81"
   ?screen_chars 0,0,1,80 = 0x65,0x301,0x31,0x32,0x33
+  ?screen_cell 0,0 = {0x65,0x301} width=1

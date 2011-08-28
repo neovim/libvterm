@@ -261,6 +261,23 @@ size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, 
   return outpos;
 }
 
+/* Copy internal to external representation of a screen cell */
+void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell)
+{
+  ScreenCell *intcell = getcell(screen, pos.row, pos.col);
+
+  for(int i = 0; ; i++) {
+    cell->chars[i] = intcell->chars[i];
+    if(!intcell->chars[i])
+      break;
+  }
+
+  if(getcell(screen, pos.row, pos.col + 1)->chars[0] == (uint32_t)-1)
+    cell->width = 2;
+  else
+    cell->width = 1;
+}
+
 VTermScreen *vterm_initialise_screen(VTerm *vt)
 {
   if(vt->screen)

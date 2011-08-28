@@ -139,6 +139,13 @@ void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks 
 void   vterm_screen_reset(VTermScreen *screen);
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
 
+typedef struct {
+  uint32_t chars[6];
+  char     width;
+} VTermScreenCell;
+
+void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
+
 void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 
