@@ -111,6 +111,19 @@ static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
   return 1;
 }
 
+static int want_moverect = 0;
+static int moverect(VTermRect dest, VTermRect src, void *user)
+{
+  if(!want_moverect)
+    return 0;
+
+  printf("moverect %d..%d,%d..%d -> %d..%d,%d..%d\n",
+      src.start_row,  src.end_row,  src.start_col,  src.end_col,
+      dest.start_row, dest.end_row, dest.start_col, dest.end_col);
+
+  return 1;
+}
+
 static int want_settermprop = 0;
 static int settermprop(VTermProp prop, VTermValue *val, void *user)
 {
@@ -162,19 +175,6 @@ static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void 
   for(int i = 0; chars[i]; i++)
     printf(i ? ",%x" : "%x", chars[i]);
   printf(" %d %d,%d\n", width, pos.row, pos.col);
-
-  return 1;
-}
-
-static int want_state_moverect = 0;
-static int state_moverect(VTermRect dest, VTermRect src, void *user)
-{
-  if(!want_state_moverect)
-    return 1;
-
-  printf("moverect %d..%d,%d..%d -> %d..%d,%d..%d\n",
-      src.start_row,  src.end_row,  src.start_col,  src.end_col,
-      dest.start_row, dest.end_row, dest.start_col, dest.end_col);
 
   return 1;
 }
@@ -236,7 +236,7 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
 VTermStateCallbacks state_cbs = {
   .putglyph     = state_putglyph,
   .movecursor   = movecursor,
-  .moverect     = state_moverect,
+  .moverect     = moverect,
   .erase        = state_erase,
   .setpenattr   = state_setpenattr,
   .settermprop  = settermprop,
@@ -257,6 +257,7 @@ static int screen_damage(VTermRect rect, void *user)
 
 VTermScreenCallbacks screen_cbs = {
   .damage       = screen_damage,
+  .moverect     = moverect,
   .movecursor   = movecursor,
   .settermprop  = settermprop,
   .setmousefunc = setmousefunc,
@@ -301,7 +302,7 @@ int main(int argc, char **argv)
           want_state_putglyph = 1;
           break;
         case 'm':
-          want_state_moverect = 1;
+          want_moverect = 1;
           break;
         case 'e':
           want_state_erase = 1;
@@ -333,6 +334,9 @@ int main(int argc, char **argv)
           break;
         case 'd':
           want_screen_damage = sense;
+          break;
+        case 'm':
+          want_moverect = 1;
           break;
         case 'c':
           want_movecursor = sense;

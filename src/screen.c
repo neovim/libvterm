@@ -77,6 +77,10 @@ static int moverect(VTermRect dest, VTermRect src, void *user)
 
   vterm_copy_cells(dest, src, &copycell, user);
 
+  if(screen->callbacks && screen->callbacks->moverect)
+    if((*screen->callbacks->moverect)(dest, src, screen->cbdata))
+      return 1;
+
   damagerect(screen, dest);
 
   return 1;
