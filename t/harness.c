@@ -530,6 +530,23 @@ int main(int argc, char **argv)
           free(chars);
         }
       }
+      else if(strstartswith(line, "?screen_cell ")) {
+        char *linep = line + 12;
+        VTermPos pos;
+        while(linep[0] == ' ')
+          linep++;
+        if(sscanf(linep, "%d,%d\n", &pos.row, &pos.col) < 2) {
+          printf("! screen_cell unrecognised input\n");
+          goto abort_line;
+        }
+        VTermScreenCell cell;
+        vterm_screen_get_cell(screen, pos, &cell);
+        printf("{");
+        for(int i = 0; cell.chars[i]; i++) {
+          printf("%s0x%x", i ? "," : "", cell.chars[i]);
+        }
+        printf("} width=%d\n", cell.width);
+      }
       else
         printf("?\n");
 
