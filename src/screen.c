@@ -272,7 +272,8 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
       break;
   }
 
-  if(getcell(screen, pos.row, pos.col + 1)->chars[0] == (uint32_t)-1)
+  if(pos.col < (screen->cols - 1) &&
+     getcell(screen, pos.row, pos.col + 1)->chars[0] == (uint32_t)-1)
     cell->width = 2;
   else
     cell->width = 1;
