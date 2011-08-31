@@ -126,20 +126,6 @@ static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
   return 0;
 }
 
-static int initpen(void *user)
-{
-  VTermScreen *screen = user;
-
-  screen->pen.bold      = 0;
-  screen->pen.underline = 0;
-  screen->pen.italic    = 0;
-  screen->pen.blink     = 0;
-  screen->pen.reverse   = 0;
-  screen->pen.font      = 0;
-
-  return 1;
-}
-
 static int setpenattr(VTermAttr attr, VTermValue *val, void *user)
 {
   VTermScreen *screen = user;
@@ -257,7 +243,6 @@ static VTermStateCallbacks state_cbs = {
   .movecursor   = &movecursor,
   .moverect     = &moverect,
   .erase        = &erase,
-  .initpen      = &initpen,
   .setpenattr   = &setpenattr,
   .settermprop  = &settermprop,
   .setmousefunc = &setmousefunc,
