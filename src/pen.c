@@ -146,6 +146,19 @@ static int setpenattr_col_palette(VTermState *state, VTermAttr attr, const long 
   return eaten + 1; // we ate palette
 }
 
+void vterm_state_resetpen(VTermState *state)
+{
+  state->pen.bold = 0;      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
+  state->pen.underline = 0; setpenattr_int( state, VTERM_ATTR_UNDERLINE, 0);
+  state->pen.italic = 0;    setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
+  state->pen.blink = 0;     setpenattr_bool(state, VTERM_ATTR_BLINK, 0);
+  state->pen.reverse = 0;   setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
+  state->pen.font = 0;      setpenattr_int( state, VTERM_ATTR_FONT, 0);
+
+  setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
+  setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
+}
+
 void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
@@ -161,15 +174,7 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
     switch(arg = CSI_ARG(args[argi])) {
     case CSI_ARG_MISSING:
     case 0: // Reset
-      state->pen.bold = 0;      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
-      state->pen.underline = 0; setpenattr_int( state, VTERM_ATTR_UNDERLINE, 0);
-      state->pen.italic = 0;    setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
-      state->pen.blink = 0;     setpenattr_bool(state, VTERM_ATTR_BLINK, 0);
-      state->pen.reverse = 0;   setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
-      state->pen.font = 0;      setpenattr_int( state, VTERM_ATTR_FONT, 0);
-
-      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
-      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
+      vterm_state_resetpen(state);
       break;
 
     case 1: // Bold on
