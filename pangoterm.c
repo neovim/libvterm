@@ -31,6 +31,7 @@
 
 int master;
 VTerm *vt;
+VTermScreen *vts;
 
 int cell_width_pango;
 int cell_width;
@@ -54,13 +55,6 @@ GdkPixmap *termbuffer;
 GdkGC *termbuffer_gc;
 
 GdkGC *cursor_gc;
-
-typedef struct {
-  GdkColor fg_col;
-  GdkColor bg_col;
-} term_cell;
-
-term_cell **cells;
 
 static char *default_fg = "gray90";
 static char *default_bg = "black";
@@ -101,10 +95,16 @@ VTermMouseFunc mousefunc;
 void *mousedata;
 
 typedef struct {
+  struct {
+    unsigned int bold      : 1;
+    unsigned int underline : 2;
+    unsigned int italic    : 1;
+    unsigned int font      : 4;
+  } attrs;
   GdkColor fg_col;
   GdkColor bg_col;
   gboolean reverse;
-  PangoAttrList *attrs;
+  PangoAttrList *pangoattrs;
   PangoLayout *layout;
 } term_pen;
 
@@ -194,8 +194,8 @@ static void flush_glyphs(void)
 
   pango_layout_set_text(layout, glyphs->str, glyphs->len);
 
-  if(glyph_pen->attrs)
-    pango_layout_set_attributes(layout, glyph_pen->attrs);
+  if(glyph_pen->pangoattrs)
+    pango_layout_set_attributes(layout, glyph_pen->pangoattrs);
 
   // Now adjust all the widths
   PangoLayoutIter *iter = pango_layout_get_iter(layout);
@@ -341,8 +341,7 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
   term_pen *pen = user;
 
-  cells[pos.row][pos.col].fg_col = pen->reverse ? pen->bg_col : pen->fg_col;
-  GdkColor bg = cells[pos.row][pos.col].bg_col = pen->reverse ? pen->fg_col : pen->bg_col;
+  GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
 
   gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
 
@@ -421,42 +420,6 @@ gboolean cursor_blink(gpointer data)
   return TRUE;
 }
 
-static void copycell(VTermPos destpos, VTermPos srcpos, void *user)
-{
-  cells[destpos.row][destpos.col].fg_col = cells[srcpos.row][srcpos.col].fg_col;
-  cells[destpos.row][destpos.col].bg_col = cells[srcpos.row][srcpos.col].bg_col;
-}
-
-int term_moverect(VTermRect dest, VTermRect src, void *user)
-{
-  flush_glyphs();
-
-  vterm_copy_cells(dest, src, &copycell, user);
-
-  GdkRectangle destarea = {
-    .x      = dest.start_col * cell_width,
-    .y      = dest.start_row * cell_height,
-    .width  = (dest.end_col - dest.start_col) * cell_width,
-    .height = (dest.end_row - dest.start_row) * cell_height,
-  };
-
-  gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
-
-  gdk_draw_drawable(termbuffer,
-      termbuffer_gc,
-      termbuffer,
-      src.start_col * cell_width,
-      src.start_row * cell_height,
-      destarea.x,
-      destarea.y,
-      destarea.width,
-      destarea.height);
-
-  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
-
-  return 1;
-}
-
 int term_erase(VTermRect rect, void *user)
 {
   flush_glyphs();
@@ -465,12 +428,6 @@ int term_erase(VTermRect rect, void *user)
 
   GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
   gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
-
-  int row, col;
-  for(row = rect.start_row; row < rect.end_row; row++)
-    for(col = rect.start_col; col < rect.end_col; col++) {
-      cells[row][col].bg_col = bg;
-    }
 
   GdkRectangle destarea = {
     .x      = rect.start_col * cell_width,
@@ -494,64 +451,104 @@ int term_erase(VTermRect rect, void *user)
   return 1;
 }
 
-int term_setpenattr(VTermAttr attr, VTermValue *val, void *user)
+static void chpen(VTermScreenCell *cell, void *user)
 {
-  flush_glyphs();
+  GdkColor col;
 
 #define ADDATTR(a) \
   do { \
     PangoAttribute *newattr = (a); \
     newattr->start_index = 0; \
     newattr->end_index = -1; \
-    pango_attr_list_change(pen->attrs, newattr); \
+    pango_attr_list_change(pen->pangoattrs, newattr); \
   } while(0)
 
   term_pen *pen = user;
 
-  switch(attr) {
-  case VTERM_ATTR_BOLD:
-    ADDATTR(pango_attr_weight_new(val->boolean ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
-    break;
-
-  case VTERM_ATTR_UNDERLINE:
-    ADDATTR(pango_attr_underline_new(val->number == 1 ? PANGO_UNDERLINE_SINGLE :
-                                     val->number == 2 ? PANGO_UNDERLINE_DOUBLE :
-                                                        PANGO_UNDERLINE_NONE));
-    break;
-
-  case VTERM_ATTR_ITALIC:
-    ADDATTR(pango_attr_style_new(val->boolean ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
-    break;
-
-  case VTERM_ATTR_REVERSE:
-    pen->reverse = val->boolean;
-    break;
-
-  case VTERM_ATTR_FONT:
-    if(val->number == 0 || val->number > sizeof(alt_fonts)/sizeof(alt_fonts[0]))
-      ADDATTR(pango_attr_family_new(default_font));
-    else
-      ADDATTR(pango_attr_family_new(alt_fonts[val->number - 1]));
-    break;
-
-  case VTERM_ATTR_FOREGROUND:
-    // Upscale 8->16bit
-    pen->fg_col.red   = 257 * val->color.red;
-    pen->fg_col.green = 257 * val->color.green;
-    pen->fg_col.blue  = 257 * val->color.blue;
-    break;
-
-  case VTERM_ATTR_BACKGROUND:
-    // Upscale 8->16bit
-    pen->bg_col.red   = 257 * val->color.red;
-    pen->bg_col.green = 257 * val->color.green;
-    pen->bg_col.blue  = 257 * val->color.blue;
-    break;
-
-  default:
-    return 0;
+  if(cell->attrs.bold != pen->attrs.bold) {
+    int bold = pen->attrs.bold = cell->attrs.bold;
+    flush_glyphs();
+    ADDATTR(pango_attr_weight_new(bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
   }
 
+  if(cell->attrs.underline != pen->attrs.underline) {
+    int underline = pen->attrs.underline = cell->attrs.underline;
+    flush_glyphs();
+    ADDATTR(pango_attr_underline_new(underline == 1 ? PANGO_UNDERLINE_SINGLE :
+                                     underline == 2 ? PANGO_UNDERLINE_DOUBLE :
+                                                      PANGO_UNDERLINE_NONE));
+  }
+
+  if(cell->attrs.italic != pen->attrs.italic) {
+    int italic = pen->attrs.italic = cell->attrs.italic;
+    flush_glyphs();
+    ADDATTR(pango_attr_style_new(italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
+  }
+
+  if(cell->attrs.reverse != pen->reverse) {
+    flush_glyphs();
+    pen->reverse = cell->attrs.reverse;
+  }
+
+  if(cell->attrs.font != pen->attrs.font) {
+    int font = pen->attrs.font = cell->attrs.font;
+    flush_glyphs();
+    if(font == 0 || font > sizeof(alt_fonts)/sizeof(alt_fonts[0]))
+      ADDATTR(pango_attr_family_new(default_font));
+    else
+      ADDATTR(pango_attr_family_new(alt_fonts[font - 1]));
+  }
+
+  // Upscale 8->16bit
+  col.red   = 257 * cell->fg.red;
+  col.green = 257 * cell->fg.green;
+  col.blue  = 257 * cell->fg.blue;
+
+  if(col.red   != pen->fg_col.red || col.green != pen->fg_col.green || col.blue  != pen->fg_col.blue) {
+    flush_glyphs();
+    pen->fg_col = col;
+  }
+
+  col.red   = 257 * cell->bg.red;
+  col.green = 257 * cell->bg.green;
+  col.blue  = 257 * cell->bg.blue;
+
+  if(col.red   != pen->bg_col.red || col.green != pen->bg_col.green || col.blue  != pen->bg_col.blue) {
+    flush_glyphs();
+    pen->bg_col = col;
+  }
+}
+
+int term_damage(VTermRect rect, void *user)
+{
+  for(int row = rect.start_row; row < rect.end_row; row++) {
+    for(int col = rect.start_col; col < rect.end_col; ) {
+      VTermPos pos = {
+        .row = row,
+        .col = col,
+      };
+
+      VTermScreenCell cell;
+      vterm_screen_get_cell(vts, pos, &cell);
+
+      chpen(&cell, user);
+
+      if(cell.chars[0] == 0) {
+        VTermRect here = {
+          .start_row = row,
+          .end_row   = row + 1,
+          .start_col = col,
+          .end_col   = col + 1,
+        };
+        term_erase(here, user);
+      }
+      else {
+        term_putglyph(cell.chars, cell.width, pos, user);
+      }
+
+      col += cell.width;
+    }
+  }
   return 1;
 }
 
@@ -629,12 +626,9 @@ int term_bell(void *user)
   return 1;
 }
 
-static VTermStateCallbacks cb = {
-  .putglyph     = term_putglyph,
+static VTermScreenCallbacks cb = {
+  .damage       = term_damage,
   .movecursor   = term_movecursor,
-  .moverect     = term_moverect,
-  .erase        = term_erase,
-  .setpenattr   = term_setpenattr,
   .settermprop  = term_settermprop,
   .setmousefunc = term_setmousefunc,
   .bell         = term_bell,
@@ -720,14 +714,14 @@ int main(int argc, char *argv[])
   gtk_widget_realize(window);
 
   term_pen *pen = g_new0(term_pen, 1);
-  pen->attrs = pango_attr_list_new();
+  pen->pangoattrs = pango_attr_list_new();
   pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
   pango_layout_set_font_description(pen->layout, fontdesc);
   gdk_color_parse(default_fg, &pen->fg_col);
   gdk_color_parse(default_bg, &pen->bg_col);
 
-  VTermState *vts = vterm_obtain_state(vt);
-  vterm_state_set_callbacks(vts, &cb, pen);
+  vts = vterm_initialise_screen(vt);
+  vterm_screen_set_callbacks(vts, &cb, pen);
 
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
@@ -746,13 +740,6 @@ int main(int argc, char *argv[])
   pango_font_description_set_size(fontdesc, default_size * PANGO_SCALE);
 
   pango_context_set_font_description(pctx, fontdesc);
-
-  cells = g_new0(term_cell*, size.ws_row);
-
-  int row;
-  for(row = 0; row < size.ws_row; row++) {
-    cells[row] = g_new0(term_cell, size.ws_col);
-  }
 
   PangoFontMetrics *metrics = pango_context_get_metrics(pctx,
       pango_context_get_font_description(pctx), pango_context_get_language(pctx));
@@ -787,8 +774,6 @@ int main(int argc, char *argv[])
   GdkColor col;
   gdk_color_parse(cursor_col, &col);
   gdk_gc_set_rgb_fg_color(cursor_gc, &col);
-
-  vterm_state_reset(vts);
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {
