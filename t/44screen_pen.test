@@ -34,3 +34,8 @@ PUSH "\e[31mG\e[m"
 !Background
 PUSH "\e[42mH\e[m"
   ?screen_cell 0,7 = {0x48} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,255,0)
+
+!EL sets reverse and colours to end of line
+PUSH "\e[H\e[7;33;44m\e[K"
+  ?screen_cell 0,0  = {} width=1 attrs={R} fg=rgb(255,255,0) bg=rgb(64,64,255)
+  ?screen_cell 0,79 = {} width=1 attrs={R} fg=rgb(255,255,0) bg=rgb(64,64,255)
