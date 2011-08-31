@@ -111,8 +111,11 @@ static int erase(VTermRect rect, void *user)
   VTermScreen *screen = user;
 
   for(int row = rect.start_row; row < rect.end_row; row++)
-    for(int col = rect.start_col; col < rect.end_col; col++)
-      getcell(screen, row, col)->chars[0] = 0;
+    for(int col = rect.start_col; col < rect.end_col; col++) {
+      ScreenCell *cell = getcell(screen, row, col);
+      cell->chars[0] = 0;
+      cell->pen = screen->pen;
+    }
 
   damagerect(screen, rect);
 
