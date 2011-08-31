@@ -142,6 +142,14 @@ size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, 
 typedef struct {
   uint32_t chars[6];
   char     width;
+  struct {
+    unsigned int bold      : 1;
+    unsigned int underline : 2;
+    unsigned int italic    : 1;
+    unsigned int blink     : 1;
+    unsigned int reverse   : 1;
+    unsigned int font      : 4; /* 0 to 9 */
+  } attrs;
 } VTermScreenCell;
 
 void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
