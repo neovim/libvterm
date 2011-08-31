@@ -45,3 +45,13 @@ PUSH "Hello\e[CWorld"
 RESET
 PUSH "Hello\r\nWorld"
   ?screen_chars 0,0,2,80 = 0x48,0x65,0x6c,0x6c,0x6f,0x13,0x57,0x6f,0x72,0x6c,0x64
+
+!Altscreen
+RESET
+PUSH "P"
+  ?screen_chars 0,0,1,80 = 0x50
+PUSH "\e[?1049h\e[2K\e[H"
+PUSH "A"
+  ?screen_chars 0,0,1,80 = 0x41
+PUSH "\e[?1049l"
+  ?screen_chars 0,0,1,80 = 0x50

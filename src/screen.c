@@ -37,6 +37,11 @@ struct _VTermScreen
 
   int rows;
   int cols;
+
+  /* Primary and Altscreen. buffers[1] is lazily allocated as needed */
+  ScreenCell *buffers[2];
+
+  /* buffer will == buffers[0] or buffers[1], depending on altscreen */
   ScreenCell *buffer;
 
   ScreenPen pen;
@@ -46,6 +51,27 @@ static inline ScreenCell *getcell(VTermScreen *screen, int row, int col)
 {
   /* TODO: Bounds checking */
   return screen->buffer + (screen->cols * row) + col;
+}
+
+static ScreenCell *realloc_buffer(VTermScreen *screen, ScreenCell *buffer, int new_rows, int new_cols)
+{
+  ScreenCell *new_buffer = g_new0(ScreenCell, new_rows * new_cols);
+
+  for(int row = 0; row < new_rows; row++) {
+    for(int col = 0; col < new_cols; col++) {
+      ScreenCell *new_cell = new_buffer + row*new_cols + col;
+
+      if(buffer && row < screen->rows && col < screen->cols)
+        *new_cell = buffer[row * screen->cols + col];
+      else
+        new_cell->chars[0] = 0;
+    }
+  }
+
+  if(buffer)
+    g_free(buffer);
+
+  return new_buffer;
 }
 
 static void damagerect(VTermScreen *screen, VTermRect rect)
@@ -170,6 +196,26 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
 {
   VTermScreen *screen = user;
 
+  switch(prop) {
+  case VTERM_PROP_ALTSCREEN:
+    {
+      VTermRect rect = {
+        .start_row = 0,
+        .end_row   = screen->rows,
+        .start_col = 0,
+        .end_col   = screen->cols,
+      };
+      if(val->boolean && !screen->buffers[1])
+        screen->buffers[1] = realloc_buffer(screen, NULL, screen->rows, screen->cols);
+
+      screen->buffer = val->boolean ? screen->buffers[1] : screen->buffers[0];
+      damagerect(screen, rect);
+    }
+    break;
+  default:
+    ; /* ignore */
+  }
+
   if(screen->callbacks && screen->callbacks->settermprop)
     return (*screen->callbacks->settermprop)(prop, val, screen->cbdata);
 
@@ -200,21 +246,13 @@ static int resize(int new_rows, int new_cols, void *user)
 {
   VTermScreen *screen = user;
 
-  ScreenCell *new_buffer = g_new0(ScreenCell, new_rows * new_cols);
+  int is_altscreen = (screen->buffers[1] && screen->buffer == screen->buffers[1]);
 
-  for(int row = 0; row < new_rows; row++) {
-    for(int col = 0; col < new_cols; col++) {
-      ScreenCell *new_cell = new_buffer + row*new_cols + col;
+  screen->buffers[0] = realloc_buffer(screen, screen->buffers[0], new_rows, new_cols);
+  if(screen->buffers[1])
+    screen->buffers[1] = realloc_buffer(screen, screen->buffers[1], new_rows, new_cols);
 
-      if(row < screen->rows && col < screen->cols)
-        *new_cell = *(getcell(screen, row, col));
-      else
-        new_cell->chars[0] = 0;
-    }
-  }
-
-  if(screen->buffer)
-    free(screen->buffer);
+  screen->buffer = is_altscreen ? screen->buffers[1] : screen->buffers[0];
 
   if(new_cols > screen->cols) {
     VTermRect rect = {
@@ -238,7 +276,6 @@ static int resize(int new_rows, int new_cols, void *user)
 
   screen->rows = new_rows;
   screen->cols = new_cols;
-  screen->buffer = new_buffer;
 
   if(screen->callbacks && screen->callbacks->resize)
     return (*screen->callbacks->resize)(new_rows, new_cols, screen->cbdata);
@@ -268,7 +305,8 @@ static VTermScreen *screen_new(VTerm *vt)
   screen->vt = vt;
 
   screen->cols = 0;
-  screen->buffer = NULL;
+
+  screen->buffers[0] = screen->buffers[1] = NULL;
 
   resize(rows, cols, screen);
 
