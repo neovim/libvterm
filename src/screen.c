@@ -16,6 +16,9 @@ typedef struct
   unsigned int blink     : 1;
   unsigned int reverse   : 1;
   unsigned int font      : 4; /* 0 to 9 */
+
+  /* After the bitfield */
+  VTermColor   fg, bg;
 } ScreenPen;
 
 /* Internal representation of a screen cell */
@@ -150,9 +153,11 @@ static int setpenattr(VTermAttr attr, VTermValue *val, void *user)
     screen->pen.font = val->number;
     return 1;
   case VTERM_ATTR_FOREGROUND:
+    screen->pen.fg = val->color;
+    return 1;
   case VTERM_ATTR_BACKGROUND:
-    /* TODO */
-    return 0;
+    screen->pen.bg = val->color;
+    return 1;
   }
 
   return 0;
@@ -327,6 +332,9 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
   cell->attrs.blink     = intcell->pen.blink;
   cell->attrs.reverse   = intcell->pen.reverse;
   cell->attrs.font      = intcell->pen.font;
+
+  cell->fg = intcell->pen.fg;
+  cell->bg = intcell->pen.bg;
 
   if(pos.col < (screen->cols - 1) &&
      getcell(screen, pos.row, pos.col + 1)->chars[0] == (uint32_t)-1)

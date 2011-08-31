@@ -150,6 +150,7 @@ typedef struct {
     unsigned int reverse   : 1;
     unsigned int font      : 4; /* 0 to 9 */
   } attrs;
+  VTermColor fg, bg;
 } VTermScreenCell;
 
 void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
