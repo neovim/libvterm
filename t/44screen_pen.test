@@ -1,0 +1,28 @@
+INIT
+WANTSCREEN
+
+RESET
+
+!Plain
+PUSH "A"
+  ?screen_cell 0,0 = {0x41} width=1 attrs={}
+
+!Bold
+PUSH "\e[1mB"
+  ?screen_cell 0,1 = {0x42} width=1 attrs={B}
+
+!Italic
+PUSH "\e[3mC"
+  ?screen_cell 0,2 = {0x43} width=1 attrs={BI}
+
+!Underline
+PUSH "\e[4mD"
+  ?screen_cell 0,3 = {0x44} width=1 attrs={BU1I}
+
+!Reset
+PUSH "\e[mE"
+  ?screen_cell 0,4 = {0x45} width=1 attrs={}
+
+!Font
+PUSH "\e[11mF\e[m"
+  ?screen_cell 0,5 = {0x46} width=1 attrs={F1}

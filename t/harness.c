@@ -545,7 +545,14 @@ int main(int argc, char **argv)
         for(int i = 0; cell.chars[i]; i++) {
           printf("%s0x%x", i ? "," : "", cell.chars[i]);
         }
-        printf("} width=%d\n", cell.width);
+        printf("} width=%d attrs={", cell.width);
+        if(cell.attrs.bold)      printf("B");
+        if(cell.attrs.underline) printf("U%d", cell.attrs.underline);
+        if(cell.attrs.italic)    printf("I");
+        if(cell.attrs.blink)     printf("K");
+        if(cell.attrs.reverse)   printf("R");
+        if(cell.attrs.font)      printf("F%d", cell.attrs.font);
+        printf("}\n");
       }
       else
         printf("?\n");

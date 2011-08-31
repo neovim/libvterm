@@ -45,7 +45,7 @@ MAN3DIR=$(MANDIR)/man3
 
 all: pangoterm
 
-pangoterm: pangoterm.c $(LIBRARY)
+pango%: pango%.c $(LIBRARY)
 	@echo LINK $@
 	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
 

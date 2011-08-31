@@ -7,10 +7,22 @@
 #define UNICODE_SPACE 0x20
 #define UNICODE_LINEFEED 0x13
 
+/* State of the pen at some moment in time, also used in a cell */
+typedef struct
+{
+  unsigned int bold      : 1;
+  unsigned int underline : 2;
+  unsigned int italic    : 1;
+  unsigned int blink     : 1;
+  unsigned int reverse   : 1;
+  unsigned int font      : 4; /* 0 to 9 */
+} ScreenPen;
+
 /* Internal representation of a screen cell */
 typedef struct
 {
   uint32_t chars[MAX_CHARS_PER_CELL];
+  ScreenPen pen;
 } ScreenCell;
 
 struct _VTermScreen
@@ -23,6 +35,8 @@ struct _VTermScreen
   int rows;
   int cols;
   ScreenCell *buffer;
+
+  ScreenPen pen;
 };
 
 static inline ScreenCell *getcell(VTermScreen *screen, int row, int col)
@@ -43,8 +57,10 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   ScreenCell *cell = getcell(screen, pos.row, pos.col);
   int i;
 
-  for(i = 0; i < MAX_CHARS_PER_CELL && chars[i]; i++)
+  for(i = 0; i < MAX_CHARS_PER_CELL && chars[i]; i++) {
     cell->chars[i] = chars[i];
+    cell->pen = screen->pen;
+  }
   if(i < MAX_CHARS_PER_CELL)
     cell->chars[i] = 0;
 
@@ -106,6 +122,52 @@ static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 
   if(screen->callbacks && screen->callbacks->movecursor)
     return (*screen->callbacks->movecursor)(pos, oldpos, visible, screen->cbdata);
+
+  return 0;
+}
+
+static int initpen(void *user)
+{
+  VTermScreen *screen = user;
+
+  screen->pen.bold      = 0;
+  screen->pen.underline = 0;
+  screen->pen.italic    = 0;
+  screen->pen.blink     = 0;
+  screen->pen.reverse   = 0;
+  screen->pen.font      = 0;
+
+  return 1;
+}
+
+static int setpenattr(VTermAttr attr, VTermValue *val, void *user)
+{
+  VTermScreen *screen = user;
+
+  switch(attr) {
+  case VTERM_ATTR_BOLD:
+    screen->pen.bold = val->boolean;
+    return 1;
+  case VTERM_ATTR_UNDERLINE:
+    screen->pen.underline = val->number;
+    return 1;
+  case VTERM_ATTR_ITALIC:
+    screen->pen.italic = val->boolean;
+    return 1;
+  case VTERM_ATTR_BLINK:
+    screen->pen.blink = val->boolean;
+    return 1;
+  case VTERM_ATTR_REVERSE:
+    screen->pen.reverse = val->boolean;
+    return 1;
+  case VTERM_ATTR_FONT:
+    screen->pen.font = val->number;
+    return 1;
+  case VTERM_ATTR_FOREGROUND:
+  case VTERM_ATTR_BACKGROUND:
+    /* TODO */
+    return 0;
+  }
 
   return 0;
 }
@@ -195,6 +257,8 @@ static VTermStateCallbacks state_cbs = {
   .movecursor   = &movecursor,
   .moverect     = &moverect,
   .erase        = &erase,
+  .initpen      = &initpen,
+  .setpenattr   = &setpenattr,
   .settermprop  = &settermprop,
   .setmousefunc = &setmousefunc,
   .bell         = &bell,
@@ -271,6 +335,13 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
     if(!intcell->chars[i])
       break;
   }
+
+  cell->attrs.bold      = intcell->pen.bold;
+  cell->attrs.underline = intcell->pen.underline;
+  cell->attrs.italic    = intcell->pen.italic;
+  cell->attrs.blink     = intcell->pen.blink;
+  cell->attrs.reverse   = intcell->pen.reverse;
+  cell->attrs.font      = intcell->pen.font;
 
   if(pos.col < (screen->cols - 1) &&
      getcell(screen, pos.row, pos.col + 1)->chars[0] == (uint32_t)-1)
