@@ -970,6 +970,8 @@ void vterm_state_reset(VTermState *state)
   if(state->callbacks && state->callbacks->initpen)
     (*state->callbacks->initpen)(state->cbdata);
 
+  vterm_state_resetpen(state);
+
   VTermRect rect = { 0, state->rows, 0, state->cols };
   erase(state, rect);
 
