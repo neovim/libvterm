@@ -46,11 +46,6 @@ guint cursor_timer_id;
 
 GtkWidget *termwin;
 
-// Actual stores of Pixmaps
-GdkPixmap *termbuffer_main;
-GdkPixmap *termbuffer_alternate;
-
-// This always points at one of the above
 GdkPixmap *termbuffer;
 GdkGC *termbuffer_gc;
 
@@ -153,17 +148,6 @@ VTermKey convert_keyval(guint gdk_keyval)
   default:
     return VTERM_KEY_NONE;
   }
-}
-
-static void update_termbuffer(void)
-{
-  if(termbuffer_gc) {
-    g_object_unref(termbuffer_gc);
-    termbuffer_gc = NULL;
-  }
-
-  if(termbuffer)
-    termbuffer_gc = gdk_gc_new(termbuffer);
 }
 
 static void add_glyph(const uint32_t chars[], int width)
@@ -569,25 +553,6 @@ int term_settermprop(VTermProp prop, VTermValue *val, void *user)
     }
     break;
 
-  case VTERM_PROP_ALTSCREEN:
-    {
-      int rows, cols;
-      vterm_get_size(vt, &rows, &cols);
-
-      GdkRectangle rect = {
-        .x = 0,
-        .y = 0,
-        .width  = cols * cell_width,
-        .height = rows * cell_height,
-      };
-
-      termbuffer = val->boolean ? termbuffer_alternate : termbuffer_main;
-      update_termbuffer();
-
-      gdk_rectangle_union(&rect, &invalid_area, &invalid_area);
-    }
-    break;
-
   case VTERM_PROP_ICONNAME:
     gdk_window_set_icon_name(GDK_WINDOW(termwin->window), val->string);
     break;
@@ -762,13 +727,9 @@ int main(int argc, char *argv[])
   cursor_area.width  = cell_width;
   cursor_area.height = cell_height;
 
-  termbuffer_main = gdk_pixmap_new(window->window,
+  termbuffer = gdk_pixmap_new(window->window,
       size.ws_col * cell_width, size.ws_row * cell_height, -1);
-  termbuffer_alternate = gdk_pixmap_new(window->window,
-      size.ws_col * cell_width, size.ws_row * cell_height, -1);
-
-  termbuffer = termbuffer_main;
-  update_termbuffer();
+  termbuffer_gc = gdk_gc_new(termbuffer);
 
   gtk_window_resize(GTK_WINDOW(window), 
       size.ws_col * cell_width, size.ws_row * cell_height);
