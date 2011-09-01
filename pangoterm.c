@@ -634,15 +634,20 @@ static VTermScreenCallbacks cb = {
   .bell         = term_bell,
 };
 
+void term_quit(GtkContainer* widget, gpointer unused_data)
+{
+  gtk_main_quit();
+}
+
 gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
 {
   char buffer[8192];
 
   ssize_t bytes = read(master, buffer, sizeof buffer);
 
-  if(bytes == 0) {
-    fprintf(stderr, "master closed\n");
-    exit(0);
+  if(bytes == 0 || (bytes == -1 && errno == EIO)) {
+    gtk_main_quit();
+    return FALSE;
   }
   if(bytes < 0) {
     fprintf(stderr, "read(master) failed - %s\n", strerror(errno));
@@ -728,6 +733,7 @@ int main(int argc, char *argv[])
 
   g_signal_connect(G_OBJECT(termwin), "button-press-event",   GTK_SIGNAL_FUNC(term_mousepress), NULL);
   g_signal_connect(G_OBJECT(termwin), "button-release-event", GTK_SIGNAL_FUNC(term_mousepress), NULL);
+  g_signal_connect(G_OBJECT(window), "destroy", GTK_SIGNAL_FUNC(term_quit), NULL);
 
   im_context = gtk_im_context_simple_new();
 
