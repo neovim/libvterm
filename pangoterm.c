@@ -233,22 +233,6 @@ void repaint_area(GdkRectangle *area)
       0, 0, 0, 0, -1, -1);
 }
 
-gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_data)
-{
-  repaint_area(&event->area);
-
-  if(cursor_visible && cursor_blinkstate && gdk_rectangle_intersect(&cursor_area, &event->area, NULL))
-    gdk_draw_rectangle(termwin->window,
-        cursor_gc,
-        FALSE,
-        cursor_area.x,
-        cursor_area.y,
-        cursor_area.width - 1,
-        cursor_area.height - 1);
-
-  return TRUE;
-}
-
 gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
   gboolean ret = gtk_im_context_filter_keypress(im_context, event);
@@ -533,6 +517,7 @@ int term_damage(VTermRect rect, void *user)
       col += cell.width;
     }
   }
+
   return 1;
 }
 
@@ -598,6 +583,32 @@ static VTermScreenCallbacks cb = {
   .setmousefunc = term_setmousefunc,
   .bell         = term_bell,
 };
+
+gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_data)
+{
+  VTermRect rect = {
+    .start_col = event->area.x / cell_width,  // round down
+    .start_row = event->area.y / cell_height,
+    .end_col   = (event->area.x + event->area.width  + cell_width  - 1) / cell_width,  // round up
+    .end_row   = (event->area.y + event->area.height + cell_height - 1) / cell_height,
+  };
+
+  term_damage(rect, user_data);
+
+  if(invalid_area.width && invalid_area.height)
+    repaint_area(&invalid_area);
+
+  if(cursor_visible)
+    gdk_draw_rectangle(termwin->window,
+        cursor_gc,
+        FALSE,
+        cursor_area.x,
+        cursor_area.y,
+        cursor_area.width - 1,
+        cursor_area.height - 1);
+
+  return TRUE;
+}
 
 void term_quit(GtkContainer* widget, gpointer unused_data)
 {
@@ -693,7 +704,7 @@ int main(int argc, char *argv[])
   vts = vterm_initialise_screen(vt);
   vterm_screen_set_callbacks(vts, &cb, pen);
 
-  g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), NULL);
+  g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), pen);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
 
   g_signal_connect(G_OBJECT(termwin), "button-press-event",   GTK_SIGNAL_FUNC(term_mousepress), NULL);
