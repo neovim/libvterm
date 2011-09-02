@@ -132,8 +132,9 @@ int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
 VTermValueType vterm_get_attr_type(VTermAttr attr);
 VTermValueType vterm_get_prop_type(VTermProp prop);
 
-VTermScreen *vterm_initialise_screen(VTerm *vt);
+VTermScreen *vterm_obtain_screen(VTerm *vt);
 
+void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen);
 void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
 
 void   vterm_screen_reset(VTermScreen *screen);
