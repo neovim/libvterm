@@ -199,14 +199,15 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
   switch(prop) {
   case VTERM_PROP_ALTSCREEN:
     {
+      if(val->boolean && !screen->buffers[1])
+        return 0;
+
       VTermRect rect = {
         .start_row = 0,
         .end_row   = screen->rows,
         .start_col = 0,
         .end_col   = screen->cols,
       };
-      if(val->boolean && !screen->buffers[1])
-        screen->buffers[1] = realloc_buffer(screen, NULL, screen->rows, screen->cols);
 
       screen->buffer = val->boolean ? screen->buffers[1] : screen->buffers[0];
       damagerect(screen, rect);
@@ -304,11 +305,13 @@ static VTermScreen *screen_new(VTerm *vt)
 
   screen->vt = vt;
 
-  screen->cols = 0;
+  screen->rows = rows;
+  screen->cols = cols;
 
-  screen->buffers[0] = screen->buffers[1] = NULL;
+  screen->buffers[0] = realloc_buffer(screen, NULL, rows, cols);
+  screen->buffers[1] = NULL;
 
-  resize(rows, cols, screen);
+  screen->buffer = screen->buffers[0];
 
   vterm_state_set_callbacks(vterm_obtain_state(vt), &state_cbs, screen);
 
@@ -384,7 +387,7 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
     cell->width = 1;
 }
 
-VTermScreen *vterm_initialise_screen(VTerm *vt)
+VTermScreen *vterm_obtain_screen(VTerm *vt)
 {
   if(vt->screen)
     return vt->screen;
@@ -393,6 +396,17 @@ VTermScreen *vterm_initialise_screen(VTerm *vt)
   vt->screen = screen;
 
   return screen;
+}
+
+void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen)
+{
+
+  if(!screen->buffers[1] && altscreen) {
+    int rows, cols;
+    vterm_get_size(screen->vt, &rows, &cols);
+
+    screen->buffers[1] = realloc_buffer(screen, NULL, rows, cols);
+  }
 }
 
 void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user)
