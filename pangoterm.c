@@ -672,7 +672,8 @@ int main(int argc, char *argv[])
   gdk_color_parse(default_fg, &pen->fg_col);
   gdk_color_parse(default_bg, &pen->bg_col);
 
-  vts = vterm_initialise_screen(vt);
+  vts = vterm_obtain_screen(vt);
+  vterm_screen_enable_altscreen(vts, 1);
   vterm_screen_set_callbacks(vts, &cb, pen);
 
   cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, pen);
