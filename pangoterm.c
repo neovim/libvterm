@@ -39,8 +39,9 @@ int cell_height;
 
 GdkRectangle invalid_area;
 int cursor_visible;
-int cursor_blinkstate;
-GdkRectangle cursor_area;
+int cursor_blinkstate = 1;
+VTermPos cursorpos;
+GdkColor cursor_col;
 
 guint cursor_timer_id;
 
@@ -49,12 +50,10 @@ GtkWidget *termwin;
 GdkPixmap *termbuffer;
 GdkGC *termbuffer_gc;
 
-GdkGC *cursor_gc;
-
 static char *default_fg = "gray90";
 static char *default_bg = "black";
 
-static char *cursor_col = "white";
+static char *cursor_col_str = "white";
 static gint cursor_blink_interval = 500;
 
 static char *default_font = "DejaVu Sans Mono";
@@ -71,7 +70,7 @@ static GOptionEntry option_entries[] = {
   /* long_name, short_name, flags, arg, arg_data, description, arg_description */
   { "foreground", 0,   0, G_OPTION_ARG_STRING, &default_fg, "Default foreground colour", "COL" },
   { "background", 0,   0, G_OPTION_ARG_STRING, &default_bg, "Default background colour", "COL" },
-  { "cursor",     0,   0, G_OPTION_ARG_STRING, &cursor_col, "Cursor colour", "COL" },
+  { "cursor",     0,   0, G_OPTION_ARG_STRING, &cursor_col_str, "Cursor colour", "COL" },
 
   { "font",       0,   0, G_OPTION_ARG_STRING, &default_font, "Font name", "FONT" },
   { "size",       's', 0, G_OPTION_ARG_INT,    &default_size, "Font size", "INT" },
@@ -344,50 +343,6 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   return 1;
 }
 
-int term_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
-{
-  GdkRectangle destarea = {
-    .x      = oldpos.col * cell_width,
-    .y      = oldpos.row * cell_height,
-    .width  = cell_width,
-    .height = cell_height
-  };
-
-  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
-
-  cursor_area.x      = pos.col * cell_width;
-  cursor_area.y      = pos.row * cell_height;
-
-  cursor_visible = visible;
-
-  return 1;
-}
-
-gboolean cursor_blink(gpointer data)
-{
-  invalid_area.x = 0;
-  invalid_area.y = 0;
-  invalid_area.width = 0;
-  invalid_area.height = 0;
-
-  cursor_blinkstate = !cursor_blinkstate;
-  gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
-
-  if(invalid_area.width && invalid_area.height)
-    repaint_area(&invalid_area);
-
-  if(cursor_visible && cursor_blinkstate)
-    gdk_draw_rectangle(termwin->window,
-        cursor_gc,
-        FALSE,
-        cursor_area.x,
-        cursor_area.y,
-        cursor_area.width - 1,
-        cursor_area.height - 1);
-
-  return TRUE;
-}
-
 int term_erase(VTermRect rect, void *user)
 {
   flush_glyphs();
@@ -419,7 +374,7 @@ int term_erase(VTermRect rect, void *user)
   return 1;
 }
 
-static void chpen(VTermScreenCell *cell, void *user)
+static void chpen(VTermScreenCell *cell, void *user, int cursoroverride)
 {
   GdkColor col;
 
@@ -472,6 +427,12 @@ static void chpen(VTermScreenCell *cell, void *user)
   col.green = 257 * cell->fg.green;
   col.blue  = 257 * cell->fg.blue;
 
+  if(cursoroverride) {
+    int grey = ((int)cursor_col.red + cursor_col.green + cursor_col.blue)*2 > 65535*3
+        ? 0 : 65535;
+    col.red = col.green = col.blue = grey;
+  }
+
   if(col.red   != pen->fg_col.red || col.green != pen->fg_col.green || col.blue  != pen->fg_col.blue) {
     flush_glyphs();
     pen->fg_col = col;
@@ -480,6 +441,9 @@ static void chpen(VTermScreenCell *cell, void *user)
   col.red   = 257 * cell->bg.red;
   col.green = 257 * cell->bg.green;
   col.blue  = 257 * cell->bg.blue;
+
+  if(cursoroverride)
+    col = cursor_col;
 
   if(col.red   != pen->bg_col.red || col.green != pen->bg_col.green || col.blue  != pen->bg_col.blue) {
     flush_glyphs();
@@ -499,7 +463,8 @@ int term_damage(VTermRect rect, void *user)
       VTermScreenCell cell;
       vterm_screen_get_cell(vts, pos, &cell);
 
-      chpen(&cell, user);
+      chpen(&cell, user,
+          (pos.row == cursorpos.row && pos.col == cursorpos.col && cursor_blinkstate));
 
       if(cell.chars[0] == 0) {
         VTermRect here = {
@@ -521,17 +486,55 @@ int term_damage(VTermRect rect, void *user)
   return 1;
 }
 
+static void damagecell(VTermPos pos, void *user)
+{
+  VTermRect rect = {
+    .start_col = pos.col,
+    .end_col   = pos.col + 1,
+    .start_row = pos.row,
+    .end_row   = pos.row + 1,
+  };
+  term_damage(rect, user);
+}
+
+int term_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
+{
+  cursorpos = pos;
+  cursor_visible = visible;
+
+  damagecell(oldpos, user);
+  damagecell(pos, user);
+
+  return 1;
+}
+
+gboolean cursor_blink(void *user_data)
+{
+  cursor_blinkstate = !cursor_blinkstate;
+
+  if(cursor_visible) {
+    damagecell(cursorpos, user_data);
+
+    flush_glyphs();
+
+    if(invalid_area.width && invalid_area.height)
+      repaint_area(&invalid_area);
+  }
+
+  return TRUE;
+}
+
 int term_settermprop(VTermProp prop, VTermValue *val, void *user)
 {
   switch(prop) {
   case VTERM_PROP_CURSORVISIBLE:
     cursor_visible = val->boolean;
-    gdk_rectangle_union(&cursor_area, &invalid_area, &invalid_area);
+    damagecell(cursorpos, user);
     break;
 
   case VTERM_PROP_CURSORBLINK:
     if(val->boolean) {
-      cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, NULL);
+      cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, user);
     }
     else {
       g_source_remove(cursor_timer_id);
@@ -598,15 +601,6 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
   if(invalid_area.width && invalid_area.height)
     repaint_area(&invalid_area);
 
-  if(cursor_visible)
-    gdk_draw_rectangle(termwin->window,
-        cursor_gc,
-        FALSE,
-        cursor_area.x,
-        cursor_area.y,
-        cursor_area.width - 1,
-        cursor_area.height - 1);
-
   return TRUE;
 }
 
@@ -654,15 +648,6 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
   if(invalid_area.width && invalid_area.height)
     repaint_area(&invalid_area);
 
-  if(cursor_visible)
-    gdk_draw_rectangle(termwin->window,
-        cursor_gc,
-        FALSE,
-        cursor_area.x,
-        cursor_area.y,
-        cursor_area.width - 1,
-        cursor_area.height - 1);
-
   return TRUE;
 }
 
@@ -704,6 +689,8 @@ int main(int argc, char *argv[])
   vts = vterm_initialise_screen(vt);
   vterm_screen_set_callbacks(vts, &cb, pen);
 
+  cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, pen);
+
   g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), pen);
   g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
 
@@ -735,9 +722,6 @@ int main(int argc, char *argv[])
   cell_width  = PANGO_PIXELS_CEIL(width);
   cell_height = PANGO_PIXELS_CEIL(height);
 
-  cursor_area.width  = cell_width;
-  cursor_area.height = cell_height;
-
   termbuffer = gdk_pixmap_new(window->window,
       size.ws_col * cell_width, size.ws_row * cell_height, -1);
   termbuffer_gc = gdk_gc_new(termbuffer);
@@ -747,11 +731,7 @@ int main(int argc, char *argv[])
 
   //gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
 
-  cursor_gc = gdk_gc_new(window->window);
-
-  GdkColor col;
-  gdk_color_parse(cursor_col, &col);
-  gdk_gc_set_rgb_fg_color(cursor_gc, &col);
+  gdk_color_parse(cursor_col_str, &cursor_col);
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {
