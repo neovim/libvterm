@@ -37,7 +37,6 @@ int cell_width_pango;
 int cell_width;
 int cell_height;
 
-GdkRectangle invalid_area;
 int cursor_visible;
 int cursor_blinkstate = 1;
 VTermPos cursorpos;
@@ -46,9 +45,8 @@ GdkColor cursor_col;
 guint cursor_timer_id;
 
 GtkWidget *termwin;
-
-GdkPixmap *termbuffer;
-GdkGC *termbuffer_gc;
+GdkDrawable *termdraw;
+GdkGC *termdraw_gc;
 
 static char *default_fg = "gray90";
 static char *default_bg = "black";
@@ -171,7 +169,7 @@ static void flush_glyphs(void)
     return;
   }
 
-  gdk_gc_set_clip_rectangle(termbuffer_gc, &glyph_area);
+  gdk_gc_set_clip_rectangle(termdraw_gc, &glyph_area);
 
   PangoLayout *layout = glyph_pen->layout;
 
@@ -204,32 +202,18 @@ static void flush_glyphs(void)
 
   pango_layout_iter_free(iter);
 
-  gdk_draw_layout_with_colors(termbuffer,
-      termbuffer_gc,
+  gdk_draw_layout_with_colors(termdraw,
+      termdraw_gc,
       glyph_area.x,
       glyph_area.y,
       layout,
       glyph_pen->reverse ? &glyph_pen->bg_col : &glyph_pen->fg_col,
       NULL);
 
-  gdk_rectangle_union(&glyph_area, &invalid_area, &invalid_area);
-
   glyph_area.width = 0;
   glyph_area.height = 0;
 
   g_string_truncate(glyphs, 0);
-}
-
-void repaint_area(GdkRectangle *area)
-{
-  GdkWindow *win = termwin->window;
-
-  gdk_gc_set_clip_rectangle(termbuffer_gc, area);
-
-  gdk_draw_drawable(win,
-      termbuffer_gc,
-      termbuffer,
-      0, 0, 0, 0, -1, -1);
 }
 
 gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -310,7 +294,7 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 
   GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
 
-  gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
+  gdk_gc_set_rgb_fg_color(termdraw_gc, &bg);
 
   GdkRectangle destarea = {
     .x      = pos.col * cell_width,
@@ -322,10 +306,10 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   if(destarea.y != glyph_area.y || destarea.x != glyph_area.x + glyph_area.width)
     flush_glyphs();
 
-  gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
+  gdk_gc_set_clip_rectangle(termdraw_gc, &destarea);
 
-  gdk_draw_rectangle(termbuffer,
-      termbuffer_gc,
+  gdk_draw_rectangle(termdraw,
+      termdraw_gc,
       TRUE,
       destarea.x,
       destarea.y,
@@ -350,7 +334,7 @@ int term_erase(VTermRect rect, void *user)
   term_pen *pen = user;
 
   GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
-  gdk_gc_set_rgb_fg_color(termbuffer_gc, &bg);
+  gdk_gc_set_rgb_fg_color(termdraw_gc, &bg);
 
   GdkRectangle destarea = {
     .x      = rect.start_col * cell_width,
@@ -359,17 +343,15 @@ int term_erase(VTermRect rect, void *user)
     .height = (rect.end_row - rect.start_row) * cell_height,
   };
 
-  gdk_gc_set_clip_rectangle(termbuffer_gc, &destarea);
+  gdk_gc_set_clip_rectangle(termdraw_gc, &destarea);
 
-  gdk_draw_rectangle(termbuffer,
-      termbuffer_gc,
+  gdk_draw_rectangle(termdraw,
+      termdraw_gc,
       TRUE,
       destarea.x,
       destarea.y,
       destarea.width,
       destarea.height);
-
-  gdk_rectangle_union(&destarea, &invalid_area, &invalid_area);
 
   return 1;
 }
@@ -516,9 +498,6 @@ gboolean cursor_blink(void *user_data)
     damagecell(cursorpos, user_data);
 
     flush_glyphs();
-
-    if(invalid_area.width && invalid_area.height)
-      repaint_area(&invalid_area);
   }
 
   return TRUE;
@@ -598,9 +577,6 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
 
   term_damage(rect, user_data);
 
-  if(invalid_area.width && invalid_area.height)
-    repaint_area(&invalid_area);
-
   return TRUE;
 }
 
@@ -636,17 +612,9 @@ gboolean master_readable(GIOChannel *source, GIOCondition cond, gpointer data)
     printf("\n");
 #endif
 
-  invalid_area.x = 0;
-  invalid_area.y = 0;
-  invalid_area.width = 0;
-  invalid_area.height = 0;
-
   vterm_push_bytes(vt, buffer, bytes);
 
   flush_glyphs();
-
-  if(invalid_area.width && invalid_area.height)
-    repaint_area(&invalid_area);
 
   return TRUE;
 }
@@ -671,13 +639,15 @@ int main(int argc, char *argv[])
   vt = vterm_new(size.ws_row, size.ws_col);
   vterm_parser_set_utf8(vt, 1);
 
-  GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  termwin = window;
+  termwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
   glyphs = g_string_sized_new(128);
   glyph_widths = g_array_new(FALSE, FALSE, sizeof(int));
 
-  gtk_widget_realize(window);
+  gtk_widget_realize(termwin);
+
+  termdraw = termwin->window;
+  termdraw_gc = gdk_gc_new(termdraw);
 
   term_pen *pen = g_new0(term_pen, 1);
   pen->pangoattrs = pango_attr_list_new();
@@ -691,18 +661,18 @@ int main(int argc, char *argv[])
 
   cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, pen);
 
-  g_signal_connect(G_OBJECT(window), "expose-event", GTK_SIGNAL_FUNC(term_expose), pen);
-  g_signal_connect(G_OBJECT(window), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
+  g_signal_connect(G_OBJECT(termwin), "expose-event", GTK_SIGNAL_FUNC(term_expose), pen);
+  g_signal_connect(G_OBJECT(termwin), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), NULL);
 
   g_signal_connect(G_OBJECT(termwin), "button-press-event",   GTK_SIGNAL_FUNC(term_mousepress), NULL);
   g_signal_connect(G_OBJECT(termwin), "button-release-event", GTK_SIGNAL_FUNC(term_mousepress), NULL);
-  g_signal_connect(G_OBJECT(window), "destroy", GTK_SIGNAL_FUNC(term_quit), NULL);
+  g_signal_connect(G_OBJECT(termwin), "destroy", GTK_SIGNAL_FUNC(term_quit), NULL);
 
   im_context = gtk_im_context_simple_new();
 
   g_signal_connect(G_OBJECT(im_context), "commit", GTK_SIGNAL_FUNC(im_commit), NULL);
 
-  PangoContext *pctx = gtk_widget_get_pango_context(window);
+  PangoContext *pctx = gtk_widget_get_pango_context(termwin);
 
   fontdesc = pango_font_description_new();
   pango_font_description_set_family(fontdesc, default_font);
@@ -722,14 +692,8 @@ int main(int argc, char *argv[])
   cell_width  = PANGO_PIXELS_CEIL(width);
   cell_height = PANGO_PIXELS_CEIL(height);
 
-  termbuffer = gdk_pixmap_new(window->window,
-      size.ws_col * cell_width, size.ws_row * cell_height, -1);
-  termbuffer_gc = gdk_gc_new(termbuffer);
-
-  gtk_window_resize(GTK_WINDOW(window), 
+  gtk_window_resize(GTK_WINDOW(termwin), 
       size.ws_col * cell_width, size.ws_row * cell_height);
-
-  //gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
 
   gdk_color_parse(cursor_col_str, &cursor_col);
 
@@ -751,7 +715,7 @@ int main(int argc, char *argv[])
   GIOChannel *gio_master = g_io_channel_unix_new(master);
   g_io_add_watch(gio_master, G_IO_IN|G_IO_HUP, master_readable, NULL);
 
-  gtk_widget_show_all(window);
+  gtk_widget_show_all(termwin);
 
   gtk_main();
 
