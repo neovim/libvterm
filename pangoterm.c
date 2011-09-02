@@ -580,6 +580,22 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
   return TRUE;
 }
 
+void term_resize(GtkContainer* widget, gpointer unused_data)
+{
+  gint raw_width, raw_height;
+  gtk_window_get_size(GTK_WINDOW(widget), &raw_width, &raw_height);
+
+  int cols = raw_width  / cell_width;
+  int lines = raw_height / cell_height;
+
+  struct winsize size = { lines, cols, 0, 0 };
+  ioctl(master, TIOCSWINSZ, &size);
+
+  vterm_set_size(vt, lines, cols);
+
+  return;
+}
+
 void term_quit(GtkContainer* widget, gpointer unused_data)
 {
   gtk_main_quit();
@@ -696,6 +712,17 @@ int main(int argc, char *argv[])
       size.ws_col * cell_width, size.ws_row * cell_height);
 
   gdk_color_parse(cursor_col_str, &cursor_col);
+
+  GdkGeometry hints;
+
+  hints.min_width = cell_width;
+  hints.min_height = cell_height;
+  hints.width_inc = cell_width;
+  hints.height_inc = cell_height;
+
+  gtk_window_set_resizable(GTK_WINDOW(termwin), TRUE);
+  gtk_window_set_geometry_hints(GTK_WINDOW(termwin), GTK_WIDGET(termwin), &hints, GDK_HINT_RESIZE_INC | GDK_HINT_MIN_SIZE);
+  g_signal_connect(G_OBJECT(termwin), "check-resize", GTK_SIGNAL_FUNC(term_resize), NULL);
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {
