@@ -38,6 +38,7 @@ VERSION_REVISION=0
 VERSION_AGE=0
 
 PREFIX=/usr/local
+BINDIR=$(PREFIX)/bin
 LIBDIR=$(PREFIX)/lib
 INCDIR=$(PREFIX)/include
 MANDIR=$(PREFIX)/share/man
@@ -83,7 +84,7 @@ clean:
 	$(LIBTOOL) --mode=clean rm -f $(LIBRARY)
 
 .PHONY: install
-install: install-inc install-lib
+install: install-inc install-lib install-bin
 
 install-inc:
 	install -d $(DESTDIR)$(INCDIR)
@@ -93,4 +94,8 @@ install-inc:
 
 install-lib:
 	install -d $(DESTDIR)$(LIBDIR)
-	$(LIBTOOL) --mode=install cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/libvterm.la
+	$(LIBTOOL) --mode=install cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/libvterm.lao
+
+install-bin: pangoterm
+	install -d $(DESTDIR)$(BINDIR)
+	$(LIBTOOL) --mode=install cp pangoterm $(DESTDIR)$(BINDIR)/pangoterm
