@@ -24,6 +24,9 @@ MOUSE 0 2 0,0
 MOUSE 1 1 10,20
   output "\e[M\x20\x35\x2b"
 
+MOUSE 0 0 10,21
+  # no output
+
 !Drag events
 RESET
 PUSH "\e[?1002h"
@@ -39,3 +42,12 @@ MOUSE 0 0 6,6
   # no output
 MOUSE 0 1 6,6
   output "\e[M\x23\x27\x27"
+MOUSE 0 0 6,7
+  # no output
+
+!Non-drag motion events
+PUSH "\e[?1003h"
+  setmousefunc func
+
+MOUSE 0 0 6,8
+  output "\e[M\x43\x29\x27"
