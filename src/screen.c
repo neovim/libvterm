@@ -63,8 +63,10 @@ static ScreenCell *realloc_buffer(VTermScreen *screen, ScreenCell *buffer, int n
 
       if(buffer && row < screen->rows && col < screen->cols)
         *new_cell = buffer[row * screen->cols + col];
-      else
+      else {
         new_cell->chars[0] = 0;
+        new_cell->pen = screen->pen;
+      }
     }
   }
 
