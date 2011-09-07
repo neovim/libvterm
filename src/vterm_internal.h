@@ -58,6 +58,9 @@ struct _VTermState
     unsigned int reverse:1;
     unsigned int font:4; /* To store 0-9 */
   } pen;
+
+  VTermColor default_fg;
+  VTermColor default_bg;
 };
 
 struct _VTerm

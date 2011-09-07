@@ -37,14 +37,7 @@ static int gamma24[] = {
 
 static void lookup_colour_ansi(long index, char is_bg, VTermColor *col)
 {
-  if(index == -1) {
-    if(is_bg)
-      col->red = col->green = col->blue = 0;
-    else
-      // 90% grey so that pure white is brighter
-      col->red = col->green = col->blue = 240;
-  }
-  else if(index >= 0 && index < 16) {
+  if(index >= 0 && index < 16) {
     *col = ansi_colors[index];
   }
 }
@@ -127,7 +120,14 @@ static void setpenattr_col_ansi(VTermState *state, VTermAttr attr, long col)
 {
   VTermValue val;
 
-  lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
+  if(col == -1) {
+    if(attr == VTERM_ATTR_BACKGROUND)
+      val.color = state->default_bg;
+    else
+      val.color = state->default_fg;
+  }
+  else
+    lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
 
   setpenattr(state, attr, VTERM_VALUETYPE_COLOR, &val);
 }
@@ -157,6 +157,12 @@ void vterm_state_resetpen(VTermState *state)
 
   setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
   setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
+}
+
+void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg)
+{
+  state->default_fg = *default_fg;
+  state->default_bg = *default_bg;
 }
 
 void vterm_state_setpen(VTermState *state, const long args[], int argcount)

@@ -127,6 +127,7 @@ VTermState *vterm_obtain_state(VTerm *vt);
 void vterm_state_reset(VTermState *state);
 void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
+void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg);
 int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val);
 
 VTermValueType vterm_get_attr_type(VTermAttr attr);
