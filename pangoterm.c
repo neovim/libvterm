@@ -262,7 +262,15 @@ gboolean term_mousepress(GtkWidget *widget, GdkEventButton *event, gpointer data
   if(!mousefunc)
     return FALSE;
 
-  (*mousefunc)(event->x / cell_width, event->y / cell_height, event->button, event->type == GDK_BUTTON_PRESS, mousedata);
+  int col = event->x / cell_width;
+  int row = event->y / cell_height;
+
+  /* If the mouse is being dragged, we'll get motion events even outside our
+   * window */
+  if(col < 0 || col >= cols || row < 0 || row >= lines)
+    return FALSE;
+
+  (*mousefunc)(col, row, event->button, event->type == GDK_BUTTON_PRESS, mousedata);
 
   size_t bufflen = vterm_output_bufferlen(vt);
   if(bufflen) {
@@ -544,9 +552,9 @@ int term_setmousefunc(VTermMouseFunc func, void *data, void *user)
   GdkEventMask mask = gdk_window_get_events(termwin->window);
 
   if(func)
-    mask |= GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK;
+    mask |= GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK;
   else
-    mask &= ~(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+    mask &= ~(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
 
   gdk_window_set_events(termwin->window, mask);
 
@@ -586,8 +594,8 @@ void term_resize(GtkContainer* widget, gpointer unused_data)
   gint raw_width, raw_height;
   gtk_window_get_size(GTK_WINDOW(widget), &raw_width, &raw_height);
 
-  int cols = raw_width  / cell_width;
-  int lines = raw_height / cell_height;
+  cols = raw_width  / cell_width;
+  lines = raw_height / cell_height;
 
   struct winsize size = { lines, cols, 0, 0 };
   ioctl(master, TIOCSWINSZ, &size);
@@ -700,6 +708,7 @@ int main(int argc, char *argv[])
 
   g_signal_connect(G_OBJECT(termwin), "button-press-event",   GTK_SIGNAL_FUNC(term_mousepress), NULL);
   g_signal_connect(G_OBJECT(termwin), "button-release-event", GTK_SIGNAL_FUNC(term_mousepress), NULL);
+  g_signal_connect(G_OBJECT(termwin), "motion-notify-event",  GTK_SIGNAL_FUNC(term_mousepress), NULL);
   g_signal_connect(G_OBJECT(termwin), "destroy", GTK_SIGNAL_FUNC(term_quit), NULL);
 
   im_context = gtk_im_context_simple_new();
