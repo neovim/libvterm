@@ -30,6 +30,7 @@ struct _VTermState
   /* Mouse state */
   int mouse_col, mouse_row;
   int mouse_buttons;
+  int mouse_flags;
 
   /* Last glyph output, for Unicode recombining purposes */
   uint32_t *combine_chars;
