@@ -669,8 +669,24 @@ int main(int argc, char *argv[])
   pen->pangoattrs = pango_attr_list_new();
   pen->layout = pango_layout_new(gtk_widget_get_pango_context(termwin));
   pango_layout_set_font_description(pen->layout, fontdesc);
-  gdk_color_parse(default_fg, &pen->fg_col);
-  gdk_color_parse(default_bg, &pen->bg_col);
+
+  GdkColor gdk_col;
+  gdk_color_parse(default_fg, &gdk_col);
+
+  VTermColor col_fg;
+  col_fg.red   = gdk_col.red   / 257;
+  col_fg.green = gdk_col.green / 257;
+  col_fg.blue  = gdk_col.blue  / 257;
+
+  gdk_color_parse(default_bg, &gdk_col);
+
+  VTermColor col_bg;
+  col_bg.red   = gdk_col.red   / 257;
+  col_bg.green = gdk_col.green / 257;
+  col_bg.blue  = gdk_col.blue  / 257;
+
+  gdk_window_set_background(termwin->window, &gdk_col);
+  vterm_state_set_default_colors(vterm_obtain_state(vt), &col_fg, &col_bg);
 
   vts = vterm_obtain_screen(vt);
   vterm_screen_enable_altscreen(vts, 1);
@@ -744,6 +760,8 @@ int main(int argc, char *argv[])
   g_io_add_watch(gio_master, G_IO_IN|G_IO_HUP, master_readable, NULL);
 
   gtk_widget_show_all(termwin);
+
+  vterm_screen_reset(vts);
 
   gtk_main();
 
