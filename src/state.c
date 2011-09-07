@@ -8,6 +8,7 @@
 #endif
 
 #define MOUSE_WANT_DRAG 0x01
+#define MOUSE_WANT_MOVE 0x02
 
 /* Some convenient wrappers to make callback functions easier */
 
@@ -396,10 +397,11 @@ static void mousefunc(int col, int row, int button, int pressed, void *data)
     }
   }
   else if(col != old_col || row != old_row) {
-    if(state->mouse_flags & MOUSE_WANT_DRAG && state->mouse_buttons) {
+    if((state->mouse_flags & MOUSE_WANT_DRAG && state->mouse_buttons) ||
+       (state->mouse_flags & MOUSE_WANT_MOVE)) {
       int button = state->mouse_buttons & 0x01 ? 1 :
                    state->mouse_buttons & 0x02 ? 2 :
-                   state->mouse_buttons & 0x04 ? 3 : 0;
+                   state->mouse_buttons & 0x04 ? 3 : 4;
       vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", button-1 + 0x40, col + 0x21, row + 0x21);
     }
   }
@@ -556,6 +558,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
 
   case 1000:
   case 1002:
+  case 1003:
     if(val) {
       state->mouse_col     = 0;
       state->mouse_row     = 0;
@@ -565,6 +568,8 @@ static void set_dec_mode(VTermState *state, int num, int val)
 
       if(num == 1002)
         state->mouse_flags |= MOUSE_WANT_DRAG;
+      if(num == 1003)
+        state->mouse_flags |= MOUSE_WANT_MOVE;
     }
 
     if(state->callbacks && state->callbacks->setmousefunc)
