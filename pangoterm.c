@@ -446,7 +446,7 @@ int term_damage(VTermRect rect, void *user)
       vterm_screen_get_cell(vts, pos, &cell);
 
       chpen(&cell, user,
-          (pos.row == cursorpos.row && pos.col == cursorpos.col && cursor_blinkstate));
+          (cursor_visible && pos.row == cursorpos.row && pos.col == cursorpos.col && cursor_blinkstate));
 
       if(cell.chars[0] == 0) {
         VTermRect here = {
