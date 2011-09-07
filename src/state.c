@@ -7,6 +7,8 @@
 # define DEBUG_GLYPH_COMBINE
 #endif
 
+#define MOUSE_WANT_DRAG 0x01
+
 /* Some convenient wrappers to make callback functions easier */
 
 static void putglyph(VTermState *state, const uint32_t chars[], int width, VTermPos pos)
@@ -370,20 +372,35 @@ static int on_control(unsigned char control, void *user)
   return 1;
 }
 
-static void mousefunc(int x, int y, int button, int pressed, void *data)
+static void mousefunc(int col, int row, int button, int pressed, void *data)
 {
   VTermState *state = data;
 
+  int old_col     = state->mouse_col;
+  int old_row     = state->mouse_row;
   int old_buttons = state->mouse_buttons;
 
-  if(pressed)
-    state->mouse_buttons |= (1 << button);
-  else
-    state->mouse_buttons &= ~(1 << button);
+  state->mouse_col = col;
+  state->mouse_row = row;
+
+  if(button > 0) {
+    if(pressed)
+      state->mouse_buttons |= (1 << (button-1));
+    else
+      state->mouse_buttons &= ~(1 << (button-1));
+  }
 
   if(state->mouse_buttons != old_buttons) {
     if(button < 4) {
-      vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", pressed ? button + 31 : 35, x + 33, y + 33);
+      vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", pressed ? button-1 + 0x20 : 0x23, col + 0x21, row + 0x21);
+    }
+  }
+  else if(col != old_col || row != old_row) {
+    if(state->mouse_flags & MOUSE_WANT_DRAG && state->mouse_buttons) {
+      int button = state->mouse_buttons & 0x01 ? 1 :
+                   state->mouse_buttons & 0x02 ? 2 :
+                   state->mouse_buttons & 0x04 ? 3 : 0;
+      vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", button-1 + 0x40, col + 0x21, row + 0x21);
     }
   }
 }
@@ -538,8 +555,17 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 1000:
-    if(val)
+  case 1002:
+    if(val) {
+      state->mouse_col     = 0;
+      state->mouse_row     = 0;
       state->mouse_buttons = 0;
+
+      state->mouse_flags = 0;
+
+      if(num == 1002)
+        state->mouse_flags |= MOUSE_WANT_DRAG;
+    }
 
     if(state->callbacks && state->callbacks->setmousefunc)
       (*state->callbacks->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata);
