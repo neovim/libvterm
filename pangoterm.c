@@ -483,6 +483,7 @@ int term_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   cursorpos = pos;
   cursor_visible = visible;
+  cursor_blinkstate = 1;
 
   damagecell(oldpos, user);
   damagecell(pos, user);
