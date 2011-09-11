@@ -91,11 +91,11 @@ typedef struct {
     unsigned int bold      : 1;
     unsigned int underline : 2;
     unsigned int italic    : 1;
+    unsigned int reverse   : 1;
     unsigned int font      : 4;
   } attrs;
   GdkColor fg_col;
   GdkColor bg_col;
-  gboolean reverse;
   PangoAttrList *pangoattrs;
   PangoLayout *layout;
 } term_pen;
@@ -207,7 +207,7 @@ static void flush_glyphs(void)
       glyph_area.x,
       glyph_area.y,
       layout,
-      glyph_pen->reverse ? &glyph_pen->bg_col : &glyph_pen->fg_col,
+      glyph_pen->attrs.reverse ? &glyph_pen->bg_col : &glyph_pen->fg_col,
       NULL);
 
   glyph_area.width = 0;
@@ -300,7 +300,7 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
   term_pen *pen = user;
 
-  GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
+  GdkColor bg = pen->attrs.reverse ? pen->fg_col : pen->bg_col;
 
   gdk_gc_set_rgb_fg_color(termdraw_gc, &bg);
 
@@ -341,7 +341,7 @@ int term_erase(VTermRect rect, void *user)
 
   term_pen *pen = user;
 
-  GdkColor bg = pen->reverse ? pen->fg_col : pen->bg_col;
+  GdkColor bg = pen->attrs.reverse ? pen->fg_col : pen->bg_col;
   gdk_gc_set_rgb_fg_color(termdraw_gc, &bg);
 
   GdkRectangle destarea = {
@@ -398,9 +398,9 @@ static void chpen(VTermScreenCell *cell, void *user, int cursoroverride)
     ADDATTR(pango_attr_style_new(italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
   }
 
-  if(cell->attrs.reverse != pen->reverse) {
+  if(cell->attrs.reverse != pen->attrs.reverse) {
     flush_glyphs();
-    pen->reverse = cell->attrs.reverse;
+    pen->attrs.reverse = cell->attrs.reverse;
   }
 
   if(cell->attrs.font != pen->attrs.font) {
