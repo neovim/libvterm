@@ -153,6 +153,7 @@ void vterm_state_resetpen(VTermState *state)
   state->pen.italic = 0;    setpenattr_bool(state, VTERM_ATTR_ITALIC, 0);
   state->pen.blink = 0;     setpenattr_bool(state, VTERM_ATTR_BLINK, 0);
   state->pen.reverse = 0;   setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
+  state->pen.strike = 0;    setpenattr_bool(state, VTERM_ATTR_STRIKE, 0);
   state->pen.font = 0;      setpenattr_int( state, VTERM_ATTR_FONT, 0);
 
   setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
@@ -208,6 +209,11 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
       setpenattr_bool(state, VTERM_ATTR_REVERSE, 1);
       break;
 
+    case 9: // Strikethrough on
+      state->pen.strike = 1;
+      setpenattr_bool(state, VTERM_ATTR_STRIKE, 1);
+      break;
+
     case 10: case 11: case 12: case 13: case 14:
     case 15: case 16: case 17: case 18: case 19: // Select font
       state->pen.font = CSI_ARG(args[argi]) - 10;
@@ -242,6 +248,11 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
     case 27: // Reverse off
       state->pen.reverse = 0;
       setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
+      break;
+
+    case 29: // Strikethrough off
+      state->pen.strike = 0;
+      setpenattr_bool(state, VTERM_ATTR_STRIKE, 0);
       break;
 
     case 30: case 31: case 32: case 33:
@@ -313,6 +324,10 @@ int vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
 
   case VTERM_ATTR_REVERSE:
     val->boolean = state->pen.reverse;
+    return 1;
+
+  case VTERM_ATTR_STRIKE:
+    val->boolean = state->pen.strike;
     return 1;
 
   case VTERM_ATTR_FONT:
