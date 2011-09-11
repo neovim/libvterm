@@ -15,6 +15,7 @@ typedef struct
   unsigned int italic    : 1;
   unsigned int blink     : 1;
   unsigned int reverse   : 1;
+  unsigned int strike    : 1;
   unsigned int font      : 4; /* 0 to 9 */
 
   /* After the bitfield */
@@ -179,6 +180,9 @@ static int setpenattr(VTermAttr attr, VTermValue *val, void *user)
     return 1;
   case VTERM_ATTR_REVERSE:
     screen->pen.reverse = val->boolean;
+    return 1;
+  case VTERM_ATTR_STRIKE:
+    screen->pen.strike = val->boolean;
     return 1;
   case VTERM_ATTR_FONT:
     screen->pen.font = val->number;
@@ -377,6 +381,7 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
   cell->attrs.italic    = intcell->pen.italic;
   cell->attrs.blink     = intcell->pen.blink;
   cell->attrs.reverse   = intcell->pen.reverse;
+  cell->attrs.strike    = intcell->pen.strike;
   cell->attrs.font      = intcell->pen.font;
 
   cell->fg = intcell->pen.fg;
