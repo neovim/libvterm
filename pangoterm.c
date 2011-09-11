@@ -92,6 +92,7 @@ typedef struct {
     unsigned int underline : 2;
     unsigned int italic    : 1;
     unsigned int reverse   : 1;
+    unsigned int strike    : 1;
     unsigned int font      : 4;
   } attrs;
   GdkColor fg_col;
@@ -401,6 +402,12 @@ static void chpen(VTermScreenCell *cell, void *user, int cursoroverride)
   if(cell->attrs.reverse != pen->attrs.reverse) {
     flush_glyphs();
     pen->attrs.reverse = cell->attrs.reverse;
+  }
+
+  if(cell->attrs.strike != pen->attrs.strike) {
+    int strike = pen->attrs.strike = cell->attrs.strike;
+    flush_glyphs();
+    ADDATTR(pango_attr_strikethrough_new(strike));
   }
 
   if(cell->attrs.font != pen->attrs.font) {
