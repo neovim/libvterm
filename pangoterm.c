@@ -672,6 +672,7 @@ int main(int argc, char *argv[])
   vterm_parser_set_utf8(vt, 1);
 
   termwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_widget_set_double_buffered(termwin, FALSE);
 
   glyphs = g_string_sized_new(128);
   glyph_widths = g_array_new(FALSE, FALSE, sizeof(int));
