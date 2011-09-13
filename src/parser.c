@@ -40,12 +40,12 @@ static size_t on_escape(VTerm *vt, const char bytes[], size_t len)
 
 static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
-  if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3e) {
+  if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3d) {
     int i;
     for(i = 0; i < arglen; i++)
-      // Treat 0x3f '?' as an intermediate byte, even though it's actually a
-      // DEC custom extension. Most terms seem to use that
-      if((args[i] & 0xf0) != 0x20 && args[i] != 0x3f)
+      // Treat 0x3e '>' and 0x3f '?' as an intermediate byte, even though it's
+      // actually a DEC custom extension. Most terms seem to use that
+      if((args[i] & 0xf0) != 0x20 && args[i] != 0x3e && args[i] != 0x3f)
         break;
 
     int intermedcount = i;

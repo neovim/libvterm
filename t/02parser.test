@@ -69,6 +69,10 @@ PUSH "\e[007e"
 PUSH "\e[?2;7f"
   csi 0x66 2,7 3f
 
+!CSI greater
+PUSH "\e[>c"
+  csi 0x63 * 3e
+
 !Mixed CSI
 PUSH "A\e[8mB"
   text 0x41
