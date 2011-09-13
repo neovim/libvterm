@@ -602,18 +602,26 @@ static int on_csi_qmark(VTermState *state, const long *args, int argcount, char 
   case 0x68: // DEC private mode set
     if(!CSI_ARG_IS_MISSING(args[0]))
       set_dec_mode(state, CSI_ARG(args[0]), 1);
-    break;
+    return 1;
 
   case 0x6c: // DEC private mode reset
     if(!CSI_ARG_IS_MISSING(args[0]))
       set_dec_mode(state, CSI_ARG(args[0]), 0);
-    break;
-
-  default:
-    return 0;
+    return 1;
   }
 
-  return 1;
+  return 0;
+}
+
+static int on_csi_greater(VTermState *state, const long *args, int argcount, char command)
+{
+  switch(command) {
+    case 0x63: // DEC secondary Device Attributes
+      vterm_push_output_sprintf(state->vt, "\e[>%d;%d;%dc", 0, 100, 0);
+      return 1;
+  }
+
+  return 0;
 }
 
 static int on_csi(const char *intermed, const long args[], int argcount, char command, void *user)
@@ -623,6 +631,8 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
   if(intermed) {
     if(strcmp(intermed, "?") == 0)
       return on_csi_qmark(state, args, argcount, command);
+    if(strcmp(intermed, ">") == 0)
+      return on_csi_greater(state, args, argcount, command);
 
     return 0;
   }
