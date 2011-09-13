@@ -1,3 +1,6 @@
+/* for putenv() */
+#define _XOPEN_SOURCE
+
 #include <errno.h>
 #include <poll.h>
 #include <stddef.h>
@@ -761,6 +764,7 @@ int main(int argc, char *argv[])
 
   pid_t kid = forkpty(&master, NULL, NULL, &size);
   if(kid == 0) {
+    putenv("TERM=xterm");
     if(argc > 1) {
       execvp(argv[1], argv + 1);
       fprintf(stderr, "Cannot exec(%s) - %s\n", argv[1], strerror(errno));
