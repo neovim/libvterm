@@ -126,10 +126,10 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
 
 static void linefeed(VTermState *state)
 {
-  if(state->pos.row == (state->scrollregion_end-1)) {
+  if(state->pos.row == SCROLLREGION_END(state) - 1) {
     VTermRect rect = {
       .start_row = state->scrollregion_start,
-      .end_row   = state->scrollregion_end,
+      .end_row   = SCROLLREGION_END(state),
       .start_col = 0,
       .end_col   = state->cols,
     };
@@ -353,7 +353,7 @@ static int on_control(unsigned char control, void *user)
     if(state->pos.row == state->scrollregion_start) {
       VTermRect rect = {
         .start_row = state->scrollregion_start,
-        .end_row   = state->scrollregion_end,
+        .end_row   = SCROLLREGION_END(state),
         .start_col = 0,
         .end_col   = state->cols,
       };
@@ -779,7 +779,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->pos.row;
-    rect.end_row   = state->scrollregion_end;
+    rect.end_row   = SCROLLREGION_END(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -791,7 +791,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->pos.row;
-    rect.end_row   = state->scrollregion_end;
+    rect.end_row   = SCROLLREGION_END(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -815,7 +815,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->scrollregion_start;
-    rect.end_row   = state->scrollregion_end;
+    rect.end_row   = SCROLLREGION_END(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -827,7 +827,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
     count = CSI_ARG_OR(args[0], 1);
 
     rect.start_row = state->scrollregion_start;
-    rect.end_row   = state->scrollregion_end;
+    rect.end_row   = SCROLLREGION_END(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -913,7 +913,7 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
 
   case 0x72: // DECSTBM - DEC custom
     state->scrollregion_start = CSI_ARG_OR(args[0], 1) - 1;
-    state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? state->rows : CSI_ARG(args[1]);
+    state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
     break;
 
   default:
@@ -1007,7 +1007,7 @@ void vterm_state_reset(VTermState *state)
   state->combine_chars = g_new0(uint32_t, state->combine_chars_size);
 
   state->scrollregion_start = 0;
-  state->scrollregion_end = state->rows;
+  state->scrollregion_end = -1;
 
   state->mode.autowrap = 1;
   state->mode.cursor_visible = 1;
