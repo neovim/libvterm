@@ -25,7 +25,8 @@ struct _VTermState
   int at_phantom; /* True if we're on the "81st" phantom column to defer a wraparound */
 
   int scrollregion_start;
-  int scrollregion_end;
+  int scrollregion_end; /* -1 means unbounded */
+#define SCROLLREGION_END(state) ((state)->scrollregion_end > -1 ? (state)->scrollregion_end : (state)->rows)
 
   /* Mouse state */
   int mouse_col, mouse_row;
