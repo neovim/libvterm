@@ -76,7 +76,6 @@ typedef struct {
 
   GtkWidget *termwin;
   GdkDrawable *termdraw;
-  GdkGC *termdraw_gc;
 } PangoTerm;
 
 static char *default_fg = "gray90";
@@ -160,7 +159,8 @@ static void flush_glyphs(PangoTerm *pt)
     return;
   }
 
-  gdk_gc_set_clip_rectangle(pt->termdraw_gc, &pt->glyph_area);
+  GdkGC *gc = gdk_gc_new(pt->termdraw);
+  gdk_gc_set_clip_rectangle(gc, &pt->glyph_area);
 
   PangoLayout *layout = pt->pen.layout;
 
@@ -194,10 +194,10 @@ static void flush_glyphs(PangoTerm *pt)
   pango_layout_iter_free(iter);
 
   GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
-  gdk_gc_set_rgb_fg_color(pt->termdraw_gc, &bg);
+  gdk_gc_set_rgb_fg_color(gc, &bg);
 
   gdk_draw_rectangle(pt->termdraw,
-      pt->termdraw_gc,
+      gc,
       TRUE,
       pt->glyph_area.x,
       pt->glyph_area.y,
@@ -205,7 +205,7 @@ static void flush_glyphs(PangoTerm *pt)
       pt->glyph_area.height);
 
   gdk_draw_layout_with_colors(pt->termdraw,
-      pt->termdraw_gc,
+      gc,
       pt->glyph_area.x,
       pt->glyph_area.y,
       layout,
@@ -216,6 +216,8 @@ static void flush_glyphs(PangoTerm *pt)
   pt->glyph_area.height = 0;
 
   g_string_truncate(pt->glyphs, 0);
+
+  g_object_unref(gc);
 }
 
 gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -339,8 +341,7 @@ int term_erase(VTermRect rect, void *user_data)
   PangoTerm *pt = user_data;
   flush_glyphs(pt);
 
-  GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
-  gdk_gc_set_rgb_fg_color(pt->termdraw_gc, &bg);
+  GdkGC *gc = gdk_gc_new(pt->termdraw);
 
   GdkRectangle destarea = {
     .x      = rect.start_col * pt->cell_width,
@@ -348,16 +349,20 @@ int term_erase(VTermRect rect, void *user_data)
     .width  = (rect.end_col - rect.start_col) * pt->cell_width,
     .height = (rect.end_row - rect.start_row) * pt->cell_height,
   };
+  gdk_gc_set_clip_rectangle(gc, &destarea);
 
-  gdk_gc_set_clip_rectangle(pt->termdraw_gc, &destarea);
+  GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
+  gdk_gc_set_rgb_fg_color(gc, &bg);
 
   gdk_draw_rectangle(pt->termdraw,
-      pt->termdraw_gc,
+      gc,
       TRUE,
       destarea.x,
       destarea.y,
       destarea.width,
       destarea.height);
+
+  g_object_unref(gc);
 
   return 1;
 }
@@ -697,7 +702,6 @@ int main(int argc, char *argv[])
   gtk_widget_realize(pt->termwin);
 
   pt->termdraw = pt->termwin->window;
-  pt->termdraw_gc = gdk_gc_new(pt->termdraw);
 
   GdkColor gdk_col;
   gdk_color_parse(default_fg, &gdk_col);
