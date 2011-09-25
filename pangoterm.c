@@ -152,20 +152,6 @@ VTermKey convert_keyval(guint gdk_keyval)
   }
 }
 
-static void add_glyph(PangoTerm *pt, const uint32_t chars[], int width)
-{
-  char *chars_str = g_ucs4_to_utf8(chars, -1, NULL, NULL, NULL);
-
-  g_array_set_size(pt->glyph_widths, pt->glyphs->len + 1);
-  g_array_index(pt->glyph_widths, int, pt->glyphs->len) = width;
-
-  g_string_append(pt->glyphs, chars_str);
-
-  g_free(chars_str);
-
-  return;
-}
-
 static void flush_glyphs(PangoTerm *pt)
 {
   if(!pt->glyphs->len) {
@@ -331,7 +317,14 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user_da
   if(destarea.y != pt->glyph_area.y || destarea.x != pt->glyph_area.x + pt->glyph_area.width)
     flush_glyphs(pt);
 
-  add_glyph(pt, chars, width);
+  char *chars_str = g_ucs4_to_utf8(chars, -1, NULL, NULL, NULL);
+
+  g_array_set_size(pt->glyph_widths, pt->glyphs->len + 1);
+  g_array_index(pt->glyph_widths, int, pt->glyphs->len) = width;
+
+  g_string_append(pt->glyphs, chars_str);
+
+  g_free(chars_str);
 
   if(pt->glyph_area.width && pt->glyph_area.height)
     gdk_rectangle_union(&destarea, &pt->glyph_area, &pt->glyph_area);
