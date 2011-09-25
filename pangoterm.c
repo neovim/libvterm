@@ -207,6 +207,17 @@ static void flush_glyphs(PangoTerm *pt)
 
   pango_layout_iter_free(iter);
 
+  GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
+  gdk_gc_set_rgb_fg_color(pt->termdraw_gc, &bg);
+
+  gdk_draw_rectangle(pt->termdraw,
+      pt->termdraw_gc,
+      TRUE,
+      pt->glyph_area.x,
+      pt->glyph_area.y,
+      pt->glyph_area.width,
+      pt->glyph_area.height);
+
   gdk_draw_layout_with_colors(pt->termdraw,
       pt->termdraw_gc,
       pt->glyph_area.x,
@@ -310,10 +321,6 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user_da
 {
   PangoTerm *pt = user_data;
 
-  GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
-
-  gdk_gc_set_rgb_fg_color(pt->termdraw_gc, &bg);
-
   GdkRectangle destarea = {
     .x      = pos.col * pt->cell_width,
     .y      = pos.row * pt->cell_height,
@@ -323,16 +330,6 @@ int term_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user_da
 
   if(destarea.y != pt->glyph_area.y || destarea.x != pt->glyph_area.x + pt->glyph_area.width)
     flush_glyphs(pt);
-
-  gdk_gc_set_clip_rectangle(pt->termdraw_gc, &destarea);
-
-  gdk_draw_rectangle(pt->termdraw,
-      pt->termdraw_gc,
-      TRUE,
-      destarea.x,
-      destarea.y,
-      destarea.width,
-      destarea.height);
 
   add_glyph(pt, chars, width);
 
