@@ -75,6 +75,8 @@ typedef struct {
   guint cursor_timer_id;
 
   GtkWidget *termwin;
+
+  GdkPixmap *buffer;
   GdkDrawable *termdraw;
 } PangoTerm;
 
@@ -151,6 +153,18 @@ VTermKey convert_keyval(guint gdk_keyval)
   }
 }
 
+static void blit_buffer(PangoTerm *pt, GdkRectangle *area)
+{
+  GdkGC *gc = gdk_gc_new(pt->termdraw);
+
+  gdk_gc_set_clip_rectangle(gc, area);
+
+  /* clip rectangle will solve this efficiently */
+  gdk_draw_drawable(pt->termdraw, gc, pt->buffer, 0, 0, 0, 0, -1, -1);
+
+  g_object_unref(gc);
+}
+
 static void flush_glyphs(PangoTerm *pt)
 {
   if(!pt->glyphs->len) {
@@ -159,7 +173,7 @@ static void flush_glyphs(PangoTerm *pt)
     return;
   }
 
-  GdkGC *gc = gdk_gc_new(pt->termdraw);
+  GdkGC *gc = gdk_gc_new(pt->buffer);
   gdk_gc_set_clip_rectangle(gc, &pt->glyph_area);
 
   PangoLayout *layout = pt->pen.layout;
@@ -196,7 +210,7 @@ static void flush_glyphs(PangoTerm *pt)
   GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
   gdk_gc_set_rgb_fg_color(gc, &bg);
 
-  gdk_draw_rectangle(pt->termdraw,
+  gdk_draw_rectangle(pt->buffer,
       gc,
       TRUE,
       pt->glyph_area.x,
@@ -204,13 +218,15 @@ static void flush_glyphs(PangoTerm *pt)
       pt->glyph_area.width,
       pt->glyph_area.height);
 
-  gdk_draw_layout_with_colors(pt->termdraw,
+  gdk_draw_layout_with_colors(pt->buffer,
       gc,
       pt->glyph_area.x,
       pt->glyph_area.y,
       layout,
       pt->pen.attrs.reverse ? &pt->pen.bg_col : &pt->pen.fg_col,
       NULL);
+
+  blit_buffer(pt, &pt->glyph_area);
 
   pt->glyph_area.width = 0;
   pt->glyph_area.height = 0;
@@ -354,13 +370,15 @@ int term_erase(VTermRect rect, void *user_data)
   GdkColor bg = pt->pen.attrs.reverse ? pt->pen.fg_col : pt->pen.bg_col;
   gdk_gc_set_rgb_fg_color(gc, &bg);
 
-  gdk_draw_rectangle(pt->termdraw,
+  gdk_draw_rectangle(pt->buffer,
       gc,
       TRUE,
       destarea.x,
       destarea.y,
       destarea.width,
       destarea.height);
+
+  blit_buffer(pt, &destarea);
 
   g_object_unref(gc);
 
@@ -600,14 +618,7 @@ gboolean term_expose(GtkWidget *widget, GdkEventExpose *event, gpointer user_dat
 {
   PangoTerm *pt = user_data;
 
-  VTermRect rect = {
-    .start_col = event->area.x / pt->cell_width,  // round down
-    .start_row = event->area.y / pt->cell_height,
-    .end_col   = (event->area.x + event->area.width  + pt->cell_width  - 1) / pt->cell_width,  // round up
-    .end_row   = (event->area.y + event->area.height + pt->cell_height - 1) / pt->cell_height,
-  };
-
-  term_damage(rect, pt);
+  blit_buffer(pt, &event->area);
 
   return TRUE;
 }
@@ -624,6 +635,22 @@ void term_resize(GtkContainer* widget, gpointer user_data)
 
   struct winsize size = { lines, cols, 0, 0 };
   ioctl(pt->master, TIOCSWINSZ, &size);
+
+  GdkPixmap *new_buffer = gdk_pixmap_new(pt->termdraw,
+      cols  * pt->cell_width,
+      lines * pt->cell_height,
+      -1);
+
+  GdkGC *gc = gdk_gc_new(new_buffer);
+  gdk_draw_drawable(new_buffer,
+      gc,
+      pt->buffer,
+      0, 0, 0, 0, -1, -1);
+
+  g_object_unref(gc);
+
+  g_object_unref(pt->buffer);
+  pt->buffer = new_buffer;
 
   vterm_set_size(pt->vt, lines, cols);
 
@@ -766,6 +793,11 @@ int main(int argc, char *argv[])
 
   gtk_window_resize(GTK_WINDOW(pt->termwin), 
       size.ws_col * pt->cell_width, size.ws_row * pt->cell_height);
+
+  pt->buffer = gdk_pixmap_new(pt->termdraw,
+      size.ws_col * pt->cell_width,
+      size.ws_row * pt->cell_height,
+      -1);
 
   gdk_color_parse(cursor_col_str, &pt->cursor_col);
 
