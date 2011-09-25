@@ -516,6 +516,55 @@ static void damagecell(PangoTerm *pt, VTermPos pos)
   term_damage(rect, pt);
 }
 
+int term_moverect(VTermRect dest, VTermRect src, void *user_data)
+{
+  PangoTerm *pt = user_data;
+
+  if(pt->cursor_visible && pt->cursor_blinkstate &&
+     (pt->cursorpos.col >= src.start_col && pt->cursorpos.col < src.end_col) &&
+     (pt->cursorpos.row >= src.start_row && pt->cursorpos.row < src.end_row)) {
+    /* Hide cursor before reading source area */
+    pt->cursor_visible = 0;
+    damagecell(pt, pt->cursorpos);
+    flush_glyphs(pt);
+    pt->cursor_visible = 1;
+  }
+
+  GdkRectangle destarea = {
+    .x      = dest.start_col * pt->cell_width,
+    .y      = dest.start_row * pt->cell_height,
+    .width  = (dest.end_col - dest.start_col) * pt->cell_width,
+    .height = (dest.end_row - dest.start_row) * pt->cell_height,
+  };
+
+  GdkGC *gc = gdk_gc_new(pt->buffer);
+  gdk_gc_set_clip_rectangle(gc, &destarea);
+
+  gdk_draw_drawable(pt->buffer,
+      gc,
+      pt->buffer,
+      src.start_col * pt->cell_width,
+      src.start_row * pt->cell_height,
+      destarea.x,
+      destarea.y,
+      destarea.width,
+      destarea.height);
+
+  g_object_unref(gc);
+
+  blit_buffer(pt, &destarea);
+
+  if(pt->cursor_visible && pt->cursor_blinkstate &&
+     (pt->cursorpos.col >= dest.start_col && pt->cursorpos.col < dest.end_col) &&
+     (pt->cursorpos.row >= dest.start_row && pt->cursorpos.row < dest.end_row)) {
+    /* Show cursor after writing dest area */
+    damagecell(pt, pt->cursorpos);
+    flush_glyphs(pt);
+  }
+
+  return 1;
+}
+
 int term_movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user_data)
 {
   PangoTerm *pt = user_data;
@@ -608,6 +657,7 @@ int term_bell(void *user_data)
 
 static VTermScreenCallbacks cb = {
   .damage       = term_damage,
+  .moverect     = term_moverect,
   .movecursor   = term_movecursor,
   .settermprop  = term_settermprop,
   .setmousefunc = term_setmousefunc,
