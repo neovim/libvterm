@@ -795,6 +795,8 @@ int main(int argc, char *argv[])
   col_bg.green = gdk_col.green / 257;
   col_bg.blue  = gdk_col.blue  / 257;
 
+  GdkColormap* colormap = gdk_colormap_get_system();
+  gdk_rgb_find_color(colormap, &gdk_col);
   gdk_window_set_background(pt->termwin->window, &gdk_col);
   vterm_state_set_default_colors(vterm_obtain_state(pt->vt), &col_fg, &col_bg);
 
