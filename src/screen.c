@@ -10,6 +10,9 @@
 /* State of the pen at some moment in time, also used in a cell */
 typedef struct
 {
+  /* After the bitfield */
+  VTermColor   fg, bg;
+
   unsigned int bold      : 1;
   unsigned int underline : 2;
   unsigned int italic    : 1;
@@ -17,9 +20,6 @@ typedef struct
   unsigned int reverse   : 1;
   unsigned int strike    : 1;
   unsigned int font      : 4; /* 0 to 9 */
-
-  /* After the bitfield */
-  VTermColor   fg, bg;
 } ScreenPen;
 
 /* Internal representation of a screen cell */
