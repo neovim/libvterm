@@ -67,6 +67,7 @@ typedef struct {
   int cell_width;
   int cell_height;
 
+  int has_focus;
   int cursor_visible;
   int cursor_blinkstate;
   VTermPos cursorpos;
@@ -481,8 +482,10 @@ int term_damage(VTermRect rect, void *user_data)
       VTermScreenCell cell;
       vterm_screen_get_cell(pt->vts, pos, &cell);
 
-      chpen(&cell, user_data,
-          (pt->cursor_visible && pos.row == pt->cursorpos.row && pos.col == pt->cursorpos.col && pt->cursor_blinkstate));
+      int cursor_here = pos.row == pt->cursorpos.row && pos.col == pt->cursorpos.col;
+      int cursor_visible = (pt->cursor_visible && pt->cursor_blinkstate) || !pt->has_focus;
+
+      chpen(&cell, user_data, cursor_visible && cursor_here);
 
       if(cell.chars[0] == 0) {
         VTermRect here = {
@@ -707,6 +710,30 @@ void term_resize(GtkContainer* widget, gpointer user_data)
   return;
 }
 
+void term_focus_in(GtkWidget *widget, GdkEventFocus *event, gpointer user_data)
+{
+  PangoTerm *pt = user_data;
+  pt->has_focus = 1;
+
+  if(pt->cursor_visible) {
+    damagecell(pt, pt->cursorpos);
+
+    flush_glyphs(pt);
+  }
+}
+
+void term_focus_out(GtkWidget *widget, GdkEventFocus *event, gpointer user_data)
+{
+  PangoTerm *pt = user_data;
+  pt->has_focus = 0;
+
+  if(pt->cursor_visible) {
+    damagecell(pt, pt->cursorpos);
+
+    flush_glyphs(pt);
+  }
+}
+
 void term_quit(GtkContainer* widget, gpointer unused_data)
 {
   gtk_main_quit();
@@ -809,10 +836,11 @@ int main(int argc, char *argv[])
 
   g_signal_connect(G_OBJECT(pt->termwin), "expose-event", GTK_SIGNAL_FUNC(term_expose), pt);
   g_signal_connect(G_OBJECT(pt->termwin), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), pt);
-
   g_signal_connect(G_OBJECT(pt->termwin), "button-press-event",   GTK_SIGNAL_FUNC(term_mousepress), pt);
   g_signal_connect(G_OBJECT(pt->termwin), "button-release-event", GTK_SIGNAL_FUNC(term_mousepress), pt);
   g_signal_connect(G_OBJECT(pt->termwin), "motion-notify-event",  GTK_SIGNAL_FUNC(term_mousepress), pt);
+  g_signal_connect(G_OBJECT(pt->termwin), "focus-in-event",  GTK_SIGNAL_FUNC(term_focus_in),  pt);
+  g_signal_connect(G_OBJECT(pt->termwin), "focus-out-event", GTK_SIGNAL_FUNC(term_focus_out), pt);
   g_signal_connect(G_OBJECT(pt->termwin), "destroy", GTK_SIGNAL_FUNC(term_quit), pt);
 
   pt->im_context = gtk_im_context_simple_new();
