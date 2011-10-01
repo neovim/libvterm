@@ -914,6 +914,8 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
   case 0x72: // DECSTBM - DEC custom
     state->scrollregion_start = CSI_ARG_OR(args[0], 1) - 1;
     state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
+    if(state->scrollregion_start == 0 && state->scrollregion_end == state->rows)
+      state->scrollregion_end = -1;
     break;
 
   default:
