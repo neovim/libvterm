@@ -2,36 +2,31 @@
 
 #include <stdio.h>
 
-void vterm_input_push_str(VTerm *vt, VTermModifier mod, const char *str, size_t len)
+void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
 {
   VTermModifier mod_noshift = mod & ~VTERM_MOD_SHIFT;
 
-  if(mod_noshift == 0)
+  if(mod_noshift == 0) {
     // Normal text - ignore just shift
-    vterm_push_output_bytes(vt, str, len);
-  else if(len == 1) {
-    char c = str[0];
-
-    if(mod & VTERM_MOD_CTRL)
-      c &= 0x1f;
-
-    if(mod & VTERM_MOD_ALT) {
-      vterm_push_output_sprintf(vt, "\e%c", c);
-    }
-    else {
-      vterm_push_output_bytes(vt, &c, 1);
-    }
+    char str[6];
+    // TODO: UTF-8 rendering
+    str[0] = c;
+    vterm_push_output_bytes(vt, str, 1);
+    return;
   }
-  else {
-    printf("Can't cope with push_str with non-zero state %d\n", mod);
-  }
-}
 
-void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
-{
-  const char byte = c;
-  /* MASSIVE TODO */
-  vterm_input_push_str(vt, mod, &byte, 1);
+  // TODO: Full CSI u encoding where required
+
+  if(mod & VTERM_MOD_ALT) {
+    vterm_push_output_bytes(vt, "\e", 1);
+    vterm_input_push_char(vt, mod & ~VTERM_MOD_ALT, c);
+    return;
+  }
+
+  if(mod & VTERM_MOD_CTRL) {
+    vterm_input_push_char(vt, mod & ~VTERM_MOD_CTRL, c & 0x1f);
+    return;
+  }
 }
 
 typedef struct {
