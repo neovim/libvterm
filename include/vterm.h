@@ -159,7 +159,7 @@ typedef struct {
 
 void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
 
-void vterm_input_push_str(VTerm *vt, VTermModifier state, const char *str, size_t len);
+void vterm_input_push_char(VTerm *vt, VTermModifier state, uint32_t c);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 
 void vterm_parser_set_utf8(VTerm *vt, int is_utf8);

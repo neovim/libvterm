@@ -406,17 +406,14 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
-    else if(strstartswith(line, "INSTR ")) {
+    else if(strstartswith(line, "INCHAR ")) {
       char *linep = line + 6;
-      int state, len = 0;
+      int state, c = 0;
       while(linep[0] == ' ')
         linep++;
-      sscanf(linep, "%d %n", &state, &len);
-      linep += len;
+      sscanf(linep, "%d %x", &state, &c);
 
-      len = inplace_hex2bytes(linep);
-
-      vterm_input_push_str(vt, state, linep, len);
+      vterm_input_push_char(vt, state, c);
     }
 
     else if(strstartswith(line, "MOUSE ")) {
