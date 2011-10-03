@@ -27,6 +27,13 @@ void vterm_input_push_str(VTerm *vt, VTermModifier mod, const char *str, size_t 
   }
 }
 
+void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
+{
+  const char byte = c;
+  /* MASSIVE TODO */
+  vterm_input_push_str(vt, mod, &byte, 1);
+}
+
 typedef struct {
   enum {
     KEYCODE_NONE,

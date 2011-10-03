@@ -1,17 +1,17 @@
 INIT
 
 !Unmodified ASCII
-INSTR 0 "ABC"
-  output "ABC"
+INCHAR 0 41
+  output "A"
 
 !Ctrl modifier on ASCII letters
-INSTR 4 "A"
+INCHAR 4 41
   output "\x01"
 
 !Alt modifier on ASCII letters
-INSTR 2 "A"
+INCHAR 2 41
   output "\eA"
 
 !Ctrl-Alt modifier on ASCII letters
-INSTR 6 "A"
+INCHAR 6 41
   output "\e\x01"

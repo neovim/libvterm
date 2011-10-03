@@ -262,9 +262,13 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(keyval)
     vterm_input_push_key(pt->vt, state, keyval);
   else {
-    size_t len = strlen(event->string);
-    if(len)
-      vterm_input_push_str(pt->vt, state, event->string, len);
+    const char *str = event->string;
+    if(str[0]) {
+      while(str && str[0]) {
+        vterm_input_push_char(pt->vt, state, g_utf8_get_char(str));
+        str = g_utf8_next_char(str);
+      }
+    }
     else
       printf("Unsure how to handle key %d with no string\n", event->keyval);
   }
@@ -310,7 +314,10 @@ gboolean im_commit(GtkIMContext *context, gchar *str, gpointer user_data)
 {
   PangoTerm *pt = user_data;
 
-  vterm_input_push_str(pt->vt, 0, str, strlen(str));
+  while(str && str[0]) {
+    vterm_input_push_char(pt->vt, 0, g_utf8_get_char(str));
+    str = g_utf8_next_char(str);
+  }
 
   size_t bufflen = vterm_output_bufferlen(pt->vt);
   if(bufflen) {
