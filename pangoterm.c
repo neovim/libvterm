@@ -261,17 +261,11 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
 
   if(keyval)
     vterm_input_push_key(pt->vt, state, keyval);
-  else {
-    const char *str = event->string;
-    if(str[0]) {
-      while(str && str[0]) {
-        vterm_input_push_char(pt->vt, state, g_utf8_get_char(str));
-        str = g_utf8_next_char(str);
-      }
-    }
-    else
-      printf("Unsure how to handle key %d with no string\n", event->keyval);
-  }
+  else if(event->keyval <= 0x10ffff)
+    /* event->keyval already contains a Unicode codepoint so that's easy */
+    vterm_input_push_char(pt->vt, state, event->keyval);
+  else
+    printf("Unsure how to handle key %d with no string\n", event->keyval);
 
   size_t bufflen = vterm_output_bufferlen(pt->vt);
   if(bufflen) {
