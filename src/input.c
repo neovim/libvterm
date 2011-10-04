@@ -16,7 +16,7 @@ static inline unsigned int utf8_seqlen(long codepoint)
   return 6;
 }
 
-static void fill_utf8(long codepoint, char *str)
+static int fill_utf8(long codepoint, char *str)
 {
   int nbytes = utf8_seqlen(codepoint);
 
@@ -38,6 +38,8 @@ static void fill_utf8(long codepoint, char *str)
     case 5: str[0] = 0xf8 | (codepoint & 0x03); break;
     case 6: str[0] = 0xfc | (codepoint & 0x01); break;
   }
+
+  return nbytes;
 }
 /* end copy */
 
@@ -50,8 +52,8 @@ void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
   if(mod == 0) {
     // Normal text - ignore just shift
     char str[6];
-    fill_utf8(c, str);
-    vterm_push_output_bytes(vt, str, 1);
+    int seqlen = fill_utf8(c, str);
+    vterm_push_output_bytes(vt, str, seqlen);
     return;
   }
 
