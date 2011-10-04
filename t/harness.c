@@ -21,6 +21,22 @@ static size_t inplace_hex2bytes(char *s)
   return outpos - s;
 }
 
+static VTermModifier strpe_modifiers(char **strp)
+{
+  VTermModifier state = 0;
+
+  while((*strp)[0]) {
+    switch(((*strp)++)[0]) {
+      case 'S': state |= VTERM_MOD_SHIFT; break;
+      case 'C': state |= VTERM_MOD_CTRL;  break;
+      case 'A': state |= VTERM_MOD_ALT;   break;
+      default: return state;
+    }
+  }
+
+  return state;
+}
+
 static VTerm *vt;
 static VTermState *state;
 static VTermScreen *screen;
@@ -408,10 +424,11 @@ int main(int argc, char **argv)
 
     else if(strstartswith(line, "INCHAR ")) {
       char *linep = line + 6;
-      int state, c = 0;
+      int c = 0;
       while(linep[0] == ' ')
         linep++;
-      sscanf(linep, "%d %x", &state, &c);
+      VTermModifier state = strpe_modifiers(&linep);
+      sscanf(linep, " %x", &c);
 
       vterm_input_push_char(vt, state, c);
     }
