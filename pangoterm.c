@@ -245,7 +245,10 @@ static void flush_glyphs(PangoTerm *pt)
 gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
   PangoTerm *pt = user_data;
-  gboolean ret = gtk_im_context_filter_keypress(pt->im_context, event);
+  /* GtkIMContext will eat a Shift-Space and not tell us about shift.
+   */
+  gboolean ret = (event->state & GDK_SHIFT_MASK && event->keyval == ' ') ? FALSE
+      : gtk_im_context_filter_keypress(pt->im_context, event);
 
   if(ret)
     return TRUE;
