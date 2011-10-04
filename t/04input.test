@@ -41,3 +41,21 @@ INCHAR CA 49
   output "\e[73;7u"
 INCHAR CA 69
   output "\e[105;7u"
+
+!Special handling of Space
+INCHAR 0 20
+  output " "
+INCHAR S 20
+  output "\e[32;2u"
+INCHAR C 20
+  output "\e[32;5u"
+INCHAR SC 20
+  output "\e[32;6u"
+INCHAR A 20
+  output "\e "
+INCHAR SA 20
+  output "\e[32;4u"
+INCHAR CA 20
+  output "\e[32;7u"
+INCHAR SCA 20
+  output "\e[32;8u"
