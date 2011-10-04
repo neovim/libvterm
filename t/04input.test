@@ -23,3 +23,21 @@ INCHAR CA 41
   output "\e[65;7u"
 INCHAR CA 61
   output "\e\x01"
+
+!Special handling of Ctrl-I
+INCHAR 0 49
+  output "I"
+INCHAR 0 69
+  output "i"
+INCHAR C 49
+  output "\e[73;5u"
+INCHAR C 69
+  output "\e[105;5u"
+INCHAR A 49
+  output "\eI"
+INCHAR A 69
+  output "\ei"
+INCHAR CA 49
+  output "\e[73;7u"
+INCHAR CA 69
+  output "\e[105;7u"
