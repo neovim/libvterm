@@ -112,7 +112,7 @@ static GOptionEntry option_entries[] = {
   { NULL },
 };
 
-VTermKey convert_keyval(guint gdk_keyval)
+VTermKey convert_keyval(guint gdk_keyval, VTermModifier *statep)
 {
   if(gdk_keyval >= GDK_F1 && gdk_keyval <= GDK_F35)
     return VTERM_KEY_FUNCTION(gdk_keyval - GDK_F1 + 1);
@@ -148,6 +148,11 @@ VTermKey convert_keyval(guint gdk_keyval)
     return VTERM_KEY_PAGEUP;
   case GDK_Page_Down:
     return VTERM_KEY_PAGEDOWN;
+
+  case GDK_KEY_ISO_Left_Tab:
+    /* This is Shift-Tab */
+    *statep |= VTERM_MOD_SHIFT;
+    return VTERM_KEY_TAB;
 
   default:
     return VTERM_KEY_NONE;
@@ -257,7 +262,7 @@ gboolean term_keypress(GtkWidget *widget, GdkEventKey *event, gpointer user_data
   if(event->state & GDK_MOD1_MASK)
     state |= VTERM_MOD_ALT;
 
-  VTermKey keyval = convert_keyval(event->keyval);
+  VTermKey keyval = convert_keyval(event->keyval, &state);
 
   if(keyval)
     vterm_input_push_key(pt->vt, state, keyval);
