@@ -140,7 +140,10 @@ void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
     break;
 
   case KEYCODE_LITERAL:
-    vterm_push_output_bytes(vt, &k.literal, 1);
+    if(mod & (VTERM_MOD_SHIFT|VTERM_MOD_CTRL))
+      vterm_push_output_sprintf(vt, "\e[%d;%du", k.literal, mod+1);
+    else
+      vterm_push_output_sprintf(vt, mod & VTERM_MOD_ALT ? "\e%c" : "%c", k.literal);
     break;
 
   case KEYCODE_CSI_CURSOR:
