@@ -46,8 +46,10 @@ static int fill_utf8(long codepoint, char *str)
 void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
 {
   /* The shift modifier is never important for Unicode characters
+   * apart from Space
    */
-  mod &= ~VTERM_MOD_SHIFT;
+  if(c != ' ')
+    mod &= ~VTERM_MOD_SHIFT;
 
   if(mod == 0) {
     // Normal text - ignore just shift
@@ -68,8 +70,8 @@ void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
       needs_CSIu = (c < 'a' || c > 'z');
   }
 
-  /* We don't need CSIu unless we have CTRL */
-  if(needs_CSIu && (mod & VTERM_MOD_CTRL)) {
+  /* ALT we can just prefix with ESC; anything else requires CSI u */
+  if(needs_CSIu && (mod & ~VTERM_MOD_ALT)) {
     vterm_push_output_sprintf(vt, "\e[%d;%du", c, mod+1);
     return;
   }
