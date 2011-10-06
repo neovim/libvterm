@@ -43,8 +43,9 @@ static VTermKey strp_key(char *str)
     char *name;
     VTermKey key;
   } keys[] = {
-    { "Up", VTERM_KEY_UP },
-    { NULL, VTERM_KEY_NONE },
+    { "Up",  VTERM_KEY_UP },
+    { "Tab", VTERM_KEY_TAB },
+    { NULL,  VTERM_KEY_NONE },
   };
 
   for(int i = 0; keys[i].name; i++) {
@@ -459,8 +460,6 @@ int main(int argc, char **argv)
       while(linep[0] == ' ')
         linep++;
       VTermKey key = strp_key(linep);
-
-      fprintf(stderr, "inkey state=%d key=%d\n", state, key);
 
       vterm_input_push_key(vt, state, key);
     }

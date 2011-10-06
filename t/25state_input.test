@@ -90,3 +90,15 @@ INKEY S Up
   output "\e[1;2A"
 INKEY C Up
   output "\e[1;5A"
+
+!Shift-Tab should be different
+INKEY 0 Tab
+  output "\x09"
+INKEY S Tab
+  output "\e[Z"
+INKEY C Tab
+  output "\e[9;5u"
+INKEY A Tab
+  output "\e\x09"
+INKEY CA Tab
+  output "\e[9;7u"
