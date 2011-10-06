@@ -37,6 +37,24 @@ static VTermModifier strpe_modifiers(char **strp)
   return state;
 }
 
+static VTermKey strp_key(char *str)
+{
+  static struct {
+    char *name;
+    VTermKey key;
+  } keys[] = {
+    { "Up", VTERM_KEY_UP },
+    { NULL, VTERM_KEY_NONE },
+  };
+
+  for(int i = 0; keys[i].name; i++) {
+    if(streq(str, keys[i].name))
+      return keys[i].key;
+  }
+
+  return VTERM_KEY_NONE;
+}
+
 static VTerm *vt;
 static VTermState *state;
 static VTermScreen *screen;
@@ -423,7 +441,7 @@ int main(int argc, char **argv)
     }
 
     else if(strstartswith(line, "INCHAR ")) {
-      char *linep = line + 6;
+      char *linep = line + 7;
       int c = 0;
       while(linep[0] == ' ')
         linep++;
@@ -431,6 +449,20 @@ int main(int argc, char **argv)
       sscanf(linep, " %x", &c);
 
       vterm_input_push_char(vt, state, c);
+    }
+
+    else if(strstartswith(line, "INKEY ")) {
+      char *linep = line + 6;
+      while(linep[0] == ' ')
+        linep++;
+      VTermModifier state = strpe_modifiers(&linep);
+      while(linep[0] == ' ')
+        linep++;
+      VTermKey key = strp_key(linep);
+
+      fprintf(stderr, "inkey state=%d key=%d\n", state, key);
+
+      vterm_input_push_key(vt, state, key);
     }
 
     else if(strstartswith(line, "MOUSE ")) {
