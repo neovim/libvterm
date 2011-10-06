@@ -91,6 +91,7 @@ typedef struct {
   enum {
     KEYCODE_NONE,
     KEYCODE_LITERAL,
+    KEYCODE_TAB,
     KEYCODE_CSI,
     KEYCODE_CSI_CURSOR,
     KEYCODE_CSINUM,
@@ -103,7 +104,7 @@ keycodes_s keycodes[] = {
   { KEYCODE_NONE }, // NONE
 
   { KEYCODE_LITERAL, '\r' }, // ENTER
-  { KEYCODE_LITERAL, '\t' }, // TAB
+  { KEYCODE_TAB,     '\t' }, // TAB
   { KEYCODE_LITERAL, '\b' }, // BACKSPACE
   { KEYCODE_LITERAL, '\e' }, // ESCAPE
 
@@ -154,6 +155,14 @@ void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
   case KEYCODE_NONE:
     break;
 
+  case KEYCODE_TAB:
+    /* Shift-Tab is CSI Z but plain Tab is 0x09 */
+    if(mod == VTERM_MOD_SHIFT)
+      vterm_push_output_sprintf(vt, "\e[Z");
+    else if(mod & VTERM_MOD_SHIFT)
+      vterm_push_output_sprintf(vt, "\e[1;%dZ", mod+1);
+    else
+      /* FALLTHROUGH */
   case KEYCODE_LITERAL:
     if(mod & (VTERM_MOD_SHIFT|VTERM_MOD_CTRL))
       vterm_push_output_sprintf(vt, "\e[%d;%du", k.literal, mod+1);
