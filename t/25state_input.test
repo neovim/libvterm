@@ -1,4 +1,5 @@
 INIT
+WANTSTATE
 
 !Unmodified ASCII
 INCHAR 0 41
@@ -60,3 +61,32 @@ INCHAR CA 20
   output "\e[32;7u"
 INCHAR SCA 20
   output "\e[32;8u"
+
+!Cursor keys in reset (cursor) mode
+INKEY 0 Up
+  output "\e[A"
+INKEY S Up
+  output "\e[1;2A"
+INKEY C Up
+  output "\e[1;5A"
+INKEY SC Up
+  output "\e[1;6A"
+INKEY A Up
+  output "\e[1;3A"
+INKEY SA Up
+  output "\e[1;4A"
+INKEY CA Up
+  output "\e[1;7A"
+INKEY SCA Up
+  output "\e[1;8A"
+
+!Cursor keys in application mode
+PUSH "\e[?1h"
+# Plain "Up" should be SS3 A now
+INKEY 0 Up
+  output "\eOA"
+# Modified keys should still use CSI
+INKEY S Up
+  output "\e[1;2A"
+INKEY C Up
+  output "\e[1;5A"
