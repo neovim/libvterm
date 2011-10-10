@@ -11,6 +11,16 @@
  * API functions *
  *****************/
 
+void *vterm_allocator_new(VTerm *vt, size_t size)
+{
+  return g_malloc0(size);
+}
+
+void vterm_allocator_free(VTerm *vt, void *ptr)
+{
+  g_free(ptr);
+}
+
 VTerm *vterm_new(int rows, int cols)
 {
   VTerm *vt = g_new0(VTerm, 1);
@@ -20,11 +30,11 @@ VTerm *vterm_new(int rows, int cols)
 
   vt->inbuffer_len = 64;
   vt->inbuffer_cur = 0;
-  vt->inbuffer = g_malloc(vt->inbuffer_len);
+  vt->inbuffer = vterm_allocator_new(vt, vt->inbuffer_len);
 
   vt->outbuffer_len = 64;
   vt->outbuffer_cur = 0;
-  vt->outbuffer = g_malloc(vt->outbuffer_len);
+  vt->outbuffer = vterm_allocator_new(vt, vt->outbuffer_len);
 
   return vt;
 }
