@@ -118,6 +118,7 @@ typedef struct {
 } VTermScreenCallbacks;
 
 VTerm *vterm_new(int rows, int cols);
+void   vterm_free(VTerm* vt);
 void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 

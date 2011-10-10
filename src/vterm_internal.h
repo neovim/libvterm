@@ -108,8 +108,12 @@ void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len);
 void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args);
 void vterm_push_output_sprintf(VTerm *vt, const char *format, ...);
 
+void vterm_state_free(VTermState *state);
+
 void vterm_state_resetpen(VTermState *state);
 void vterm_state_setpen(VTermState *state, const long args[], int argcount);
+
+void vterm_screen_free(VTermScreen *screen);
 
 VTermEncoding *vterm_lookup_encoding(VTermEncodingType type, char designation);
 
