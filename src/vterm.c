@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include <glib.h>
@@ -17,8 +18,13 @@ VTerm *vterm_new(int rows, int cols)
   vt->rows = rows;
   vt->cols = cols;
 
-  vt->inbuffer = g_string_new(NULL);
-  vt->outbuffer = g_string_new(NULL);
+  vt->inbuffer_len = 64;
+  vt->inbuffer_cur = 0;
+  vt->inbuffer = g_malloc(vt->inbuffer_len);
+
+  vt->outbuffer_len = 64;
+  vt->outbuffer_cur = 0;
+  vt->outbuffer = g_malloc(vt->outbuffer_len);
 
   return vt;
 }
@@ -53,26 +59,56 @@ void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
 
 void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
 {
-  if((vt->inbuffer->len)) {
-    g_string_append_len(vt->inbuffer, bytes, len);
-    size_t eaten = vterm_parser_interpret_bytes(vt, vt->inbuffer->str, vt->inbuffer->len);
-    g_string_erase(vt->inbuffer, 0, eaten);
+  if(vt->inbuffer_cur) {
+    if(len > vt->inbuffer_len - vt->inbuffer_cur) {
+      fprintf(stderr, "vterm_push_bytes(): buffer overflow; truncating input\n");
+      len = vt->inbuffer_len - vt->inbuffer_cur;
+    }
+    memcpy(vt->inbuffer + vt->inbuffer_cur, bytes, len);
+    vt->inbuffer_cur += len;
+
+    size_t eaten = vterm_parser_interpret_bytes(vt, vt->inbuffer, vt->inbuffer_cur);
+
+    if(eaten < vt->inbuffer_cur) {
+      memmove(vt->inbuffer, vt->inbuffer + eaten, vt->inbuffer_cur - eaten);
+    }
+
+    vt->inbuffer_cur -= eaten;
   }
   else {
     size_t eaten = vterm_parser_interpret_bytes(vt, bytes, len);
-    if(eaten < len)
-      g_string_append_len(vt->inbuffer, bytes + eaten, len - eaten);
+    if(eaten < len) {
+      bytes += eaten;
+      len   -= eaten;
+
+      if(len > vt->inbuffer_len) {
+        fprintf(stderr, "vterm_push_bytes(): buffer overflow; truncating input\n");
+        len = vt->inbuffer_len;
+      }
+
+      memcpy(vt->inbuffer, bytes, len);
+      vt->inbuffer_cur = len;
+    }
   }
 }
 
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
 {
-  g_string_append_len(vt->outbuffer, bytes, len);
+  if(len > vt->outbuffer_len - vt->outbuffer_cur) {
+    fprintf(stderr, "vterm_push_output(): buffer overflow; truncating output\n");
+    len = vt->outbuffer_len - vt->outbuffer_cur;
+  }
+
+  memcpy(vt->outbuffer + vt->outbuffer_cur, bytes, len);
+  vt->outbuffer_cur += len;
 }
 
 void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
 {
-  g_string_append_vprintf(vt->outbuffer, format, args);
+  int written = vsnprintf(vt->outbuffer + vt->outbuffer_cur,
+      vt->outbuffer_len - vt->outbuffer_cur,
+      format, args);
+  vt->outbuffer_cur += written;
 }
 
 void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
@@ -85,17 +121,20 @@ void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
 
 size_t vterm_output_bufferlen(VTerm *vt)
 {
-  return vt->outbuffer->len;
+  return vt->outbuffer_cur;
 }
 
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len)
 {
-  if(len > vt->outbuffer->len)
-    len = vt->outbuffer->len;
+  if(len > vt->outbuffer_cur)
+    len = vt->outbuffer_cur;
 
-  strncpy(buffer, vt->outbuffer->str, len);
+  memcpy(buffer, vt->outbuffer, len);
 
-  g_string_erase(vt->outbuffer, 0, len);
+  if(len < vt->outbuffer_cur)
+    memmove(vt->outbuffer, vt->outbuffer + len, vt->outbuffer_cur - len);
+
+  vt->outbuffer_cur -= len;
 
   return len;
 }

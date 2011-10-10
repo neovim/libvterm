@@ -76,8 +76,15 @@ struct _VTerm
   const VTermParserCallbacks *parser_callbacks;
   void *cbdata;
 
-  GString *inbuffer;
-  GString *outbuffer;
+  /* len == malloc()ed size; cur == number of valid bytes */
+  char  *inbuffer;
+  size_t inbuffer_len;
+  size_t inbuffer_cur;
+
+  char  *outbuffer;
+  size_t outbuffer_len;
+  size_t outbuffer_cur;
+
   VTermState *state;
   VTermScreen *screen;
 };
