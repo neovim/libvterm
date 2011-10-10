@@ -928,5 +928,7 @@ int main(int argc, char *argv[])
 
   gtk_main();
 
+  vterm_free(pt->vt);
+
   return 0;
 }
