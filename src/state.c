@@ -143,8 +143,13 @@ static void linefeed(VTermState *state)
 
 static void grow_combine_buffer(VTermState *state)
 {
-  state->combine_chars_size *= 2;
-  state->combine_chars = g_realloc(state->combine_chars, state->combine_chars_size * sizeof(state->combine_chars[0]));
+  size_t    new_size = state->combine_chars_size * 2;
+  uint32_t *new_chars = vterm_allocator_new(state->vt, new_size);
+
+  memcpy(new_chars, state->combine_chars, state->combine_chars_size);
+
+  vterm_allocator_free(state->vt, state->combine_chars);
+  state->combine_chars = new_chars;
 }
 
 static int is_col_tabstop(VTermState *state, int col)
