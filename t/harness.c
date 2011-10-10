@@ -624,5 +624,7 @@ int main(int argc, char **argv)
     printf(err ? "?\n" : "DONE\n");
   }
 
+  vterm_free(vt);
+
   return 0;
 }
