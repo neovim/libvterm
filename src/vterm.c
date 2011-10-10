@@ -39,6 +39,20 @@ VTerm *vterm_new(int rows, int cols)
   return vt;
 }
 
+void vterm_free(VTerm *vt)
+{
+  if(vt->screen)
+    vterm_screen_free(vt->screen);
+
+  if(vt->state)
+    vterm_state_free(vt->state);
+
+  vterm_allocator_free(vt, vt->inbuffer);
+  vterm_allocator_free(vt, vt->outbuffer);
+
+  vterm_allocator_free(vt, vt);
+}
+
 void vterm_get_size(VTerm *vt, int *rowsp, int *colsp)
 {
   if(rowsp)
