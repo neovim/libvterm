@@ -43,7 +43,7 @@ static void erase(VTermState *state, VTermRect rect)
 
 static VTermState *vterm_state_new(VTerm *vt)
 {
-  VTermState *state = g_new0(VTermState, 1);
+  VTermState *state = vterm_allocator_new(vt, sizeof(VTermState));
 
   state->vt = vt;
 
@@ -61,7 +61,8 @@ static VTermState *vterm_state_new(VTerm *vt)
 
 static void vterm_state_free(VTermState *state)
 {
-  g_free(state);
+  vterm_allocator_free(state->vt, state->combine_chars);
+  vterm_allocator_free(state->vt, state);
 }
 
 static void scroll(VTermState *state, VTermRect rect, int downward, int rightward)
@@ -1006,7 +1007,7 @@ void vterm_state_reset(VTermState *state)
   state->at_phantom = 0;
 
   state->combine_chars_size = 16;
-  state->combine_chars = g_new0(uint32_t, state->combine_chars_size);
+  state->combine_chars = vterm_allocator_new(state->vt, sizeof(uint32_t) * state->combine_chars_size);
 
   state->scrollregion_start = 0;
   state->scrollregion_end = -1;
