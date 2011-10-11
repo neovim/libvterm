@@ -20,9 +20,6 @@ ifeq ($(PROFILE),1)
   LDFLAGS+=-pg
 endif
 
-CFLAGS +=$(shell pkg-config --cflags glib-2.0)
-LDFLAGS+=$(shell pkg-config --libs   glib-2.0)
-
 CFILES=$(wildcard src/*.c)
 HFILES=$(wildcard include/*.h)
 OBJECTS=$(CFILES:.c=.lo)
