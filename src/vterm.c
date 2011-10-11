@@ -9,19 +9,33 @@
  * API functions *
  *****************/
 
-void *vterm_allocator_new(VTerm *vt, size_t size)
+static void *default_malloc(size_t size, void *allocdata)
 {
   return malloc(size);
 }
 
-void vterm_allocator_free(VTerm *vt, void *ptr)
+static void default_free(void *ptr, void *allocdata)
 {
   free(ptr);
 }
 
+static VTermAllocatorFunctions default_allocator = {
+  .malloc = &default_malloc,
+  .free   = &default_free,
+};
+
 VTerm *vterm_new(int rows, int cols)
 {
-  VTerm *vt = malloc(sizeof(VTerm));
+  return vterm_new_with_allocator(rows, cols, &default_allocator, NULL);
+}
+
+VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *funcs, void *allocdata)
+{
+  /* Need to bootstrap using the allocator function directly */
+  VTerm *vt = (*funcs->malloc)(sizeof(VTerm), allocdata);
+
+  vt->allocator = funcs;
+  vt->allocdata = allocdata;
 
   vt->rows = rows;
   vt->cols = cols;
@@ -49,6 +63,16 @@ void vterm_free(VTerm *vt)
   vterm_allocator_free(vt, vt->outbuffer);
 
   vterm_allocator_free(vt, vt);
+}
+
+void *vterm_allocator_new(VTerm *vt, size_t size)
+{
+  return (*vt->allocator->malloc)(size, vt->allocdata);
+}
+
+void vterm_allocator_free(VTerm *vt, void *ptr)
+{
+  (*vt->allocator->free)(ptr, vt->allocdata);
 }
 
 void vterm_get_size(VTerm *vt, int *rowsp, int *colsp)
