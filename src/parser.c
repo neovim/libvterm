@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <glib.h>
+#define CSI_ARGS_MAX 16
+#define CSI_INTERMED_MAX 16
 
 static size_t on_text(VTerm *vt, const char bytes[], size_t len)
 {
@@ -56,7 +57,10 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
       if(args[i] == 0x3b || args[i] == 0x3a) // ; or :
         argcount++;
 
-    long *csi_args = g_alloca(argcount * sizeof(long));
+    /* TODO: Consider if these buffers should live in the VTerm struct itself */
+    long csi_args[CSI_ARGS_MAX];
+    if(argcount > CSI_ARGS_MAX)
+      argcount = CSI_ARGS_MAX;
 
     int argi;
     for(argi = 0; argi < argcount; argi++)
@@ -64,7 +68,7 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
 
     argi = 0;
     int pos;
-    for(pos = intermedcount; pos < arglen; pos++) {
+    for(pos = intermedcount; pos < arglen && argi < argcount; pos++) {
       switch(args[pos]) {
       case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
       case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
@@ -85,9 +89,10 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
       }
     }
 
-    char *intermed = NULL;
+    char intermed[CSI_INTERMED_MAX];
     if(intermedcount) {
-      intermed = g_alloca(intermedcount + 1); // for terminating NUL
+      if(intermedcount > CSI_INTERMED_MAX - 1)
+        intermedcount = CSI_INTERMED_MAX - 1;
       strncpy(intermed, args, intermedcount);
       intermed[intermedcount] = 0;
     }
@@ -101,7 +106,7 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
     //}
 
     if(vt->parser_callbacks && vt->parser_callbacks->csi)
-      if((*vt->parser_callbacks->csi)(intermed, csi_args, argcount, command, vt->cbdata))
+      if((*vt->parser_callbacks->csi)(intermedcount ? intermed : NULL, csi_args, argcount, command, vt->cbdata))
         return;
   }
 
