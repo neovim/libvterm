@@ -102,7 +102,7 @@ typedef enum {
   ENC_SINGLE_94
 } VTermEncodingType;
 
-void *vterm_allocator_new(VTerm *vt, size_t size);
+void *vterm_allocator_malloc(VTerm *vt, size_t size);
 void  vterm_allocator_free(VTerm *vt, void *ptr);
 
 size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len);
