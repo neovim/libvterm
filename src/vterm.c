@@ -5,25 +5,23 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include <glib.h>
-
 /*****************
  * API functions *
  *****************/
 
 void *vterm_allocator_new(VTerm *vt, size_t size)
 {
-  return g_malloc0(size);
+  return malloc(size);
 }
 
 void vterm_allocator_free(VTerm *vt, void *ptr)
 {
-  g_free(ptr);
+  free(ptr);
 }
 
 VTerm *vterm_new(int rows, int cols)
 {
-  VTerm *vt = g_new0(VTerm, 1);
+  VTerm *vt = malloc(sizeof(VTerm));
 
   vt->rows = rows;
   vt->cols = cols;
