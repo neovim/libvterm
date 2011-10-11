@@ -42,11 +42,11 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
 
   vt->inbuffer_len = 64;
   vt->inbuffer_cur = 0;
-  vt->inbuffer = vterm_allocator_new(vt, vt->inbuffer_len);
+  vt->inbuffer = vterm_allocator_malloc(vt, vt->inbuffer_len);
 
   vt->outbuffer_len = 64;
   vt->outbuffer_cur = 0;
-  vt->outbuffer = vterm_allocator_new(vt, vt->outbuffer_len);
+  vt->outbuffer = vterm_allocator_malloc(vt, vt->outbuffer_len);
 
   return vt;
 }
@@ -65,7 +65,7 @@ void vterm_free(VTerm *vt)
   vterm_allocator_free(vt, vt);
 }
 
-void *vterm_allocator_new(VTerm *vt, size_t size)
+void *vterm_allocator_malloc(VTerm *vt, size_t size)
 {
   return (*vt->allocator->malloc)(size, vt->allocdata);
 }

@@ -56,7 +56,7 @@ static inline ScreenCell *getcell(VTermScreen *screen, int row, int col)
 
 static ScreenCell *realloc_buffer(VTermScreen *screen, ScreenCell *buffer, int new_rows, int new_cols)
 {
-  ScreenCell *new_buffer = vterm_allocator_new(screen->vt, sizeof(ScreenCell) * new_rows * new_cols);
+  ScreenCell *new_buffer = vterm_allocator_malloc(screen->vt, sizeof(ScreenCell) * new_rows * new_cols);
 
   for(int row = 0; row < new_rows; row++) {
     for(int col = 0; col < new_cols; col++) {
@@ -304,7 +304,7 @@ static VTermStateCallbacks state_cbs = {
 
 static VTermScreen *screen_new(VTerm *vt)
 {
-  VTermScreen *screen = vterm_allocator_new(vt, sizeof(VTermScreen));
+  VTermScreen *screen = vterm_allocator_malloc(vt, sizeof(VTermScreen));
   int rows, cols;
 
   vterm_get_size(vt, &rows, &cols);

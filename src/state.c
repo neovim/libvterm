@@ -43,7 +43,7 @@ static void erase(VTermState *state, VTermRect rect)
 
 static VTermState *vterm_state_new(VTerm *vt)
 {
-  VTermState *state = vterm_allocator_new(vt, sizeof(VTermState));
+  VTermState *state = vterm_allocator_malloc(vt, sizeof(VTermState));
 
   state->vt = vt;
 
@@ -144,7 +144,7 @@ static void linefeed(VTermState *state)
 static void grow_combine_buffer(VTermState *state)
 {
   size_t    new_size = state->combine_chars_size * 2;
-  uint32_t *new_chars = vterm_allocator_new(state->vt, new_size);
+  uint32_t *new_chars = vterm_allocator_malloc(state->vt, new_size);
 
   memcpy(new_chars, state->combine_chars, state->combine_chars_size);
 
@@ -1012,7 +1012,7 @@ void vterm_state_reset(VTermState *state)
   state->at_phantom = 0;
 
   state->combine_chars_size = 16;
-  state->combine_chars = vterm_allocator_new(state->vt, sizeof(uint32_t) * state->combine_chars_size);
+  state->combine_chars = vterm_allocator_malloc(state->vt, sizeof(uint32_t) * state->combine_chars_size);
 
   state->scrollregion_start = 0;
   state->scrollregion_end = -1;
