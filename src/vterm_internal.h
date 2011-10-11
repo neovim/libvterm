@@ -68,6 +68,9 @@ struct _VTermState
 
 struct _VTerm
 {
+  VTermAllocatorFunctions *allocator;
+  void *allocdata;
+
   int rows;
   int cols;
 

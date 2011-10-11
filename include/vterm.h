@@ -117,8 +117,15 @@ typedef struct {
   int (*resize)(int rows, int cols, void *user);
 } VTermScreenCallbacks;
 
+typedef struct {
+  void *(*malloc)(size_t size, void *allocdata);
+  void  (*free)(void *ptr, void *allocdata);
+} VTermAllocatorFunctions;
+
 VTerm *vterm_new(int rows, int cols);
+VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *funcs, void *allocdata);
 void   vterm_free(VTerm* vt);
+
 void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 
