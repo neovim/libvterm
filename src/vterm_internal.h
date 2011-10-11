@@ -3,7 +3,7 @@
 
 #include "vterm.h"
 
-#include <glib.h>
+#include <stdarg.h>
 
 typedef struct _VTermEncoding VTermEncoding;
 
