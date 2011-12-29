@@ -634,11 +634,16 @@ static int on_csi(const char *intermed, const long args[], int argcount, char co
 {
   VTermState *state = user;
 
-  if(intermed) {
-    if(strcmp(intermed, "?") == 0)
+  if(intermed && intermed[0]) {
+    if(intermed[1]) // longer than 1 char
+      return 0;
+
+    switch(intermed[0]) {
+    case '?':
       return on_csi_qmark(state, args, argcount, command);
-    if(strcmp(intermed, ">") == 0)
+    case '>':
       return on_csi_greater(state, args, argcount, command);
+    }
 
     return 0;
   }
