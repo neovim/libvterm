@@ -305,13 +305,17 @@ static VTermStateCallbacks state_cbs = {
 
 static VTermScreen *screen_new(VTerm *vt)
 {
+  VTermState *state = vterm_obtain_state(vt);
+  if(!state)
+    return NULL;
+
   VTermScreen *screen = vterm_allocator_malloc(vt, sizeof(VTermScreen));
   int rows, cols;
 
   vterm_get_size(vt, &rows, &cols);
 
   screen->vt = vt;
-  screen->state = vterm_obtain_state(vt);
+  screen->state = state;
 
   screen->rows = rows;
   screen->cols = cols;
