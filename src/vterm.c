@@ -11,7 +11,10 @@
 
 static void *default_malloc(size_t size, void *allocdata)
 {
-  return malloc(size);
+  void *ptr = malloc(size);
+  if(ptr)
+    memset(ptr, 0, size);
+  return ptr;
 }
 
 static void default_free(void *ptr, void *allocdata)

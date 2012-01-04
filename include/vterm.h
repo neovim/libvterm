@@ -118,6 +118,8 @@ typedef struct {
 } VTermScreenCallbacks;
 
 typedef struct {
+  /* libvterm relies on this memory to be zeroed out before it is returned
+   * by the allocator. */
   void *(*malloc)(size_t size, void *allocdata);
   void  (*free)(void *ptr, void *allocdata);
 } VTermAllocatorFunctions;
