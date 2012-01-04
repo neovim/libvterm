@@ -32,6 +32,7 @@ typedef struct
 struct _VTermScreen
 {
   VTerm *vt;
+  VTermState *state;
 
   const VTermScreenCallbacks *callbacks;
   void *cbdata;
@@ -310,6 +311,7 @@ static VTermScreen *screen_new(VTerm *vt)
   vterm_get_size(vt, &rows, &cols);
 
   screen->vt = vt;
+  screen->state = vterm_obtain_state(vt);
 
   screen->rows = rows;
   screen->cols = cols;
@@ -318,7 +320,7 @@ static VTermScreen *screen_new(VTerm *vt)
 
   screen->buffer = screen->buffers[0];
 
-  vterm_state_set_callbacks(vterm_obtain_state(vt), &state_cbs, screen);
+  vterm_state_set_callbacks(screen->state, &state_cbs, screen);
 
   return screen;
 }
@@ -334,7 +336,7 @@ void vterm_screen_free(VTermScreen *screen)
 
 void vterm_screen_reset(VTermScreen *screen)
 {
-  vterm_state_reset(vterm_obtain_state(screen->vt));
+  vterm_state_reset(screen->state);
 }
 
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
