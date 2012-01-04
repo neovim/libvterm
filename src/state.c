@@ -1003,6 +1003,9 @@ VTermState *vterm_obtain_state(VTerm *vt)
   VTermState *state = vterm_state_new(vt);
   vt->state = state;
 
+  state->combine_chars_size = 16;
+  state->combine_chars = vterm_allocator_malloc(state->vt, sizeof(uint32_t) * state->combine_chars_size);
+
   vterm_set_parser_callbacks(vt, &parser_callbacks, state);
 
   return state;
@@ -1013,9 +1016,6 @@ void vterm_state_reset(VTermState *state)
   state->pos.row = 0;
   state->pos.col = 0;
   state->at_phantom = 0;
-
-  state->combine_chars_size = 16;
-  state->combine_chars = vterm_allocator_malloc(state->vt, sizeof(uint32_t) * state->combine_chars_size);
 
   state->scrollregion_start = 0;
   state->scrollregion_end = -1;
