@@ -2,7 +2,9 @@
 
 #include <stdio.h>
 
-#define MAX_CHARS_PER_CELL 6
+#ifndef MAX_CHARS_PER_CELL
+# define MAX_CHARS_PER_CELL 6
+#endif
 
 #define UNICODE_SPACE 0x20
 #define UNICODE_LINEFEED 0x13
