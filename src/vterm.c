@@ -51,12 +51,6 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
   vt->outbuffer_cur = 0;
   vt->outbuffer = vterm_allocator_malloc(vt, vt->outbuffer_len);
 
-  vt->parser_callbacks = NULL;
-  vt->cbdata = NULL;
-
-  vt->state = NULL;
-  vt->screen = NULL;
-
   return vt;
 }
 
