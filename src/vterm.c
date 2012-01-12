@@ -212,6 +212,7 @@ VTermValueType vterm_get_prop_type(VTermProp prop)
     case VTERM_PROP_ALTSCREEN:     return VTERM_VALUETYPE_BOOL;
     case VTERM_PROP_TITLE:         return VTERM_VALUETYPE_STRING;
     case VTERM_PROP_ICONNAME:      return VTERM_VALUETYPE_STRING;
+    case VTERM_PROP_REVERSE:       return VTERM_VALUETYPE_BOOL;
   }
   return 0; /* UNREACHABLE */
 }

@@ -41,6 +41,7 @@ struct _VTermScreen
 
   int rows;
   int cols;
+  int global_reverse;
 
   /* Primary and Altscreen. buffers[1] is lazily allocated as needed */
   ScreenCell *buffers[2];
@@ -225,6 +226,10 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
     screen->buffer = val->boolean ? screen->buffers[1] : screen->buffers[0];
     damagescreen(screen);
     break;
+  case VTERM_PROP_REVERSE:
+    screen->global_reverse = val->boolean;
+    damagescreen(screen);
+    break;
   default:
     ; /* ignore */
   }
@@ -399,7 +404,7 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
   cell->attrs.underline = intcell->pen.underline;
   cell->attrs.italic    = intcell->pen.italic;
   cell->attrs.blink     = intcell->pen.blink;
-  cell->attrs.reverse   = intcell->pen.reverse;
+  cell->attrs.reverse   = intcell->pen.reverse ^ screen->global_reverse;
   cell->attrs.strike    = intcell->pen.strike;
   cell->attrs.font      = intcell->pen.font;
 

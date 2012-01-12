@@ -91,6 +91,7 @@ typedef enum {
   VTERM_PROP_ALTSCREEN,         // bool
   VTERM_PROP_TITLE,             // string
   VTERM_PROP_ICONNAME,          // string
+  VTERM_PROP_REVERSE,           // bool
 } VTermProp;
 
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
