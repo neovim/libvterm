@@ -94,3 +94,10 @@ PUSH "\e]1;Hello\x07"
 
 PUSH "\x{9d}1;Hello\x9c"
   osc "1;Hello"
+
+!DCS
+PUSH "\ePHello\x07"
+  dcs "Hello"
+
+PUSH "\x{90}Hello\x9c"
+  dcs "Hello"

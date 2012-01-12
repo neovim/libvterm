@@ -124,12 +124,23 @@ static int parser_osc(const char *command, size_t cmdlen, void *user)
   return 1;
 }
 
+static int parser_dcs(const char *command, size_t cmdlen, void *user)
+{
+  printf("dcs ");
+  for(int i = 0; i < cmdlen; i++)
+    printf("%02x", command[i]);
+  printf("\n");
+
+  return 1;
+}
+
 static VTermParserCallbacks parser_cbs = {
   .text    = parser_text,
   .control = parser_control,
   .escape  = parser_escape,
   .csi     = parser_csi,
   .osc     = parser_osc,
+  .dcs     = parser_dcs,
 };
 
 /* These callbacks are shared by State and Screen */

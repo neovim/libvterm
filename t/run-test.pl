@@ -98,8 +98,8 @@ while( my $line = <$test> ) {
       elsif( $line =~ m/^csi (\S+) (.*)$/ ) {
          $line = sprintf "csi %02x %s", eval($1), $2; # TODO
       }
-      elsif( $line =~ m/^osc (.*)$/ ) {
-         $line = "osc " . join "", map sprintf("%02x", $_), unpack "C*", eval($1);
+      elsif( $line =~ m/^(osc|dcs) (.*)$/ ) {
+         $line = "$1 " . join "", map sprintf("%02x", $_), unpack "C*", eval($2);
       }
       elsif( $line =~ m/^putglyph (\S+) (.*)$/ ) {
          $line = "putglyph " . join( ",", map sprintf("%x", $_), eval($1) ) . " $2";
