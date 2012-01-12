@@ -86,6 +86,18 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
     (*screen->callbacks->damage)(rect, screen->cbdata);
 }
 
+static void damagescreen(VTermScreen *screen)
+{
+  VTermRect rect = {
+    .start_row = 0,
+    .end_row   = screen->rows,
+    .start_col = 0,
+    .end_col   = screen->cols,
+  };
+
+  damagerect(screen, rect);
+}
+
 static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
   VTermScreen *screen = user;
@@ -207,20 +219,11 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
 
   switch(prop) {
   case VTERM_PROP_ALTSCREEN:
-    {
-      if(val->boolean && !screen->buffers[1])
-        return 0;
+    if(val->boolean && !screen->buffers[1])
+      return 0;
 
-      VTermRect rect = {
-        .start_row = 0,
-        .end_row   = screen->rows,
-        .start_col = 0,
-        .end_col   = screen->cols,
-      };
-
-      screen->buffer = val->boolean ? screen->buffers[1] : screen->buffers[0];
-      damagerect(screen, rect);
-    }
+    screen->buffer = val->boolean ? screen->buffers[1] : screen->buffers[0];
+    damagescreen(screen);
     break;
   default:
     ; /* ignore */
