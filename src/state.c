@@ -314,6 +314,10 @@ static int on_control(unsigned char control, void *user)
   VTermPos oldpos = state->pos;
 
   switch(control) {
+  case 0x00: // NUL - ECMA-48 8.3.88
+    /* no effect */
+    break;
+
   case 0x07: // BEL - ECMA-48 8.3.3
     if(state->callbacks && state->callbacks->bell)
       (*state->callbacks->bell)(state->cbdata);
