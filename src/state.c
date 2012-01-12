@@ -551,6 +551,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
     state->mode.cursor = val;
     break;
 
+  case 5:
+    settermprop_bool(state, VTERM_PROP_REVERSE, val);
+    break;
+
   case 7:
     state->mode.autowrap = val;
     break;
