@@ -122,6 +122,15 @@ static void on_osc(VTerm *vt, const char *command, size_t cmdlen)
   fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
 }
 
+static void on_dcs(VTerm *vt, const char *command, size_t cmdlen)
+{
+  if(vt->parser_callbacks && vt->parser_callbacks->dcs)
+    if((*vt->parser_callbacks->dcs)(command, cmdlen, vt->cbdata))
+      return;
+
+  fprintf(stderr, "libvterm: Unhandled DCS %.*s\n", (int)cmdlen, command);
+}
+
 size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
 {
   size_t pos = 0;
@@ -132,6 +141,7 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
     ESC,
     CSI,
     OSC,
+    DCS,
   } parse_state = NORMAL;
 
   size_t string_start;
@@ -142,6 +152,10 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
     switch(parse_state) {
     case ESC:
       switch(c) {
+      case 0x50: // DCS
+        parse_state = DCS;
+        string_start = pos + 1;
+        break;
       case 0x5b: // CSI
         parse_state = CSI;
         string_start = pos + 1;
@@ -177,13 +191,30 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
       break;
 
     case OSC:
+    case DCS:
       if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
-        on_osc(vt, bytes + string_start, pos - string_start);
+        switch(parse_state) {
+        case OSC:
+          on_osc(vt, bytes + string_start, pos - string_start);
+          break;
+        case DCS:
+          on_dcs(vt, bytes + string_start, pos - string_start);
+          break;
+        default: ;
+        }
         parse_state = NORMAL;
         eaten = pos + 1;
       }
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        on_osc(vt, bytes + string_start, pos - string_start - 1);
+        switch(parse_state) {
+        case OSC:
+          on_osc(vt, bytes + string_start, pos - string_start - 1);
+          break;
+        case DCS:
+          on_dcs(vt, bytes + string_start, pos - string_start - 1);
+          break;
+        default: ;
+        }
         parse_state = NORMAL;
         eaten = pos + 1;
       }
@@ -194,6 +225,10 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
         switch(c) {
         case 0x1b: // ESC
           parse_state = ESC;
+          break;
+        case 0x90: // DCS
+          parse_state = DCS;
+          string_start = pos + 1;
           break;
         case 0x9b: // CSI
           parse_state = CSI;
