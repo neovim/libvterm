@@ -39,3 +39,13 @@ PUSH "\e[42mH\e[m"
 PUSH "\e[H\e[7;33;44m\e[K"
   ?screen_cell 0,0  = {} width=1 attrs={R} fg=rgb(240,240,0) bg=rgb(64,64,240)
   ?screen_cell 0,79 = {} width=1 attrs={R} fg=rgb(240,240,0) bg=rgb(64,64,240)
+
+!DECSCNM xors reverse for entire screen
+PUSH "\e[?5h"
+  ?screen_cell 0,0  = {} width=1 attrs={} fg=rgb(240,240,0) bg=rgb(64,64,240)
+  ?screen_cell 0,79 = {} width=1 attrs={} fg=rgb(240,240,0) bg=rgb(64,64,240)
+  ?screen_cell 1,0  = {} width=1 attrs={R} fg=rgb(240,240,240) bg=rgb(0,0,0)
+PUSH "\e[?5l"
+  ?screen_cell 0,0  = {} width=1 attrs={R} fg=rgb(240,240,0) bg=rgb(64,64,240)
+  ?screen_cell 0,79 = {} width=1 attrs={R} fg=rgb(240,240,0) bg=rgb(64,64,240)
+  ?screen_cell 1,0  = {} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
