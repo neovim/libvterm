@@ -67,11 +67,11 @@ PUSH "\e[007e"
 
 !CSI qmark
 PUSH "\e[?2;7f"
-  csi 0x66 2,7 3f
+  csi 0x66 3f 2,7
 
 !CSI greater
 PUSH "\e[>c"
-  csi 0x63 * 3e
+  csi 0x63 3e *
 
 !Mixed CSI
 PUSH "A\e[8mB"
