@@ -619,10 +619,10 @@ int term_settermprop(VTermProp prop, VTermValue *val, void *user_data)
     break;
 
   case VTERM_PROP_CURSORBLINK:
-    if(val->boolean) {
+    if(val->boolean && !pt->cursor_timer_id) {
       pt->cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, pt);
     }
-    else {
+    else if(!val->boolean && pt->cursor_timer_id) {
       g_source_remove(pt->cursor_timer_id);
     }
     break;
