@@ -6,19 +6,7 @@
 #define CSI_ARGS_MAX 16
 #define CSI_LEADER_MAX 16
 
-static size_t on_text(VTerm *vt, const char bytes[], size_t len)
-{
-  size_t eaten;
-
-  if(vt->parser_callbacks && vt->parser_callbacks->text)
-    if((eaten = (*vt->parser_callbacks->text)(bytes, len, vt->cbdata)))
-      return eaten;
-
-  fprintf(stderr, "libvterm: Unhandled text (%zu chars)\n", len);
-  return 0;
-}
-
-static void on_control(VTerm *vt, unsigned char control)
+static void do_control(VTerm *vt, unsigned char control)
 {
   if(vt->parser_callbacks && vt->parser_callbacks->control)
     if((*vt->parser_callbacks->control)(control, vt->cbdata))
@@ -27,19 +15,7 @@ static void on_control(VTerm *vt, unsigned char control)
   fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
 }
 
-static size_t on_escape(VTerm *vt, const char bytes[], size_t len)
-{
-  size_t eaten;
-
-  if(vt->parser_callbacks && vt->parser_callbacks->escape)
-    if((eaten = (*vt->parser_callbacks->escape)(bytes, len, vt->cbdata)))
-      return eaten;
-
-  fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", bytes[0]);
-  return 0;
-}
-
-static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
+static void do_string_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
   int i = 0;
 
@@ -111,24 +87,6 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
   fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
 
-static void on_osc(VTerm *vt, const char *command, size_t cmdlen)
-{
-  if(vt->parser_callbacks && vt->parser_callbacks->osc)
-    if((*vt->parser_callbacks->osc)(command, cmdlen, vt->cbdata))
-      return;
-
-  fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)cmdlen, command);
-}
-
-static void on_dcs(VTerm *vt, const char *command, size_t cmdlen)
-{
-  if(vt->parser_callbacks && vt->parser_callbacks->dcs)
-    if((*vt->parser_callbacks->dcs)(command, cmdlen, vt->cbdata))
-      return;
-
-  fprintf(stderr, "libvterm: Unhandled DCS %.*s\n", (int)cmdlen, command);
-}
-
 static void append_strbuffer(VTerm *vt, const char *str, size_t len)
 {
   if(len > vt->strbuffer_len - vt->strbuffer_cur) {
@@ -157,19 +115,43 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
     len = 0;
   }
 
+  size_t eaten;
+
   switch(vt->parser_state) {
   case NORMAL:
-    return on_text(vt, str_frag, len);
+    if(vt->parser_callbacks && vt->parser_callbacks->text)
+      if((eaten = (*vt->parser_callbacks->text)(str_frag, len, vt->cbdata)))
+        return eaten;
+
+    fprintf(stderr, "libvterm: Unhandled text (%zu chars)\n", len);
+    return 0;
+
   case ESC:
-    return on_escape(vt, str_frag, len);
+    if(vt->parser_callbacks && vt->parser_callbacks->escape)
+      if((eaten = (*vt->parser_callbacks->escape)(str_frag, len, vt->cbdata)))
+        return eaten;
+
+    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", str_frag[0]);
+    return 0;
+
   case CSI:
-    on_csi(vt, str_frag, len - 1, str_frag[len - 1]);
+    do_string_csi(vt, str_frag, len - 1, str_frag[len - 1]);
     return 0;
+
   case OSC:
-    on_osc(vt, str_frag, len);
+    if(vt->parser_callbacks && vt->parser_callbacks->osc)
+      if((*vt->parser_callbacks->osc)(str_frag, len, vt->cbdata))
+        return 0;
+
+    fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)len, str_frag);
     return 0;
+
   case DCS:
-    on_dcs(vt, str_frag, len);
+    if(vt->parser_callbacks && vt->parser_callbacks->dcs)
+      if((*vt->parser_callbacks->dcs)(str_frag, len, vt->cbdata))
+        return 0;
+
+    fprintf(stderr, "libvterm: Unhandled DCS %.*s\n", (int)len, str_frag);
     return 0;
   }
 
@@ -215,7 +197,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         if(c >= 0x40 && c < 0x60) {
           // C1 emulations using 7bit clean
           // ESC 0x40 == 0x80
-          on_control(vt, c + 0x40);
+          do_control(vt, c + 0x40);
           ENTER_NORMAL_STATE();
         }
         else {
@@ -265,7 +247,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
           ENTER_STRING_STATE(OSC);
           break;
         default:
-          on_control(vt, c);
+          do_control(vt, c);
           break;
         }
       }
