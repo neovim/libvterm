@@ -92,7 +92,13 @@ typedef enum {
   VTERM_PROP_TITLE,             // string
   VTERM_PROP_ICONNAME,          // string
   VTERM_PROP_REVERSE,           // bool
+  VTERM_PROP_CURSORSHAPE,       // number
 } VTermProp;
+
+enum {
+  VTERM_PROP_CURSORSHAPE_BLOCK = 1,
+  VTERM_PROP_CURSORSHAPE_UNDERLINE,
+};
 
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
 
