@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define CSI_ARGS_MAX 16
-#define CSI_INTERMED_MAX 16
+#define CSI_LEADER_MAX 16
 
 static size_t on_text(VTerm *vt, const char bytes[], size_t len)
 {
@@ -42,14 +42,14 @@ static size_t on_escape(VTerm *vt, const char bytes[], size_t len)
 static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
   if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3d) {
-    int i;
-    for(i = 0; i < arglen; i++)
-      // Treat 0x3e '>' and 0x3f '?' as an intermediate byte, even though it's
-      // actually a DEC custom extension. Most terms seem to use that
-      if((args[i] & 0xf0) != 0x20 && args[i] != 0x3e && args[i] != 0x3f)
+    int i = 0;
+
+    // Extract leader bytes 0x3c to 0x3f
+    for( ; i < arglen; i++)
+      if(args[i] < 0x3c || args[i] > 0x3f)
         break;
 
-    int intermedcount = i;
+    int leadercount = i;
 
     int argcount = 1; // Always at least 1 arg
 
@@ -68,7 +68,7 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
 
     argi = 0;
     int pos;
-    for(pos = intermedcount; pos < arglen && argi < argcount; pos++) {
+    for(pos = leadercount; pos < arglen && argi < argcount; pos++) {
       switch(args[pos]) {
       case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
       case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
@@ -89,16 +89,16 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
       }
     }
 
-    char intermed[CSI_INTERMED_MAX];
-    if(intermedcount) {
-      if(intermedcount > CSI_INTERMED_MAX - 1)
-        intermedcount = CSI_INTERMED_MAX - 1;
-      strncpy(intermed, args, intermedcount);
-      intermed[intermedcount] = 0;
+    char leader[CSI_LEADER_MAX];
+    if(leadercount) {
+      if(leadercount > CSI_LEADER_MAX - 1)
+        leadercount = CSI_LEADER_MAX - 1;
+      strncpy(leader, args, leadercount);
+      leader[leadercount] = 0;
     }
 
     //printf("Parsed CSI args %.*s as:\n", arglen, args);
-    //printf(" intermed: %s\n", intermed);
+    //printf(" leader: %s\n", leader);
     //for(argi = 0; argi < argcount; argi++) {
     //  printf(" %lu", CSI_ARG(csi_args[argi]));
     //  if(!CSI_ARG_HAS_MORE(csi_args[argi]))
@@ -106,7 +106,7 @@ static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
     //}
 
     if(vt->parser_callbacks && vt->parser_callbacks->csi)
-      if((*vt->parser_callbacks->csi)(intermedcount ? intermed : NULL, csi_args, argcount, command, vt->cbdata))
+      if((*vt->parser_callbacks->csi)(leadercount ? leader : NULL, csi_args, argcount, command, vt->cbdata))
         return;
   }
 

@@ -91,9 +91,16 @@ static int parser_escape(const char bytes[], size_t len, void *user)
   return 1;
 }
 
-static int parser_csi(const char *intermed, const long args[], int argcount, char command, void *user)
+static int parser_csi(const char *leader, const long args[], int argcount, char command, void *user)
 {
   printf("csi %02x", command);
+
+  if(leader && leader[0]) {
+    printf(" ");
+    for(int i = 0; leader[i]; i++)
+      printf("%02x", leader[i]);
+  }
+
   for(int i = 0; i < argcount; i++) {
     char sep = i ? ',' : ' ';
 
@@ -101,12 +108,6 @@ static int parser_csi(const char *intermed, const long args[], int argcount, cha
       printf("%c*", sep);
     else
       printf("%c%ld%s", sep, CSI_ARG(args[i]), CSI_ARG_HAS_MORE(args[i]) ? "+" : "");
-  }
-
-  if(intermed && intermed[0]) {
-    printf(" ");
-    for(int i = 0; intermed[i]; i++)
-      printf("%02x", intermed[i]);
   }
 
   printf("\n");
