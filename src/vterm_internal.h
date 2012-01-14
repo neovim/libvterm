@@ -76,13 +76,20 @@ struct _VTerm
 
   int is_utf8;
 
+  enum VTermParserState {
+    NORMAL,
+    ESC,
+    CSI,
+    OSC,
+    DCS,
+  } parser_state;
   const VTermParserCallbacks *parser_callbacks;
   void *cbdata;
 
   /* len == malloc()ed size; cur == number of valid bytes */
-  char  *inbuffer;
-  size_t inbuffer_len;
-  size_t inbuffer_cur;
+  char  *strbuffer;
+  size_t strbuffer_len;
+  size_t strbuffer_cur;
 
   char  *outbuffer;
   size_t outbuffer_len;
@@ -104,8 +111,6 @@ typedef enum {
 
 void *vterm_allocator_malloc(VTerm *vt, size_t size);
 void  vterm_allocator_free(VTerm *vt, void *ptr);
-
-size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len);
 
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len);
 void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args);
