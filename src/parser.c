@@ -41,74 +41,72 @@ static size_t on_escape(VTerm *vt, const char bytes[], size_t len)
 
 static void on_csi(VTerm *vt, const char *args, size_t arglen, char command)
 {
-  if(arglen == 0 || args[0] < 0x3c || args[0] > 0x3d) {
-    int i = 0;
+  int i = 0;
 
-    // Extract leader bytes 0x3c to 0x3f
-    for( ; i < arglen; i++)
-      if(args[i] < 0x3c || args[i] > 0x3f)
-        break;
+  // Extract leader bytes 0x3c to 0x3f
+  for( ; i < arglen; i++)
+    if(args[i] < 0x3c || args[i] > 0x3f)
+      break;
 
-    int leadercount = i;
+  int leadercount = i;
 
-    int argcount = 1; // Always at least 1 arg
+  int argcount = 1; // Always at least 1 arg
 
-    for( ; i < arglen; i++)
-      if(args[i] == 0x3b || args[i] == 0x3a) // ; or :
-        argcount++;
+  for( ; i < arglen; i++)
+    if(args[i] == 0x3b || args[i] == 0x3a) // ; or :
+      argcount++;
 
-    /* TODO: Consider if these buffers should live in the VTerm struct itself */
-    long csi_args[CSI_ARGS_MAX];
-    if(argcount > CSI_ARGS_MAX)
-      argcount = CSI_ARGS_MAX;
+  /* TODO: Consider if these buffers should live in the VTerm struct itself */
+  long csi_args[CSI_ARGS_MAX];
+  if(argcount > CSI_ARGS_MAX)
+    argcount = CSI_ARGS_MAX;
 
-    int argi;
-    for(argi = 0; argi < argcount; argi++)
-      csi_args[argi] = CSI_ARG_MISSING;
+  int argi;
+  for(argi = 0; argi < argcount; argi++)
+    csi_args[argi] = CSI_ARG_MISSING;
 
-    argi = 0;
-    int pos;
-    for(pos = leadercount; pos < arglen && argi < argcount; pos++) {
-      switch(args[pos]) {
-      case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
-      case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
-        if(csi_args[argi] == CSI_ARG_MISSING)
-          csi_args[argi] = 0;
-        csi_args[argi] *= 10;
-        csi_args[argi] += args[pos] - '0';
-        break;
-      case 0x3a:
-        csi_args[argi] |= CSI_ARG_FLAG_MORE;
-        /* FALLTHROUGH */
-      case 0x3b:
-        argi++;
-        break;
-      default:
-        fprintf(stderr, "TODO: Parse %c in CSI\n", args[pos]);
-        break;
-      }
+  argi = 0;
+  int pos;
+  for(pos = leadercount; pos < arglen && argi < argcount; pos++) {
+    switch(args[pos]) {
+    case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
+    case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
+      if(csi_args[argi] == CSI_ARG_MISSING)
+        csi_args[argi] = 0;
+      csi_args[argi] *= 10;
+      csi_args[argi] += args[pos] - '0';
+      break;
+    case 0x3a:
+      csi_args[argi] |= CSI_ARG_FLAG_MORE;
+      /* FALLTHROUGH */
+    case 0x3b:
+      argi++;
+      break;
+    default:
+      fprintf(stderr, "TODO: Parse %c in CSI\n", args[pos]);
+      break;
     }
-
-    char leader[CSI_LEADER_MAX];
-    if(leadercount) {
-      if(leadercount > CSI_LEADER_MAX - 1)
-        leadercount = CSI_LEADER_MAX - 1;
-      strncpy(leader, args, leadercount);
-      leader[leadercount] = 0;
-    }
-
-    //printf("Parsed CSI args %.*s as:\n", arglen, args);
-    //printf(" leader: %s\n", leader);
-    //for(argi = 0; argi < argcount; argi++) {
-    //  printf(" %lu", CSI_ARG(csi_args[argi]));
-    //  if(!CSI_ARG_HAS_MORE(csi_args[argi]))
-    //    printf("\n");
-    //}
-
-    if(vt->parser_callbacks && vt->parser_callbacks->csi)
-      if((*vt->parser_callbacks->csi)(leadercount ? leader : NULL, csi_args, argcount, command, vt->cbdata))
-        return;
   }
+
+  char leader[CSI_LEADER_MAX];
+  if(leadercount) {
+    if(leadercount > CSI_LEADER_MAX - 1)
+      leadercount = CSI_LEADER_MAX - 1;
+    strncpy(leader, args, leadercount);
+    leader[leadercount] = 0;
+  }
+
+  //printf("Parsed CSI args %.*s as:\n", arglen, args);
+  //printf(" leader: %s\n", leader);
+  //for(argi = 0; argi < argcount; argi++) {
+  //  printf(" %lu", CSI_ARG(csi_args[argi]));
+  //  if(!CSI_ARG_HAS_MORE(csi_args[argi]))
+  //    printf("\n");
+  //}
+
+  if(vt->parser_callbacks && vt->parser_callbacks->csi)
+    if((*vt->parser_callbacks->csi)(leadercount ? leader : NULL, csi_args, argcount, command, vt->cbdata))
+      return;
 
   fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
