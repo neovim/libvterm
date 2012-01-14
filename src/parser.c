@@ -5,6 +5,7 @@
 
 #define CSI_ARGS_MAX 16
 #define CSI_LEADER_MAX 16
+#define CSI_INTERMED_MAX 16
 
 static void do_control(VTerm *vt, unsigned char control)
 {
@@ -19,12 +20,18 @@ static void do_string_csi(VTerm *vt, const char *args, size_t arglen, char comma
 {
   int i = 0;
 
+  int leaderlen = 0;
+  char leader[CSI_LEADER_MAX];
+
   // Extract leader bytes 0x3c to 0x3f
-  for( ; i < arglen; i++)
+  for( ; i < arglen; i++) {
     if(args[i] < 0x3c || args[i] > 0x3f)
       break;
+    if(leaderlen < CSI_LEADER_MAX-1)
+      leader[leaderlen++] = args[i];
+  }
 
-  int leadercount = i;
+  leader[leaderlen] = 0;
 
   int argcount = 1; // Always at least 1 arg
 
@@ -42,15 +49,14 @@ static void do_string_csi(VTerm *vt, const char *args, size_t arglen, char comma
     csi_args[argi] = CSI_ARG_MISSING;
 
   argi = 0;
-  int pos;
-  for(pos = leadercount; pos < arglen && argi < argcount; pos++) {
-    switch(args[pos]) {
+  for(i = leaderlen; i < arglen && argi < argcount; i++) {
+    switch(args[i]) {
     case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
     case 0x35: case 0x36: case 0x37: case 0x38: case 0x39:
       if(csi_args[argi] == CSI_ARG_MISSING)
         csi_args[argi] = 0;
       csi_args[argi] *= 10;
-      csi_args[argi] += args[pos] - '0';
+      csi_args[argi] += args[i] - '0';
       break;
     case 0x3a:
       csi_args[argi] |= CSI_ARG_FLAG_MORE;
@@ -59,17 +65,26 @@ static void do_string_csi(VTerm *vt, const char *args, size_t arglen, char comma
       argi++;
       break;
     default:
-      fprintf(stderr, "TODO: Parse %c in CSI\n", args[pos]);
-      break;
+      goto done_leader;
     }
   }
+done_leader: ;
 
-  char leader[CSI_LEADER_MAX];
-  if(leadercount) {
-    if(leadercount > CSI_LEADER_MAX - 1)
-      leadercount = CSI_LEADER_MAX - 1;
-    strncpy(leader, args, leadercount);
-    leader[leadercount] = 0;
+  int intermedlen = 0;
+  char intermed[CSI_INTERMED_MAX];
+
+  for( ; i < arglen; i++) {
+    if((args[i] & 0xf0) != 0x20)
+      break;
+
+    if(intermedlen < CSI_INTERMED_MAX-1)
+      intermed[intermedlen++] = args[i];
+  }
+
+  intermed[intermedlen] = 0;
+
+  if(i < arglen) {
+    fprintf(stderr, "libvterm: TODO unhandled CSI bytes \"%.*s\"\n", (int)(arglen - i), args + i);
   }
 
   //printf("Parsed CSI args %.*s as:\n", arglen, args);
@@ -78,10 +93,11 @@ static void do_string_csi(VTerm *vt, const char *args, size_t arglen, char comma
   //  printf(" %lu", CSI_ARG(csi_args[argi]));
   //  if(!CSI_ARG_HAS_MORE(csi_args[argi]))
   //    printf("\n");
+  //printf(" intermed: %s\n", intermed);
   //}
 
   if(vt->parser_callbacks && vt->parser_callbacks->csi)
-    if((*vt->parser_callbacks->csi)(leadercount ? leader : NULL, csi_args, argcount, command, vt->cbdata))
+    if((*vt->parser_callbacks->csi)(leaderlen ? leader : NULL, csi_args, argcount, intermedlen ? intermed : NULL, command, vt->cbdata))
       return;
 
   fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
