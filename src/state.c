@@ -636,15 +636,15 @@ static int on_csi_greater(VTermState *state, const long *args, int argcount, cha
   return 0;
 }
 
-static int on_csi(const char *intermed, const long args[], int argcount, char command, void *user)
+static int on_csi(const char *leader, const long args[], int argcount, char command, void *user)
 {
   VTermState *state = user;
 
-  if(intermed && intermed[0]) {
-    if(intermed[1]) // longer than 1 char
+  if(leader && leader[0]) {
+    if(leader[1]) // longer than 1 char
       return 0;
 
-    switch(intermed[0]) {
+    switch(leader[0]) {
     case '?':
       return on_csi_qmark(state, args, argcount, command);
     case '>':
