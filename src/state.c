@@ -608,7 +608,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
   }
 }
 
-static int on_csi(const char *leader, const long args[], int argcount, char command, void *user)
+static int on_csi(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user)
 {
   VTermState *state = user;
   int leader_byte = 0;
