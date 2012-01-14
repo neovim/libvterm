@@ -142,7 +142,7 @@ static void append_strbuffer(VTerm *vt, const char *str, size_t len)
   }
 }
 
-static size_t do_string(VTerm *vt, const char *str_frag, size_t len, char command)
+static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
 {
   if(vt->strbuffer_cur) {
     if(str_frag)
@@ -163,7 +163,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len, char comman
   case ESC:
     return on_escape(vt, str_frag, len);
   case CSI:
-    on_csi(vt, str_frag, len, command);
+    on_csi(vt, str_frag, len - 1, str_frag[len - 1]);
     return 0;
   case OSC:
     on_osc(vt, str_frag, len);
@@ -219,7 +219,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
           ENTER_NORMAL_STATE();
         }
         else {
-          size_t esc_eaten = do_string(vt, bytes + pos, len - pos, 0);
+          size_t esc_eaten = do_string(vt, bytes + pos, len - pos);
           if(esc_eaten <= 0)
             goto pause;
 
@@ -231,7 +231,8 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
 
     case CSI:
       if(c >= 0x40 && c <= 0x7f) {
-        do_string(vt, string_start, bytes + pos - string_start, c);
+        /* +1 to pos because we want to include this command byte as well */
+        do_string(vt, string_start, bytes + pos - string_start + 1);
         ENTER_NORMAL_STATE();
       }
       break;
@@ -239,11 +240,11 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     case OSC:
     case DCS:
       if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
-        do_string(vt, string_start, bytes + pos - string_start, 0);
+        do_string(vt, string_start, bytes + pos - string_start);
         ENTER_NORMAL_STATE();
       }
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        do_string(vt, string_start, bytes + pos - string_start - 1, 0);
+        do_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
       }
       break;
@@ -269,7 +270,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         }
       }
       else {
-        size_t text_eaten = do_string(vt, bytes + pos, len - pos, 0);
+        size_t text_eaten = do_string(vt, bytes + pos, len - pos);
 
         if(text_eaten == 0) {
           string_start = bytes + pos;
