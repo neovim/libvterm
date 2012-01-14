@@ -131,92 +131,122 @@ static void on_dcs(VTerm *vt, const char *command, size_t cmdlen)
   fprintf(stderr, "libvterm: Unhandled DCS %.*s\n", (int)cmdlen, command);
 }
 
-size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
+static void append_strbuffer(VTerm *vt, const char *str, size_t len)
+{
+  if(len > vt->strbuffer_len - vt->strbuffer_cur) {
+    len = vt->strbuffer_len - vt->strbuffer_cur;
+    fprintf(stderr, "Truncating strbuffer preserve to %zd bytes\n", len);
+  }
+
+  if(len > 0) {
+    strncpy(vt->strbuffer + vt->strbuffer_cur, str, len);
+    vt->strbuffer_cur += len;
+  }
+}
+
+static size_t do_string(VTerm *vt, const char *str_frag, size_t len, char command)
+{
+  if(vt->strbuffer_cur) {
+    if(str_frag)
+      append_strbuffer(vt, str_frag, len);
+
+    str_frag = vt->strbuffer;
+    len = vt->strbuffer_cur;
+    vt->strbuffer_cur = 0;
+  }
+  else if(!str_frag) {
+    fprintf(stderr, "parser.c: TODO: No strbuffer _and_ no final fragment???\n");
+    len = 0;
+  }
+
+  switch(vt->parser_state) {
+  case NORMAL:
+    return on_text(vt, str_frag, len);
+  case ESC:
+    return on_escape(vt, str_frag, len);
+  case CSI:
+    on_csi(vt, str_frag, len, command);
+    return 0;
+  case OSC:
+    on_osc(vt, str_frag, len);
+    return 0;
+  case DCS:
+    on_dcs(vt, str_frag, len);
+    return 0;
+  }
+
+  return 0;
+}
+
+void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
 {
   size_t pos = 0;
-  size_t eaten = 0;
+  const char *string_start;
 
-  enum {
-    NORMAL,
-    ESC,
-    CSI,
-    OSC,
-    DCS,
-  } parse_state = NORMAL;
+  switch(vt->parser_state) {
+  case NORMAL:
+    string_start = NULL;
+    break;
+  case ESC:
+  case CSI:
+  case OSC:
+  case DCS:
+    string_start = bytes;
+    break;
+  }
 
-  size_t string_start;
+#define ENTER_STRING_STATE(st) do { vt->parser_state = st; string_start = bytes + pos + 1; } while(0)
+#define ENTER_NORMAL_STATE()   do { vt->parser_state = NORMAL; string_start = NULL; } while(0)
 
   for(pos = 0; pos < len; pos++) {
     unsigned char c = bytes[pos];
 
-    switch(parse_state) {
+    switch(vt->parser_state) {
     case ESC:
       switch(c) {
       case 0x50: // DCS
-        parse_state = DCS;
-        string_start = pos + 1;
+        ENTER_STRING_STATE(DCS);
         break;
       case 0x5b: // CSI
-        parse_state = CSI;
-        string_start = pos + 1;
+        ENTER_STRING_STATE(CSI);
         break;
       case 0x5d: // OSC
-        parse_state = OSC;
-        string_start = pos + 1;
+        ENTER_STRING_STATE(OSC);
         break;
       default:
         if(c >= 0x40 && c < 0x60) {
           // C1 emulations using 7bit clean
           // ESC 0x40 == 0x80
           on_control(vt, c + 0x40);
+          ENTER_NORMAL_STATE();
         }
         else {
-          size_t esc_eaten = on_escape(vt, bytes + pos, len - pos);
-          if(esc_eaten < 0)
-            return eaten;
-          if(esc_eaten > 0)
-            pos += (esc_eaten - 1); // we'll ++ it again in a moment
+          size_t esc_eaten = do_string(vt, bytes + pos, len - pos, 0);
+          if(esc_eaten <= 0)
+            goto pause;
+
+          ENTER_NORMAL_STATE();
+          pos += (esc_eaten - 1); // we'll ++ it again in a moment
         }
-        parse_state = NORMAL;
-        eaten = pos + 1;
       }
       break;
 
     case CSI:
       if(c >= 0x40 && c <= 0x7f) {
-        on_csi(vt, bytes + string_start, pos - string_start, c);
-        parse_state = NORMAL;
-        eaten = pos + 1;
+        do_string(vt, string_start, bytes + pos - string_start, c);
+        ENTER_NORMAL_STATE();
       }
       break;
 
     case OSC:
     case DCS:
       if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
-        switch(parse_state) {
-        case OSC:
-          on_osc(vt, bytes + string_start, pos - string_start);
-          break;
-        case DCS:
-          on_dcs(vt, bytes + string_start, pos - string_start);
-          break;
-        default: ;
-        }
-        parse_state = NORMAL;
-        eaten = pos + 1;
+        do_string(vt, string_start, bytes + pos - string_start, 0);
+        ENTER_NORMAL_STATE();
       }
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        switch(parse_state) {
-        case OSC:
-          on_osc(vt, bytes + string_start, pos - string_start - 1);
-          break;
-        case DCS:
-          on_dcs(vt, bytes + string_start, pos - string_start - 1);
-          break;
-        default: ;
-        }
-        parse_state = NORMAL;
-        eaten = pos + 1;
+        do_string(vt, string_start, bytes + pos - string_start - 1, 0);
+        ENTER_NORMAL_STATE();
       }
       break;
 
@@ -224,42 +254,39 @@ size_t vterm_parser_interpret_bytes(VTerm *vt, const char bytes[], size_t len)
       if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !vt->is_utf8)) {
         switch(c) {
         case 0x1b: // ESC
-          parse_state = ESC;
+          ENTER_STRING_STATE(ESC);
           break;
         case 0x90: // DCS
-          parse_state = DCS;
-          string_start = pos + 1;
+          ENTER_STRING_STATE(DCS);
           break;
         case 0x9b: // CSI
-          parse_state = CSI;
-          string_start = pos + 1;
+          ENTER_STRING_STATE(CSI);
           break;
         case 0x9d: // OSC
-          parse_state = OSC;
-          string_start = pos + 1;
+          ENTER_STRING_STATE(OSC);
           break;
         default:
           on_control(vt, c);
-          eaten = pos + 1;
           break;
         }
       }
       else {
-        size_t text_eaten = on_text(vt, bytes + pos, len - pos);
+        size_t text_eaten = do_string(vt, bytes + pos, len - pos, 0);
 
-        if(text_eaten == 0)
-          return pos;
+        if(text_eaten == 0) {
+          string_start = bytes + pos;
+          goto pause;
+        }
 
-        pos += text_eaten;
-        eaten = pos;
-
-        // pos is now the first character we didn't like
-        pos--;
+        pos += (text_eaten - 1); // we'll ++ it again in a moment
       }
       break;
-
     }
   }
 
-  return eaten;
+pause:
+  if(string_start) {
+    size_t remaining = len - (string_start - bytes);
+    append_strbuffer(vt, string_start, remaining);
+  }
 }

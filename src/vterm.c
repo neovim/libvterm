@@ -43,9 +43,11 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
   vt->rows = rows;
   vt->cols = cols;
 
-  vt->inbuffer_len = 64;
-  vt->inbuffer_cur = 0;
-  vt->inbuffer = vterm_allocator_malloc(vt, vt->inbuffer_len);
+  vt->parser_state = NORMAL;
+
+  vt->strbuffer_len = 64;
+  vt->strbuffer_cur = 0;
+  vt->strbuffer = vterm_allocator_malloc(vt, vt->strbuffer_len);
 
   vt->outbuffer_len = 64;
   vt->outbuffer_cur = 0;
@@ -62,7 +64,7 @@ void vterm_free(VTerm *vt)
   if(vt->state)
     vterm_state_free(vt->state);
 
-  vterm_allocator_free(vt, vt->inbuffer);
+  vterm_allocator_free(vt, vt->strbuffer);
   vterm_allocator_free(vt, vt->outbuffer);
 
   vterm_allocator_free(vt, vt);
@@ -104,41 +106,6 @@ void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks
 void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
 {
   vt->is_utf8 = is_utf8;
-}
-
-void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
-{
-  if(vt->inbuffer_cur) {
-    if(len > vt->inbuffer_len - vt->inbuffer_cur) {
-      fprintf(stderr, "vterm_push_bytes(): buffer overflow; truncating input\n");
-      len = vt->inbuffer_len - vt->inbuffer_cur;
-    }
-    memcpy(vt->inbuffer + vt->inbuffer_cur, bytes, len);
-    vt->inbuffer_cur += len;
-
-    size_t eaten = vterm_parser_interpret_bytes(vt, vt->inbuffer, vt->inbuffer_cur);
-
-    if(eaten < vt->inbuffer_cur) {
-      memmove(vt->inbuffer, vt->inbuffer + eaten, vt->inbuffer_cur - eaten);
-    }
-
-    vt->inbuffer_cur -= eaten;
-  }
-  else {
-    size_t eaten = vterm_parser_interpret_bytes(vt, bytes, len);
-    if(eaten < len) {
-      bytes += eaten;
-      len   -= eaten;
-
-      if(len > vt->inbuffer_len) {
-        fprintf(stderr, "vterm_push_bytes(): buffer overflow; truncating input\n");
-        len = vt->inbuffer_len;
-      }
-
-      memcpy(vt->inbuffer, bytes, len);
-      vt->inbuffer_cur = len;
-    }
-  }
 }
 
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
