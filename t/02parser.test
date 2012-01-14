@@ -87,6 +87,9 @@ PUSH "foo\e["
   text 0x66, 0x6f, 0x6f
 PUSH "4b"
   csi 0x62 4
+PUSH "\e[12;"
+PUSH "3c"
+  csi 0x63 12,3
 
 !OSC
 PUSH "\e]1;Hello\x07"
