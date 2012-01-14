@@ -608,37 +608,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
   }
 }
 
-static int on_csi_qmark(VTermState *state, const long *args, int argcount, char command)
-{
-  switch(command) {
-  case 0x68: // DEC private mode set
-    if(!CSI_ARG_IS_MISSING(args[0]))
-      set_dec_mode(state, CSI_ARG(args[0]), 1);
-    return 1;
-
-  case 0x6c: // DEC private mode reset
-    if(!CSI_ARG_IS_MISSING(args[0]))
-      set_dec_mode(state, CSI_ARG(args[0]), 0);
-    return 1;
-  }
-
-  return 0;
-}
-
-static int on_csi_greater(VTermState *state, const long *args, int argcount, char command)
-{
-  switch(command) {
-    case 0x63: // DEC secondary Device Attributes
-      vterm_push_output_sprintf(state->vt, "\e[>%d;%d;%dc", 0, 100, 0);
-      return 1;
-  }
-
-  return 0;
-}
-
 static int on_csi(const char *leader, const long args[], int argcount, char command, void *user)
 {
   VTermState *state = user;
+  int leader_byte = 0;
 
   if(leader && leader[0]) {
     if(leader[1]) // longer than 1 char
@@ -646,12 +619,12 @@ static int on_csi(const char *leader, const long args[], int argcount, char comm
 
     switch(leader[0]) {
     case '?':
-      return on_csi_qmark(state, args, argcount, command);
     case '>':
-      return on_csi_greater(state, args, argcount, command);
+      leader_byte = leader[0];
+      break;
+    default:
+      return 0;
     }
-
-    return 0;
   }
 
   VTermPos oldpos = state->pos;
@@ -664,7 +637,9 @@ static int on_csi(const char *leader, const long args[], int argcount, char comm
   int row, col;
   VTermRect rect;
 
-  switch(command) {
+#define LEADER(l,b) ((l << 8) | b)
+
+  switch(LEADER(leader_byte, command)) {
   case 0x40: // ICH - ECMA-48 8.3.64
     count = CSI_ARG_OR(args[0], 1);
 
@@ -880,6 +855,10 @@ static int on_csi(const char *leader, const long args[], int argcount, char comm
     UBOUND(state->pos.col, state->cols-1);
     break;
 
+  case LEADER('>', 0x63): // DEC secondary Device Attributes
+    vterm_push_output_sprintf(state->vt, "\e[>%d;%d;%dc", 0, 100, 0);
+    break;
+
   case 0x64: // VPA - ECMA-48 8.3.158
     row = CSI_ARG_OR(args[0], 1);
     state->pos.row = row-1;
@@ -907,6 +886,11 @@ static int on_csi(const char *leader, const long args[], int argcount, char comm
       set_mode(state, CSI_ARG(args[0]), 1);
     break;
 
+  case LEADER('?', 0x68): // DEC private mode set
+    if(!CSI_ARG_IS_MISSING(args[0]))
+      set_dec_mode(state, CSI_ARG(args[0]), 1);
+    break;
+
   case 0x6a: // HPB - ECMA-48 8.3.58
     count = CSI_ARG_OR(args[0], 1);
     state->pos.col -= count;
@@ -922,6 +906,11 @@ static int on_csi(const char *leader, const long args[], int argcount, char comm
   case 0x6c: // RM - ECMA-48 8.3.106
     if(!CSI_ARG_IS_MISSING(args[0]))
       set_mode(state, CSI_ARG(args[0]), 0);
+    break;
+
+  case LEADER('?', 0x6c): // DEC private mode reset
+    if(!CSI_ARG_IS_MISSING(args[0]))
+      set_dec_mode(state, CSI_ARG(args[0]), 0);
     break;
 
   case 0x6d: // SGR - ECMA-48 8.3.117
