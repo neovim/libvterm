@@ -435,6 +435,26 @@ static int settermprop_bool(VTermState *state, VTermProp prop, int v)
   return 0;
 }
 
+static int settermprop_int(VTermState *state, VTermProp prop, int v)
+{
+  VTermValue val;
+  val.number = v;
+
+#ifdef DEBUG
+  if(VTERM_VALUETYPE_INT != vterm_get_prop_type(prop)) {
+    fprintf(stderr, "Cannot set prop %d as it has type %d, not type int\n",
+        prop, vterm_get_prop_type(prop));
+    return;
+  }
+#endif
+
+  if(state->callbacks && state->callbacks->settermprop)
+    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
+      return 1;
+
+  return 0;
+}
+
 static int settermprop_string(VTermState *state, VTermProp prop, const char *str, size_t len)
 {
   char strvalue[len+1];
@@ -612,6 +632,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 {
   VTermState *state = user;
   int leader_byte = 0;
+  int intermed_byte = 0;
 
   if(leader && leader[0]) {
     if(leader[1]) // longer than 1 char
@@ -621,6 +642,19 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     case '?':
     case '>':
       leader_byte = leader[0];
+      break;
+    default:
+      return 0;
+    }
+  }
+
+  if(intermed && intermed[0]) {
+    if(intermed[1]) // longer than 1 char
+      return 0;
+
+    switch(intermed[0]) {
+    case ' ':
+      intermed_byte = intermed[0];
       break;
     default:
       return 0;
@@ -638,8 +672,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   VTermRect rect;
 
 #define LEADER(l,b) ((l << 8) | b)
+#define INTERMED(i,b) ((i << 16) | b)
 
-  switch(LEADER(leader_byte, command)) {
+  switch(intermed_byte << 16 | leader_byte << 8 | command) {
   case 0x40: // ICH - ECMA-48 8.3.64
     count = CSI_ARG_OR(args[0], 1);
 
@@ -917,6 +952,29 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     vterm_state_setpen(state, args, argcount);
     break;
 
+  case INTERMED(' ', 0x71): // DECSCUSR - DEC set cursor shape
+    count = CSI_ARG_OR(args[0], 1);
+
+    switch(count) {
+    case 0: case 1:
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
+      break;
+    case 2:
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
+      break;
+    case 3:
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
+      break;
+    case 4:
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
+      break;
+    }
+    break;
+
   case 0x72: // DECSTBM - DEC custom
     state->scrollregion_start = CSI_ARG_OR(args[0], 1) - 1;
     state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
@@ -1053,6 +1111,7 @@ void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *cal
     // Initialise the props
     settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
     settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
+    settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
 
     if(state->callbacks && state->callbacks->initpen)
       (*state->callbacks->initpen)(state->cbdata);
