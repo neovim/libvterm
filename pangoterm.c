@@ -72,6 +72,7 @@ typedef struct {
   int cursor_blinkstate;
   VTermPos cursorpos;
   GdkColor cursor_col;
+  int cursor_shape;
 
   guint cursor_timer_id;
 
@@ -496,7 +497,7 @@ int term_damage(VTermRect rect, void *user_data)
       int cursor_here = pos.row == pt->cursorpos.row && pos.col == pt->cursorpos.col;
       int cursor_visible = (pt->cursor_visible && pt->cursor_blinkstate) || !pt->has_focus;
 
-      chpen(&cell, user_data, cursor_visible && cursor_here);
+      chpen(&cell, user_data, cursor_visible && cursor_here && pt->cursor_shape == VTERM_PROP_CURSORSHAPE_BLOCK);
 
       if(cell.chars[0] == 0) {
         VTermRect here = {
@@ -509,6 +510,37 @@ int term_damage(VTermRect rect, void *user_data)
       }
       else {
         term_putglyph(cell.chars, cell.width, pos, user_data);
+      }
+
+      if(cursor_visible && cursor_here && pt->cursor_shape != VTERM_PROP_CURSORSHAPE_BLOCK) {
+        flush_glyphs(pt);
+
+        GdkGC *gc = gdk_gc_new(pt->termdraw);
+
+        GdkRectangle destarea = {
+          .x      = pos.col * pt->cell_width,
+          .y      = pos.row * pt->cell_height,
+          .width  = pt->cell_width,
+          .height = pt->cell_height,
+        };
+        gdk_gc_set_clip_rectangle(gc, &destarea);
+
+        switch(pt->cursor_shape) {
+        case VTERM_PROP_CURSORSHAPE_UNDERLINE:
+          gdk_gc_set_rgb_fg_color(gc, &pt->cursor_col);
+          gdk_draw_rectangle(pt->buffer,
+              gc,
+              TRUE,
+              destarea.x,
+              destarea.y + (int)(destarea.height * 0.85),
+              destarea.width,
+              (int)(destarea.height * 0.15));
+          break;
+        }
+
+        blit_buffer(pt, &destarea);
+
+        g_object_unref(gc);
       }
 
       col += cell.width;
@@ -624,7 +656,13 @@ int term_settermprop(VTermProp prop, VTermValue *val, void *user_data)
     }
     else if(!val->boolean && pt->cursor_timer_id) {
       g_source_remove(pt->cursor_timer_id);
+      pt->cursor_timer_id = 0;
     }
+    break;
+
+  case VTERM_PROP_CURSORSHAPE:
+    pt->cursor_shape = val->number;
+    damagecell(pt, pt->cursorpos);
     break;
 
   case VTERM_PROP_ICONNAME:
@@ -844,6 +882,7 @@ int main(int argc, char *argv[])
 
   pt->cursor_timer_id = g_timeout_add(cursor_blink_interval, cursor_blink, pt);
   pt->cursor_blinkstate = 1;
+  pt->cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
 
   g_signal_connect(G_OBJECT(pt->termwin), "expose-event", GTK_SIGNAL_FUNC(term_expose), pt);
   g_signal_connect(G_OBJECT(pt->termwin), "key-press-event", GTK_SIGNAL_FUNC(term_keypress), pt);
