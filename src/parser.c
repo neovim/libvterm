@@ -144,9 +144,16 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
     return 0;
 
   case ESC:
+    if(len == 1 && str_frag[0] >= 0x40 && str_frag[0] < 0x60) {
+      // C1 emulations using 7bit clean
+      // ESC 0x40 == 0x80
+      do_control(vt, str_frag[0] + 0x40);
+      return 0;
+    }
+
     if(vt->parser_callbacks && vt->parser_callbacks->escape)
-      if((eaten = (*vt->parser_callbacks->escape)(str_frag, len, vt->cbdata)))
-        return eaten;
+      if((*vt->parser_callbacks->escape)(str_frag, len, vt->cbdata))
+        return 0;
 
     fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", str_frag[0]);
     return 0;
@@ -185,18 +192,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     string_start = NULL;
     break;
   case ESC:
-    if(vt->strbuffer_cur) {
-      size_t waslen = vt->strbuffer_cur;
-      size_t esc_eaten = do_string(vt, bytes, len);
-      if(esc_eaten == (size_t)-1 || esc_eaten == 0)
-        goto pause;
-
-      vt->parser_state = NORMAL;
-      pos = esc_eaten - waslen;
-      string_start = NULL;
-      break;
-    }
-    /* fallthrough */
   case CSI:
   case OSC:
   case DCS:
@@ -223,19 +218,16 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         ENTER_STRING_STATE(OSC);
         break;
       default:
-        if(c >= 0x40 && c < 0x60) {
-          // C1 emulations using 7bit clean
-          // ESC 0x40 == 0x80
-          do_control(vt, c + 0x40);
+        if(c >= 0x30 && c < 0x7f) {
+          /* +1 to pos because we want to include this command byte as well */
+          do_string(vt, string_start, bytes + pos - string_start + 1);
           ENTER_NORMAL_STATE();
         }
+        else if(c >= 0x20 && c < 0x30) {
+          /* intermediate byte */
+        }
         else {
-          size_t esc_eaten = do_string(vt, bytes + pos, len - pos);
-          if(esc_eaten == (size_t)-1 || esc_eaten == 0)
-            goto pause;
-
-          ENTER_NORMAL_STATE();
-          pos += (esc_eaten - 1); // we'll ++ it again in a moment
+          fprintf(stderr, "TODO: Unhandled byte %02x in Escape\n", c);
         }
       }
       break;
