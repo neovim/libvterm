@@ -88,7 +88,7 @@ static int parser_escape(const char bytes[], size_t len, void *user)
 {
   if(bytes[0] >= 0x20 && bytes[0] < 0x30) {
     if(len < 2)
-      return 0;
+      return -1;
     len = 2;
   }
   else {

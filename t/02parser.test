@@ -45,6 +45,11 @@ PUSH "\e="
 PUSH "\e(X"
   escape "(X"
 
+!Split write Escape
+PUSH "\e("
+PUSH "Y"
+  escape "(Y"
+
 !CSI 0 args
 PUSH "\e[a"
   csi 0x61 *

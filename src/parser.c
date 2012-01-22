@@ -124,12 +124,13 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
 
     str_frag = vt->strbuffer;
     len = vt->strbuffer_cur;
-    vt->strbuffer_cur = 0;
   }
   else if(!str_frag) {
     fprintf(stderr, "parser.c: TODO: No strbuffer _and_ no final fragment???\n");
     len = 0;
   }
+
+  vt->strbuffer_cur = 0;
 
   size_t eaten;
 
@@ -184,6 +185,18 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     string_start = NULL;
     break;
   case ESC:
+    if(vt->strbuffer_cur) {
+      size_t waslen = vt->strbuffer_cur;
+      size_t esc_eaten = do_string(vt, bytes, len);
+      if(esc_eaten == (size_t)-1 || esc_eaten == 0)
+        goto pause;
+
+      vt->parser_state = NORMAL;
+      pos = esc_eaten - waslen;
+      string_start = NULL;
+      break;
+    }
+    /* fallthrough */
   case CSI:
   case OSC:
   case DCS:
@@ -194,7 +207,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
 #define ENTER_STRING_STATE(st) do { vt->parser_state = st; string_start = bytes + pos + 1; } while(0)
 #define ENTER_NORMAL_STATE()   do { vt->parser_state = NORMAL; string_start = NULL; } while(0)
 
-  for(pos = 0; pos < len; pos++) {
+  for( ; pos < len; pos++) {
     unsigned char c = bytes[pos];
 
     switch(vt->parser_state) {
@@ -218,7 +231,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         }
         else {
           size_t esc_eaten = do_string(vt, bytes + pos, len - pos);
-          if(esc_eaten <= 0)
+          if(esc_eaten == (size_t)-1 || esc_eaten == 0)
             goto pause;
 
           ENTER_NORMAL_STATE();
@@ -282,7 +295,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
   }
 
 pause:
-  if(string_start) {
+  if(string_start && len > (string_start - bytes)) {
     size_t remaining = len - (string_start - bytes);
     append_strbuffer(vt, string_start, remaining);
   }
