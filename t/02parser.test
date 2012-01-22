@@ -39,7 +39,11 @@ PUSH "1\n2"
 
 !Escape
 PUSH "\e="
-  escape 0x3d
+  escape "="
+
+!Escape 2-byte
+PUSH "\e(X"
+  escape "(X"
 
 !CSI 0 args
 PUSH "\e[a"

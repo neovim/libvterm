@@ -86,9 +86,21 @@ static int parser_control(unsigned char control, void *user)
 
 static int parser_escape(const char bytes[], size_t len, void *user)
 {
-  printf("escape %02x\n", bytes[0]);
+  if(bytes[0] >= 0x20 && bytes[0] < 0x30) {
+    if(len < 2)
+      return 0;
+    len = 2;
+  }
+  else {
+    len = 1;
+  }
 
-  return 1;
+  printf("escape ");
+  for(int i = 0; i < len; i++)
+    printf("%02x", bytes[i]);
+  printf("\n");
+
+  return len;
 }
 
 static int parser_csi(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user)
