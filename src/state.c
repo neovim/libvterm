@@ -667,7 +667,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 #define UBOUND(v,max) if((v) > (max)) (v) = (max)
 
   // Some temporaries for later code
-  int count;
+  int count, val;
   int row, col;
   VTermRect rect;
 
@@ -676,7 +676,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   switch(intermed_byte << 16 | leader_byte << 8 | command) {
   case 0x40: // ICH - ECMA-48 8.3.64
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -688,46 +688,46 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x41: // CUU - ECMA-48 8.3.22
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.row -= count;
     LBOUND(state->pos.row, 0);
     break;
 
   case 0x42: // CUD - ECMA-48 8.3.19
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.row += count;
     UBOUND(state->pos.row, state->rows-1);
     break;
 
   case 0x43: // CUF - ECMA-48 8.3.20
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.col += count;
     UBOUND(state->pos.col, state->cols-1);
     break;
 
   case 0x44: // CUB - ECMA-48 8.3.18
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.col -= count;
     LBOUND(state->pos.col, 0);
     break;
 
   case 0x45: // CNL - ECMA-48 8.3.12
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.col = 0;
     state->pos.row += count;
     UBOUND(state->pos.row, state->rows-1);
     break;
 
   case 0x46: // CPL - ECMA-48 8.3.13
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.col = 0;
     state->pos.row -= count;
     LBOUND(state->pos.row, 0);
     break;
 
   case 0x47: // CHA - ECMA-48 8.3.9
-    count = CSI_ARG_OR(args[0], 1);
-    state->pos.col = count-1;
+    val = CSI_ARG_OR(args[0], 1);
+    state->pos.col = val-1;
     UBOUND(state->pos.col, state->cols-1);
     break;
 
@@ -742,7 +742,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x49: // CHT - ECMA-48 8.3.10
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     tab(state, count, +1);
     break;
 
@@ -803,7 +803,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x4c: // IL - ECMA-48 8.3.67
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
     rect.end_row   = SCROLLREGION_END(state);
@@ -815,7 +815,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x4d: // DL - ECMA-48 8.3.32
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
     rect.end_row   = SCROLLREGION_END(state);
@@ -827,7 +827,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x50: // DCH - ECMA-48 8.3.26
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -839,7 +839,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x53: // SU - ECMA-48 8.3.147
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->scrollregion_start;
     rect.end_row   = SCROLLREGION_END(state);
@@ -851,7 +851,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x54: // SD - ECMA-48 8.3.113
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->scrollregion_start;
     rect.end_row   = SCROLLREGION_END(state);
@@ -863,7 +863,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x58: // ECH - ECMA-48 8.3.38
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -874,7 +874,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x5a: // CBT - ECMA-48 8.3.7
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     tab(state, count, -1);
     break;
 
@@ -885,7 +885,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x61: // HPR - ECMA-48 8.3.59
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.col += count;
     UBOUND(state->pos.col, state->cols-1);
     break;
@@ -901,7 +901,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x65: // VPR - ECMA-48 8.3.160
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.row += count;
     UBOUND(state->pos.row, state->rows-1);
     break;
@@ -927,13 +927,13 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x6a: // HPB - ECMA-48 8.3.58
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.col -= count;
     LBOUND(state->pos.col, 0);
     break;
 
   case 0x6b: // VPB - ECMA-48 8.3.159
-    count = CSI_ARG_OR(args[0], 1);
+    count = CSI_ARG_COUNT(args[0]);
     state->pos.row -= count;
     LBOUND(state->pos.row, 0);
     break;
@@ -953,9 +953,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case INTERMED(' ', 0x71): // DECSCUSR - DEC set cursor shape
-    count = CSI_ARG_OR(args[0], 1);
+    val = CSI_ARG_OR(args[0], 1);
 
-    switch(count) {
+    switch(val) {
     case 0: case 1:
       settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
       settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
