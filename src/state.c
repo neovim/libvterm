@@ -515,10 +515,11 @@ static int on_escape(const char *bytes, size_t len, void *user)
 {
   VTermState *state = user;
 
-  switch(bytes[0]) {
-  case 0x28: case 0x29: case 0x2a: case 0x2b:
-    if(len < 2)
-      return -1;
+  /* Command byte is the final byte */
+  switch(bytes[len-1]) {
+  case '0': case 'A': case 'B': case 'u':
+    if(len != 2)
+      return 0;
 
     {
       int setnum = bytes[0] - 0x28;

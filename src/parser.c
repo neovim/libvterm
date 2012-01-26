@@ -155,7 +155,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
       if((*vt->parser_callbacks->escape)(str_frag, len, vt->cbdata))
         return 0;
 
-    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", str_frag[0]);
+    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", str_frag[len-1]);
     return 0;
 
   case CSI:
