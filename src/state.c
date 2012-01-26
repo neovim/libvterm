@@ -531,6 +531,18 @@ static int on_escape(const char *bytes, size_t len, void *user)
 
     return 2;
 
+  case 0x38:
+    if(len == 2 && bytes[0] == '#') { // DECALN
+      VTermPos pos;
+      uint32_t E[] = { 'E', 0 };
+      for(pos.row = 0; pos.row < state->rows; pos.row++)
+        for(pos.col = 0; pos.col < state->cols; pos.col++)
+          putglyph(state, E, 1, pos);
+
+      return 2;
+    }
+    return 0;
+
   case 0x3d:
     state->mode.keypad = 1;
     return 1;
