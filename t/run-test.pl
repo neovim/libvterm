@@ -53,13 +53,9 @@ sub do_onetest
    $exitcode = 1 if $fail_printed;
 }
 
-open my $test, "<", $ARGV[0] or die "Cannot open test script $ARGV[0] - $!";
-
-while( my $line = <$test> ) {
-   $line =~ s/^\s+//;
-   next if $line =~ m/^(?:#|$)/;
-
-   chomp $line;
+sub do_line
+{
+   my ( $line ) = @_;
 
    if( $line =~ m/^!(.*)/ ) {
       do_onetest if defined $command;
@@ -127,9 +123,30 @@ while( my $line = <$test> ) {
          $exitcode = 1;
       }
    }
+   # Test controls start with '$'
+   elsif( $line =~ s/\$SEQ\s+(\d+)\s+(\d+):\s*// ) {
+      foreach my $val ( $1 .. $2 ) {
+         ( my $inner = $line ) =~ s/\\#/$val/g;
+         do_line( $inner );
+      }
+   }
+   elsif( $line =~ s/\$REP\s+(\d+):\s*// ) {
+      my $count = $1;
+      do_line( $line ) for 1 .. $count;
+   }
    else {
       die "Unrecognised TEST line $line\n";
    }
+}
+
+open my $test, "<", $ARGV[0] or die "Cannot open test script $ARGV[0] - $!";
+
+while( my $line = <$test> ) {
+   $line =~ s/^\s+//;
+   next if $line =~ m/^(?:#|$)/;
+
+   chomp $line;
+   do_line( $line );
 }
 
 do_onetest if defined $command;
