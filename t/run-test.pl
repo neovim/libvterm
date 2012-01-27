@@ -106,6 +106,27 @@ sub do_line
 
       push @expect, $line;
    }
+   # ?screen_row assertion is emulated here
+   elsif( $line =~ s/^\?screen_row\s+(\d+)\s*=\s*// ) {
+      my $row = $1;
+      my $row1 = $row + 1;
+      my $want = eval($line);
+
+      do_onetest if defined $command;
+
+      # TODO: may not be 80
+      $hin->print( "\?screen_chars $row,0,$row1,80\n" );
+      my $response = <$hout>;
+      chomp $response;
+
+      $response = pack "C*", map hex, split m/,/, $response;
+      if( $response ne $want ) {
+         print "# Assert ?screen_row $row failed:\n" .
+               "# Expected: $want\n" .
+               "# Actual:   $response\n";
+         $exitcode = 1;
+      }
+   }
    # Assertions start with '?'
    elsif( $line =~ s/^\?([a-z]+.*?=)\s+// ) {
       do_onetest if defined $command;

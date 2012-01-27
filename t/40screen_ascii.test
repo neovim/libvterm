@@ -10,6 +10,7 @@ PUSH "ABC"
   ?screen_cell 0,0 = {0x41} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
   ?screen_cell 0,1 = {0x42} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
   ?screen_cell 0,2 = {0x43} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
+  ?screen_row 0 = "ABC"
 PUSH "\e[H"
   movecursor 0,0
   ?screen_chars 0,0,1,80 = 0x41,0x42,0x43
