@@ -134,7 +134,7 @@ sub do_line
       my ( $assertion ) = $1 =~ m/^(.*)\s+=/;
 
       $hin->print( "\?$assertion\n" );
-      my $response = <$hout>;
+      my $response = <$hout>; defined $response or wait, die "Test harness failed - $?\n";
       chomp $response;
 
       if( $response ne $line ) {
