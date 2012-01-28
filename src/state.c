@@ -588,6 +588,16 @@ static void set_dec_mode(VTermState *state, int num, int val)
     settermprop_bool(state, VTERM_PROP_REVERSE, val);
     break;
 
+  case 6: // DECOM - origin mode
+    {
+      VTermPos oldpos = state->pos;
+      state->mode.origin = val;
+      state->pos.row = state->mode.origin ? state->scrollregion_start : 0;
+      state->pos.col = 0;
+      updatecursor(state, &oldpos, 1);
+    }
+    break;
+
   case 7:
     state->mode.autowrap = val;
     break;
@@ -740,6 +750,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     // zero-based
     state->pos.row = row-1;
     state->pos.col = col-1;
+    if(state->mode.origin)
+      state->pos.row += state->scrollregion_start;
     break;
 
   case 0x49: // CHT - ECMA-48 8.3.10
@@ -896,6 +908,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x64: // VPA - ECMA-48 8.3.158
     row = CSI_ARG_OR(args[0], 1);
     state->pos.row = row-1;
+    if(state->mode.origin)
+      state->pos.row += state->scrollregion_start;
     break;
 
   case 0x65: // VPR - ECMA-48 8.3.160
@@ -909,6 +923,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     // zero-based
     state->pos.row = row-1;
     state->pos.col = col-1;
+    if(state->mode.origin)
+      state->pos.row += state->scrollregion_start;
     break;
 
   case 0x68: // SM - ECMA-48 8.3.125
@@ -984,8 +1000,15 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   LBOUND(state->pos.col, 0);
   UBOUND(state->pos.col, state->cols-1);
-  LBOUND(state->pos.row, 0);
-  UBOUND(state->pos.row, state->rows-1);
+
+  if(state->mode.origin) {
+    LBOUND(state->pos.row, state->scrollregion_start);
+    UBOUND(state->pos.row, state->scrollregion_end-1);
+  }
+  else {
+    LBOUND(state->pos.row, 0);
+    UBOUND(state->pos.row, state->rows-1);
+  }
 
   updatecursor(state, &oldpos, 1);
 
@@ -1078,6 +1101,7 @@ void vterm_state_reset(VTermState *state)
 
   state->mode.autowrap = 1;
   state->mode.cursor_visible = 1;
+  state->mode.origin = 0;
 
   if(state->callbacks && state->callbacks->initpen)
     (*state->callbacks->initpen)(state->cbdata);

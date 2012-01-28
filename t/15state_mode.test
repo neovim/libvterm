@@ -30,3 +30,24 @@ PUSH "e"
   putglyph 0x65 1 0,2
 PUSH "\xCC\x81"
   putglyph 0x65,0x301 1 0,2
+
+!DEC origin mode
+RESET
+  erase 0..25,0..80
+  ?cursor = 0,0
+PUSH "\e[5;15r"
+PUSH "\e[H"
+  ?cursor = 0,0
+PUSH "\e[3;3H"
+  ?cursor = 2,2
+PUSH "\e[?6h"
+PUSH "\e[H"
+  ?cursor = 4,0
+PUSH "\e[3;3H"
+  ?cursor = 6,2
+
+!Origin mode bounds cursor to scrolling region
+PUSH "\e[10A"
+  ?cursor = 4,2
+PUSH "\e[20B"
+  ?cursor = 14,2
