@@ -18,6 +18,22 @@ PUSH "\r"
 PUSH "\n"
   ?cursor = 1,0
 
+!Backspace bounded by lefthand edge
+PUSH "\e[4;2H"
+  ?cursor = 3,1
+PUSH "\b"
+  ?cursor = 3,0
+PUSH "\b"
+  ?cursor = 3,0
+
+!HT bounded by righthand edge
+PUSH "\e[1;78H"
+  ?cursor = 0,77
+PUSH "\t"
+  ?cursor = 0,79
+PUSH "\t"
+  ?cursor = 0,79
+
 RESET
 
 !Index
@@ -187,11 +203,3 @@ PUSH "\e[Z"
   ?cursor = 0,56
 PUSH "\e[2Z"
   ?cursor = 0,40
-
-!HT bounded by righthand edge
-PUSH "\e[78G"
-  ?cursor = 0,77
-PUSH "\t"
-  ?cursor = 0,79
-PUSH "\t"
-  ?cursor = 0,79
