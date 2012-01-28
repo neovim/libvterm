@@ -159,7 +159,7 @@ static int is_col_tabstop(VTermState *state, int col)
 static void tab(VTermState *state, int count, int direction)
 {
   while(count--)
-    while(state->pos.col >= 0 && state->pos.col <= state->cols-1) {
+    while(state->pos.col >= 0 && state->pos.col < state->cols-1) {
       state->pos.col += direction;
 
       if(is_col_tabstop(state, state->pos.col))
