@@ -26,6 +26,14 @@ PUSH "\b"
 PUSH "\b"
   ?cursor = 3,0
 
+!Backspace cancels phantom
+PUSH "\e[4;80H"
+  ?cursor = 3,79
+PUSH "X"
+  ?cursor = 3,79
+PUSH "\b"
+  ?cursor = 3,78
+
 !HT bounded by righthand edge
 PUSH "\e[1;78H"
   ?cursor = 0,77
