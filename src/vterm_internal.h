@@ -47,6 +47,7 @@ struct _VTermState
     int cursor_visible:1;
     int alt_screen:1;
     int saved_cursor:1;
+    int origin:1;
   } mode;
 
   VTermEncoding *encoding[4];
