@@ -676,9 +676,6 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   VTermPos oldpos = state->pos;
 
-#define LBOUND(v,min) if((v) < (min)) (v) = (min)
-#define UBOUND(v,max) if((v) > (max)) (v) = (max)
-
   // Some temporaries for later code
   int count, val;
   int row, col;
@@ -703,45 +700,38 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x41: // CUU - ECMA-48 8.3.22
     count = CSI_ARG_COUNT(args[0]);
     state->pos.row -= count;
-    LBOUND(state->pos.row, 0);
     break;
 
   case 0x42: // CUD - ECMA-48 8.3.19
     count = CSI_ARG_COUNT(args[0]);
     state->pos.row += count;
-    UBOUND(state->pos.row, state->rows-1);
     break;
 
   case 0x43: // CUF - ECMA-48 8.3.20
     count = CSI_ARG_COUNT(args[0]);
     state->pos.col += count;
-    UBOUND(state->pos.col, state->cols-1);
     break;
 
   case 0x44: // CUB - ECMA-48 8.3.18
     count = CSI_ARG_COUNT(args[0]);
     state->pos.col -= count;
-    LBOUND(state->pos.col, 0);
     break;
 
   case 0x45: // CNL - ECMA-48 8.3.12
     count = CSI_ARG_COUNT(args[0]);
     state->pos.col = 0;
     state->pos.row += count;
-    UBOUND(state->pos.row, state->rows-1);
     break;
 
   case 0x46: // CPL - ECMA-48 8.3.13
     count = CSI_ARG_COUNT(args[0]);
     state->pos.col = 0;
     state->pos.row -= count;
-    LBOUND(state->pos.row, 0);
     break;
 
   case 0x47: // CHA - ECMA-48 8.3.9
     val = CSI_ARG_OR(args[0], 1);
     state->pos.col = val-1;
-    UBOUND(state->pos.col, state->cols-1);
     break;
 
   case 0x48: // CUP - ECMA-48 8.3.21
@@ -749,9 +739,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
     // zero-based
     state->pos.row = row-1;
-    UBOUND(state->pos.row, state->rows-1);
     state->pos.col = col-1;
-    UBOUND(state->pos.col, state->cols-1);
     break;
 
   case 0x49: // CHT - ECMA-48 8.3.10
@@ -894,13 +882,11 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x60: // HPA - ECMA-48 8.3.57
     col = CSI_ARG_OR(args[0], 1);
     state->pos.col = col-1;
-    UBOUND(state->pos.col, state->cols-1);
     break;
 
   case 0x61: // HPR - ECMA-48 8.3.59
     count = CSI_ARG_COUNT(args[0]);
     state->pos.col += count;
-    UBOUND(state->pos.col, state->cols-1);
     break;
 
   case LEADER('>', 0x63): // DEC secondary Device Attributes
@@ -910,13 +896,11 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x64: // VPA - ECMA-48 8.3.158
     row = CSI_ARG_OR(args[0], 1);
     state->pos.row = row-1;
-    UBOUND(state->pos.row, state->rows-1);
     break;
 
   case 0x65: // VPR - ECMA-48 8.3.160
     count = CSI_ARG_COUNT(args[0]);
     state->pos.row += count;
-    UBOUND(state->pos.row, state->rows-1);
     break;
 
   case 0x66: // HVP - ECMA-48 8.3.63
@@ -924,9 +908,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     col = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? 1 : CSI_ARG(args[1]);
     // zero-based
     state->pos.row = row-1;
-    UBOUND(state->pos.row, state->rows-1);
     state->pos.col = col-1;
-    UBOUND(state->pos.col, state->cols-1);
     break;
 
   case 0x68: // SM - ECMA-48 8.3.125
@@ -942,13 +924,11 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x6a: // HPB - ECMA-48 8.3.58
     count = CSI_ARG_COUNT(args[0]);
     state->pos.col -= count;
-    LBOUND(state->pos.col, 0);
     break;
 
   case 0x6b: // VPB - ECMA-48 8.3.159
     count = CSI_ARG_COUNT(args[0]);
     state->pos.row -= count;
-    LBOUND(state->pos.row, 0);
     break;
 
   case 0x6c: // RM - ECMA-48 8.3.106
@@ -998,6 +978,14 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   default:
     return 0;
   }
+
+#define LBOUND(v,min) if((v) < (min)) (v) = (min)
+#define UBOUND(v,max) if((v) > (max)) (v) = (max)
+
+  LBOUND(state->pos.col, 0);
+  UBOUND(state->pos.col, state->cols-1);
+  LBOUND(state->pos.row, 0);
+  UBOUND(state->pos.row, state->rows-1);
 
   updatecursor(state, &oldpos, 1);
 
