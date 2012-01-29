@@ -208,6 +208,10 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     switch(vt->parser_state) {
     case ESC:
       switch(c) {
+      case 0x1b: // ESC
+        /* Cancel this escape, start another */
+        ENTER_STRING_STATE(ESC);
+        break;
       case 0x50: // DCS
         ENTER_STRING_STATE(DCS);
         break;
@@ -238,6 +242,10 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         do_string(vt, string_start, bytes + pos - string_start + 1);
         ENTER_NORMAL_STATE();
       }
+      else if(c == 0x1b) {
+        /* Cancel this sequence, start another Escape */
+        ENTER_STRING_STATE(ESC);
+      }
       break;
 
     case OSC:
@@ -249,6 +257,10 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       else if(c == 0x5c && bytes[pos-1] == 0x1b) {
         do_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
+      }
+      else if(c == 0x1b) {
+        /* Cancel this sequence, start another Escape */
+        ENTER_STRING_STATE(ESC);
       }
       break;
 
