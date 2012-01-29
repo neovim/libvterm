@@ -50,6 +50,10 @@ PUSH "\e("
 PUSH "Y"
   escape "(Y"
 
+!Escape cancels Escape, starts another
+PUSH "\e(\e)Z"
+  escape ")Z"
+
 !CSI 0 args
 PUSH "\e[a"
   csi 0x61 *
@@ -104,6 +108,10 @@ PUSH "\e[12;"
 PUSH "3c"
   csi 0x63 12,3
 
+!Escape cancels CSI, starts Escape
+PUSH "\e[123\e9"
+  escape "9"
+
 !OSC
 PUSH "\e]1;Hello\x07"
   osc "1;Hello"
@@ -111,9 +119,17 @@ PUSH "\e]1;Hello\x07"
 PUSH "\x{9d}1;Hello\x9c"
   osc "1;Hello"
 
+!Escape cancels DCS, starts Escape
+PUSH "\e]Something\e9"
+  escape "9"
+
 !DCS
 PUSH "\ePHello\x07"
   dcs "Hello"
 
 PUSH "\x{90}Hello\x9c"
   dcs "Hello"
+
+!Escape cancels DCS, starts Escape
+PUSH "\ePSomething\e9"
+  escape "9"
