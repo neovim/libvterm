@@ -128,6 +128,17 @@ PUSH "\e[8H"
 PUSH "\e[H"
   ?cursor = 0,0
 
+!Cursor Position cancels phantom
+PUSH "\e[10;78H"
+  ?cursor = 9,77
+PUSH "ABC"
+  ?cursor = 9,79
+PUSH "\e[10;80H"
+PUSH "C"
+  ?cursor = 9,79
+PUSH "X"
+  ?cursor = 10,1
+
 RESET
 
 !Bounds Checking
