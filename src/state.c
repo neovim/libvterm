@@ -958,6 +958,28 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     state->at_phantom = 0;
     break;
 
+  case 0x67: // TBC - ECMA-48 8.3.154
+    val = CSI_ARG_OR(args[0], 0);
+
+    switch(val) {
+    case 0:
+      clear_col_tabstop(state, state->pos.col);
+      break;
+    case 3:
+    case 5:
+      for(col = 0; col < state->cols; col++)
+        clear_col_tabstop(state, col);
+      break;
+    case 1:
+    case 2:
+    case 4:
+      break;
+    /* TODO: 1, 2 and 4 aren't meaningful yet without line tab stops */
+    default:
+      return 0;
+    }
+    break;
+
   case 0x68: // SM - ECMA-48 8.3.125
     if(!CSI_ARG_IS_MISSING(args[0]))
       set_mode(state, CSI_ARG(args[0]), 1);
