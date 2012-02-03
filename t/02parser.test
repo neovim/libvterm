@@ -54,6 +54,10 @@ PUSH "Y"
 PUSH "\e(\e)Z"
   escape ")Z"
 
+!CAN cancels Escape, returns to normal mode
+PUSH "\e(\x{18}AB"
+  text 0x41, 0x42
+
 !CSI 0 args
 PUSH "\e[a"
   csi 0x61 *
@@ -112,6 +116,10 @@ PUSH "3c"
 PUSH "\e[123\e9"
   escape "9"
 
+!CAN cancels CSI, returns to normal mode
+PUSH "\e[12\x{18}AB"
+  text 0x41, 0x42
+
 !OSC
 PUSH "\e]1;Hello\x07"
   osc "1;Hello"
@@ -119,9 +127,13 @@ PUSH "\e]1;Hello\x07"
 PUSH "\x{9d}1;Hello\x9c"
   osc "1;Hello"
 
-!Escape cancels DCS, starts Escape
+!Escape cancels OSC, starts Escape
 PUSH "\e]Something\e9"
   escape "9"
+
+!CAN cancels OSC, returns to normal mode
+PUSH "\e]12\x{18}AB"
+  text 0x41, 0x42
 
 !DCS
 PUSH "\ePHello\x07"
@@ -133,3 +145,7 @@ PUSH "\x{90}Hello\x9c"
 !Escape cancels DCS, starts Escape
 PUSH "\ePSomething\e9"
   escape "9"
+
+!CAN cancels DCS, returns to normal mode
+PUSH "\eP12\x{18}AB"
+  text 0x41, 0x42

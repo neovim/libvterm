@@ -221,6 +221,11 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       case 0x5d: // OSC
         ENTER_STRING_STATE(OSC);
         break;
+      case 0x18: // CAN
+      case 0x1a: // SUB
+        /* Cancel back to normal mode */
+        ENTER_NORMAL_STATE();
+        break;
       default:
         if(c >= 0x30 && c < 0x7f) {
           /* +1 to pos because we want to include this command byte as well */
@@ -246,6 +251,10 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         /* Cancel this sequence, start another Escape */
         ENTER_STRING_STATE(ESC);
       }
+      else if(c == 0x18 || c == 0x1a) {
+        /* Cancel back to normal mode */
+        ENTER_NORMAL_STATE();
+      }
       break;
 
     case OSC:
@@ -261,6 +270,10 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       else if(c == 0x1b) {
         /* Cancel this sequence, start another Escape */
         ENTER_STRING_STATE(ESC);
+      }
+      else if(c == 0x18 || c == 0x1a) {
+        /* Cancel back to normal mode */
+        ENTER_NORMAL_STATE();
       }
       break;
 
