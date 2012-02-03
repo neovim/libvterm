@@ -333,6 +333,8 @@ static int on_control(unsigned char control, void *user)
     break;
 
   case 0x0a: // LF - ECMA-48 8.3.74
+  case 0x0b: // VT
+  case 0x0c: // FF
     linefeed(state);
     break;
 
