@@ -150,10 +150,22 @@ static void grow_combine_buffer(VTermState *state)
   state->combine_chars = new_chars;
 }
 
+static void set_col_tabstop(VTermState *state, int col)
+{
+  unsigned char mask = 1 << (col & 7);
+  state->tabstops[col >> 3] |= mask;
+}
+
+static void clear_col_tabstop(VTermState *state, int col)
+{
+  unsigned char mask = 1 << (col & 7);
+  state->tabstops[col >> 3] &= ~mask;
+}
+
 static int is_col_tabstop(VTermState *state, int col)
 {
-  // TODO: Implement variable tabstops
-  return (col % 8) == 0;
+  unsigned char mask = 1 << (col & 7);
+  return state->tabstops[col >> 3] & mask;
 }
 
 static void tab(VTermState *state, int count, int direction)
@@ -1061,6 +1073,31 @@ static int on_resize(int rows, int cols, void *user)
   VTermState *state = user;
   VTermPos oldpos = state->pos;
 
+  if(cols != state->cols) {
+    unsigned char *newtabstops = vterm_allocator_malloc(state->vt, (cols + 7) / 8);
+
+    /* TODO: This can all be done much more efficiently bytewise */
+    int col;
+    for(col = 0; col < state->cols && col < cols; col++) {
+      unsigned char mask = 1 << (col & 7);
+      if(state->tabstops[col >> 3] & mask)
+        newtabstops[col >> 3] |= mask;
+      else
+        newtabstops[col >> 3] &= ~mask;
+      }
+
+    for( ; col < cols; col++) {
+      unsigned char mask = 1 << (col & 7);
+      if(col % 8 == 0)
+        newtabstops[col >> 3] |= mask;
+      else
+        newtabstops[col >> 3] &= ~mask;
+    }
+
+    vterm_allocator_free(state->vt, state->tabstops);
+    state->tabstops = newtabstops;
+  }
+
   state->rows = rows;
   state->cols = cols;
 
@@ -1102,6 +1139,8 @@ VTermState *vterm_obtain_state(VTerm *vt)
   state->combine_chars_size = 16;
   state->combine_chars = vterm_allocator_malloc(state->vt, sizeof(uint32_t) * state->combine_chars_size);
 
+  state->tabstops = vterm_allocator_malloc(state->vt, (state->cols + 7) / 8);
+
   vterm_set_parser_callbacks(vt, &parser_callbacks, state);
 
   return state;
@@ -1119,6 +1158,12 @@ void vterm_state_reset(VTermState *state)
   state->mode.autowrap = 1;
   state->mode.cursor_visible = 1;
   state->mode.origin = 0;
+
+  for(int col = 0; col < state->cols; col++)
+    if(col % 8 == 0)
+      set_col_tabstop(state, col);
+    else
+      clear_col_tabstop(state, col);
 
   if(state->callbacks && state->callbacks->initpen)
     (*state->callbacks->initpen)(state->cbdata);

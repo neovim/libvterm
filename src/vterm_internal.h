@@ -28,6 +28,9 @@ struct _VTermState
   int scrollregion_end; /* -1 means unbounded */
 #define SCROLLREGION_END(state) ((state)->scrollregion_end > -1 ? (state)->scrollregion_end : (state)->rows)
 
+  /* Bitvector of tab stops */
+  unsigned char *tabstops;
+
   /* Mouse state */
   int mouse_col, mouse_row;
   int mouse_buttons;
