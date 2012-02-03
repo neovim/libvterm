@@ -371,6 +371,10 @@ static int on_control(unsigned char control, void *user)
     state->pos.col = 0;
     break;
 
+  case 0x88: // HTS - ECMA-48 8.3.62
+    set_col_tabstop(state, state->pos.col);
+    break;
+
   case 0x8d: // RI - ECMA-48 8.3.104
     if(state->pos.row == state->scrollregion_start) {
       VTermRect rect = {
