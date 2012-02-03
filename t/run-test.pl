@@ -146,7 +146,8 @@ sub do_line
    }
    # Test controls start with '$'
    elsif( $line =~ s/\$SEQ\s+(\d+)\s+(\d+):\s*// ) {
-      foreach my $val ( $1 .. $2 ) {
+      my ( $low, $high ) = ( $1, $2 );
+      foreach my $val ( $low .. $high ) {
          ( my $inner = $line ) =~ s/\\#/$val/g;
          do_line( $inner );
       }
