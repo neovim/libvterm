@@ -235,6 +235,11 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         else if(c >= 0x20 && c < 0x30) {
           /* intermediate byte */
         }
+        else if(c < 0x20) {
+          append_strbuffer(vt, string_start, bytes + pos - string_start);
+          do_control(vt, c);
+          string_start = bytes + pos + 1;
+        }
         else {
           fprintf(stderr, "TODO: Unhandled byte %02x in Escape\n", c);
         }
@@ -255,6 +260,11 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         /* Cancel back to normal mode */
         ENTER_NORMAL_STATE();
       }
+      else if(c < 0x20) {
+        append_strbuffer(vt, string_start, bytes + pos - string_start);
+        do_control(vt, c);
+        string_start = bytes + pos + 1;
+      }
       break;
 
     case OSC:
@@ -274,6 +284,11 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       else if(c == 0x18 || c == 0x1a) {
         /* Cancel back to normal mode */
         ENTER_NORMAL_STATE();
+      }
+      else if(c < 0x20) {
+        append_strbuffer(vt, string_start, bytes + pos - string_start);
+        do_control(vt, c);
+        string_start = bytes + pos + 1;
       }
       break;
 

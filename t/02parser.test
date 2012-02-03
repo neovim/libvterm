@@ -58,6 +58,11 @@ PUSH "\e(\e)Z"
 PUSH "\e(\x{18}AB"
   text 0x41, 0x42
 
+!C0 in Escape interrupts and continues
+PUSH "\e(\nX"
+  control 10
+  escape "(X"
+
 !CSI 0 args
 PUSH "\e[a"
   csi 0x61 *
@@ -120,6 +125,11 @@ PUSH "\e[123\e9"
 PUSH "\e[12\x{18}AB"
   text 0x41, 0x42
 
+!C0 in Escape interrupts and continues
+PUSH "\e[12\n;3X"
+  control 10
+  csi 0x58 12,3
+
 !OSC
 PUSH "\e]1;Hello\x07"
   osc "1;Hello"
@@ -135,6 +145,11 @@ PUSH "\e]Something\e9"
 PUSH "\e]12\x{18}AB"
   text 0x41, 0x42
 
+!C0 in OSC interrupts and continues
+PUSH "\e]2;\nBye\x07"
+  control 10
+  osc "2;Bye"
+
 !DCS
 PUSH "\ePHello\x07"
   dcs "Hello"
@@ -149,3 +164,8 @@ PUSH "\ePSomething\e9"
 !CAN cancels DCS, returns to normal mode
 PUSH "\eP12\x{18}AB"
   text 0x41, 0x42
+
+!C0 in OSC interrupts and continues
+PUSH "\ePBy\ne\x07"
+  control 10
+  dcs "Bye"
