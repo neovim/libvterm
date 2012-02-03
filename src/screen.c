@@ -272,28 +272,31 @@ static int resize(int new_rows, int new_cols, void *user)
 
   screen->buffer = is_altscreen ? screen->buffers[1] : screen->buffers[0];
 
-  if(new_cols > screen->cols) {
+  int old_rows = screen->rows;
+  int old_cols = screen->cols;
+
+  screen->rows = new_rows;
+  screen->cols = new_cols;
+
+  if(new_cols > old_cols) {
     VTermRect rect = {
       .start_row = 0,
-      .end_row   = screen->rows,
-      .start_col = screen->cols,
+      .end_row   = old_rows,
+      .start_col = old_cols,
       .end_col   = new_cols,
     };
     damagerect(screen, rect);
   }
 
-  if(new_rows > screen->rows) {
+  if(new_rows > old_rows) {
     VTermRect rect = {
-      .start_row = screen->rows,
+      .start_row = old_rows,
       .end_row   = new_rows,
       .start_col = 0,
       .end_col   = new_cols,
     };
     damagerect(screen, rect);
   }
-
-  screen->rows = new_rows;
-  screen->cols = new_cols;
 
   if(screen->callbacks && screen->callbacks->resize)
     return (*screen->callbacks->resize)(new_rows, new_cols, screen->cbdata);
