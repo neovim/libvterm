@@ -982,6 +982,12 @@ int main(int argc, char *argv[])
 
   pid_t kid = forkpty(&pt->master, NULL, &termios, &size);
   if(kid == 0) {
+    /* Restore the ISIG signals back to defaults */
+    signal(SIGINT,  SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+    signal(SIGSTOP, SIG_DFL);
+    signal(SIGCONT, SIG_DFL);
+
     putenv("TERM=xterm");
     if(argc > 1) {
       execvp(argv[1], argv + 1);
