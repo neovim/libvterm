@@ -1,6 +1,9 @@
 /* for putenv() */
 #define _XOPEN_SOURCE
 
+/* for ECHOCTL and ECHOKE */
+#define _BSD_SOURCE
+
 #include <errno.h>
 #include <poll.h>
 #include <stddef.h>
@@ -942,7 +945,42 @@ int main(int argc, char *argv[])
   gtk_window_set_geometry_hints(GTK_WINDOW(pt->termwin), GTK_WIDGET(pt->termwin), &hints, GDK_HINT_RESIZE_INC | GDK_HINT_MIN_SIZE);
   g_signal_connect(G_OBJECT(pt->termwin), "check-resize", GTK_SIGNAL_FUNC(term_resize), pt);
 
-  pid_t kid = forkpty(&pt->master, NULL, NULL, &size);
+  /* None of the docs about termios explain how to construct a new one of
+   * these, so this is largely a guess */
+  struct termios termios = {
+    .c_iflag = ICRNL|IXON|IUTF8,
+    .c_oflag = OPOST|ONLCR|NL0|CR0|TAB0|BS0|VT0|FF0,
+    .c_cflag = CS8|CREAD,
+    .c_lflag = ISIG|ICANON|IEXTEN|ECHO|ECHOE|ECHOK,
+    /* c_cc later */
+  };
+
+#ifdef ECHOCTL
+  termios.c_lflag |= ECHOCTL;
+#endif
+#ifdef ECHOKE
+  termios.c_lflag |= ECHOKE;
+#endif
+
+  cfsetspeed(&termios, 38400);
+
+  termios.c_cc[VINTR]    = 0x1f & 'C';
+  termios.c_cc[VQUIT]    = 0x1f & '\\';
+  termios.c_cc[VERASE]   = 0x1f & 'H';
+  termios.c_cc[VKILL]    = 0x1f & 'U';
+  termios.c_cc[VEOF]     = 0x1f & 'D';
+  termios.c_cc[VEOL]     = _POSIX_VDISABLE;
+  termios.c_cc[VEOL2]    = _POSIX_VDISABLE;
+  termios.c_cc[VSTART]   = 0x1f & 'Q';
+  termios.c_cc[VSTOP]    = 0x1f & 'S';
+  termios.c_cc[VSUSP]    = 0x1f & 'Z';
+  termios.c_cc[VREPRINT] = 0x1f & 'R';
+  termios.c_cc[VWERASE]  = 0x1f & 'W';
+  termios.c_cc[VLNEXT]   = 0x1f & 'V';
+  termios.c_cc[VMIN]     = 1;
+  termios.c_cc[VTIME]    = 0;
+
+  pid_t kid = forkpty(&pt->master, NULL, &termios, &size);
   if(kid == 0) {
     putenv("TERM=xterm");
     if(argc > 1) {
