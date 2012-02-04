@@ -70,6 +70,10 @@ void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
     case 'h': case 'i': case 'j': case 'm': case '[':
       needs_CSIu = 1;
       break;
+    /* Ctrl-\ ] ^ _ don't need CSUu */
+    case '\\': case ']': case '^': case '_':
+      needs_CSIu = 0;
+      break;
     /* All other characters needs CSIu except for letters a-z */
     default:
       needs_CSIu = (c < 'a' || c > 'z');
