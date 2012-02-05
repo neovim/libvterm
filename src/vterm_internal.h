@@ -19,8 +19,6 @@ struct _VTermState
 
   /* Current cursor position */
   VTermPos pos;
-  /* Saved cursor position under DEC mode 1048/1049 */
-  VTermPos saved_pos;
 
   int at_phantom; /* True if we're on the "81st" phantom column to defer a wraparound */
 
@@ -49,7 +47,6 @@ struct _VTermState
     int insert:1;
     int cursor_visible:1;
     int alt_screen:1;
-    int saved_cursor:1;
     int origin:1;
   } mode;
 
@@ -68,6 +65,11 @@ struct _VTermState
 
   VTermColor default_fg;
   VTermColor default_bg;
+
+  /* Saved state under DEC mode 1048/1049 */
+  struct {
+    VTermPos pos;
+  } saved;
 };
 
 struct _VTerm
