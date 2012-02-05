@@ -1,0 +1,22 @@
+INIT
+WANTSTATE p
+
+RESET
+  settermprop 1 true
+  settermprop 2 true
+  settermprop 7 1
+
+!Set up state
+PUSH "\e[2;2H"
+  ?cursor = 1,1
+
+!Save
+PUSH "\e[?1048h"
+
+!Change state
+PUSH "\e[5;5H"
+  ?cursor = 4,4
+
+!Restore
+PUSH "\e[?1048l"
+  ?cursor = 1,1
