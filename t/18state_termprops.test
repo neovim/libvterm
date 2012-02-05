@@ -2,8 +2,8 @@ INIT
 WANTSTATE p
 
 RESET
-  settermprop 2 true
   settermprop 1 true
+  settermprop 2 true
   settermprop 7 1
 
 !Cursor visibility

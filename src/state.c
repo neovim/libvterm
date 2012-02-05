@@ -1209,8 +1209,8 @@ void vterm_state_reset(VTermState *state)
   state->gr_set = 0;
 
   // Initialise the props
-  settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
   settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
+  settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
   settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
 }
 
