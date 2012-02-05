@@ -1208,6 +1208,11 @@ void vterm_state_reset(VTermState *state)
 
   state->gl_set = 0;
   state->gr_set = 0;
+
+  // Initialise the props
+  settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+  settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
+  settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
 }
 
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)
@@ -1220,11 +1225,6 @@ void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *cal
   if(callbacks) {
     state->callbacks = callbacks;
     state->cbdata = user;
-
-    // Initialise the props
-    settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
-    settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
-    settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
 
     if(state->callbacks && state->callbacks->initpen)
       (*state->callbacks->initpen)(state->cbdata);
