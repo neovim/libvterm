@@ -499,13 +499,12 @@ static int settermprop_string(VTermState *state, VTermProp prop, const char *str
 
 static void savecursor(VTermState *state, int save)
 {
-  state->mode.saved_cursor = save;
   if(save) {
-    state->saved_pos = state->pos;
+    state->saved.pos = state->pos;
   }
   else {
     VTermPos oldpos = state->pos;
-    state->pos = state->saved_pos;
+    state->pos = state->saved.pos;
     updatecursor(state, &oldpos, 1);
   }
 }
