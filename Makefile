@@ -41,11 +41,7 @@ INCDIR=$(PREFIX)/include
 MANDIR=$(PREFIX)/share/man
 MAN3DIR=$(MANDIR)/man3
 
-all: pangoterm
-
-pango%: pango%.c $(LIBRARY)
-	@echo LINK $@
-	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $^ $(shell pkg-config --cflags --libs gtk+-2.0) $(LDFLAGS)
+all: $(LIBRARY)
 
 $(LIBRARY): $(OBJECTS)
 	@echo LINK $@
@@ -77,11 +73,10 @@ test: $(LIBRARY) t/harness
 clean:
 	$(LIBTOOL) --mode=clean rm -f $(OBJECTS)
 	$(LIBTOOL) --mode=clean rm -f t/harness.lo t/harness
-	$(LIBTOOL) --mode=clean rm -f pangoterm
 	$(LIBTOOL) --mode=clean rm -f $(LIBRARY)
 
 .PHONY: install
-install: install-inc install-lib install-bin
+install: install-inc install-lib
 
 install-inc:
 	install -d $(DESTDIR)$(INCDIR)
@@ -92,7 +87,3 @@ install-inc:
 install-lib:
 	install -d $(DESTDIR)$(LIBDIR)
 	$(LIBTOOL) --mode=install cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/libvterm.lao
-
-install-bin: pangoterm
-	install -d $(DESTDIR)$(BINDIR)
-	$(LIBTOOL) --mode=install cp pangoterm $(DESTDIR)$(BINDIR)/pangoterm
