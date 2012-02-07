@@ -16,7 +16,13 @@ PUSH "\e[?1048h"
 !Change state
 PUSH "\e[5;5H"
   ?cursor = 4,4
+PUSH "\e[4 q"
+  settermprop 2 false
+  settermprop 7 2
 
 !Restore
 PUSH "\e[?1048l"
+  settermprop 1 true
+  settermprop 2 true
+  settermprop 7 1
   ?cursor = 1,1
