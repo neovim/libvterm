@@ -46,6 +46,8 @@ struct _VTermState
     int autowrap:1;
     int insert:1;
     int cursor_visible:1;
+    int cursor_blink:1;
+    unsigned int cursor_shape:2;
     int alt_screen:1;
     int origin:1;
   } mode;
@@ -69,6 +71,12 @@ struct _VTermState
   /* Saved state under DEC mode 1048/1049 */
   struct {
     VTermPos pos;
+
+    struct {
+      int cursor_visible:1;
+      int cursor_blink:1;
+      unsigned int cursor_shape:2;
+    } mode;
   } saved;
 };
 
