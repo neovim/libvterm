@@ -501,10 +501,22 @@ static void savecursor(VTermState *state, int save)
 {
   if(save) {
     state->saved.pos = state->pos;
+    state->saved.mode.cursor_visible = state->mode.cursor_visible;
+    state->saved.mode.cursor_blink   = state->mode.cursor_blink;
+    state->saved.mode.cursor_shape   = state->mode.cursor_shape;
   }
   else {
     VTermPos oldpos = state->pos;
+
     state->pos = state->saved.pos;
+    state->mode.cursor_visible = state->saved.mode.cursor_visible;
+    state->mode.cursor_blink   = state->saved.mode.cursor_blink;
+    state->mode.cursor_shape   = state->saved.mode.cursor_shape;
+
+    settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
+    settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->mode.cursor_blink);
+    settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->mode.cursor_shape);
+
     updatecursor(state, &oldpos, 1);
   }
 }
@@ -620,6 +632,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 12:
+    state->mode.cursor_blink = val;
     settermprop_bool(state, VTERM_PROP_CURSORBLINK, val);
     break;
 
@@ -1020,22 +1033,25 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     switch(val) {
     case 0: case 1:
-      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
-      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
+      state->mode.cursor_blink = 1;
+      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
       break;
     case 2:
-      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
-      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
+      state->mode.cursor_blink = 0;
+      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
       break;
     case 3:
-      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
-      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
+      state->mode.cursor_blink = 1;
+      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_UNDERLINE;
       break;
     case 4:
-      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
-      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
+      state->mode.cursor_blink = 0;
+      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_UNDERLINE;
       break;
     }
+
+    settermprop_bool(state, VTERM_PROP_CURSORBLINK, state->mode.cursor_blink);
+    settermprop_int (state, VTERM_PROP_CURSORSHAPE, state->mode.cursor_shape);
     break;
 
   case 0x72: // DECSTBM - DEC custom
@@ -1182,6 +1198,8 @@ void vterm_state_reset(VTermState *state)
 
   state->mode.autowrap = 1;
   state->mode.cursor_visible = 1;
+  state->mode.cursor_blink = 1;
+  state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
   state->mode.origin = 0;
 
   for(int col = 0; col < state->cols; col++)
@@ -1210,8 +1228,8 @@ void vterm_state_reset(VTermState *state)
 
   // Initialise the props
   settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
-  settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
-  settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
+  settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->mode.cursor_blink);
+  settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->mode.cursor_shape);
 }
 
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)
