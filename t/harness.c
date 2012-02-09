@@ -407,7 +407,7 @@ int main(int argc, char **argv)
           want_screen_damage = sense;
           break;
         case 'm':
-          want_moverect = 1;
+          want_moverect = sense;
           break;
         case 'c':
           want_movecursor = sense;
