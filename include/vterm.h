@@ -160,6 +160,7 @@ void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks 
 
 typedef enum {
   VTERM_DAMAGE_CELL,    /* every cell */
+  VTERM_DAMAGE_ROW,     /* entire rows */
   VTERM_DAMAGE_SCREEN,  /* entire screen */
 } VTermDamageSize;
 
