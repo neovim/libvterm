@@ -31,10 +31,12 @@ PUSH "\e[5@"
   moverect 0..1,0..75 -> 0..1,5..80
   damage 0..1,0..5
 
+WANTSCREEN -m
+
 !Merge to cells
-DAMAGEMERGE CELL
 RESET
   damage 0..25,0..80
+DAMAGEMERGE CELL
 
 PUSH "A"
   damage 0..1,0..1
@@ -43,11 +45,29 @@ PUSH "B"
 PUSH "C"
   damage 0..1,2..3
 
-!Merge entire screen
-DAMAGEMERGE SCREEN
+!Merge entire rows
+!! TODO
 RESET
   damage 0..25,0..80
+DAMAGEMERGE ROW
+
+PUSH "ABCDE\r\nEFGH"
+  damage 0..1,0..5
+DAMAGEFLUSH
+  damage 1..2,0..4
+PUSH "\e[3;6r\e[6H\eD"
+  damage 2..5,0..80
+DAMAGEFLUSH
+  damage 5..6,0..80
+
+!Merge entire screen
+RESET
+  damage 0..25,0..80
+DAMAGEMERGE SCREEN
 
 PUSH "ABCDE\r\nEFGH"
 DAMAGEFLUSH
   damage 0..2,0..5
+PUSH "\e[3;6r\e[6H\eD"
+DAMAGEFLUSH
+  damage 2..6,0..80

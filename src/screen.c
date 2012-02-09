@@ -94,6 +94,34 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
     emit = rect;
     break;
 
+  case VTERM_DAMAGE_ROW:
+    /* Emit damage longer than one row. Try to merge with existing damage in
+     * the same row */
+    if(rect.end_row > rect.start_row + 1) {
+      // Bigger than 1 line - flush existing, emit this
+      vterm_screen_flush_damage(screen);
+      emit = rect;
+    }
+    else if(screen->damaged.start_row == -1) {
+      // None stored yet
+      screen->damaged = rect;
+      return;
+    }
+    else if(rect.start_row == screen->damaged.start_row) {
+      // Merge with the stored line
+      if(screen->damaged.start_col > rect.start_col)
+        screen->damaged.start_col = rect.start_col;
+      if(screen->damaged.end_col < rect.end_col)
+        screen->damaged.end_col = rect.end_col;
+      return;
+    }
+    else {
+      // Emit the currently stored line, store a new one
+      emit = screen->damaged;
+      screen->damaged = rect;
+    }
+    break;
+
   case VTERM_DAMAGE_SCREEN:
     /* Never emit damage event */
     if(screen->damaged.start_row == -1)
@@ -388,6 +416,7 @@ void vterm_screen_free(VTermScreen *screen)
 
 void vterm_screen_reset(VTermScreen *screen)
 {
+  screen->damaged.start_row = -1;
   vterm_state_reset(screen->state);
   vterm_screen_flush_damage(screen);
 }
