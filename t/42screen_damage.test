@@ -30,3 +30,24 @@ WANTSCREEN m
 PUSH "\e[5@"
   moverect 0..1,0..75 -> 0..1,5..80
   damage 0..1,0..5
+
+!Merge to cells
+DAMAGEMERGE CELL
+RESET
+  damage 0..25,0..80
+
+PUSH "A"
+  damage 0..1,0..1
+PUSH "B"
+  damage 0..1,1..2
+PUSH "C"
+  damage 0..1,2..3
+
+!Merge entire screen
+DAMAGEMERGE SCREEN
+RESET
+  damage 0..25,0..80
+
+PUSH "ABCDE\r\nEFGH"
+DAMAGEFLUSH
+  damage 0..2,0..5
