@@ -46,7 +46,6 @@ PUSH "C"
   damage 0..1,2..3
 
 !Merge entire rows
-!! TODO
 RESET
   damage 0..25,0..80
 DAMAGEMERGE ROW
@@ -71,3 +70,17 @@ DAMAGEFLUSH
 PUSH "\e[3;6r\e[6H\eD"
 DAMAGEFLUSH
   damage 2..6,0..80
+
+!Merge entire screen with moverect
+WANTSCREEN m
+
+RESET
+  damage 0..25,0..80
+DAMAGEMERGE SCREEN
+
+PUSH "ABCDE\r\nEFGH"
+PUSH "\e[3;6r\e[6H\eD"
+  damage 0..2,0..5
+  moverect 3..6,0..80 -> 2..5,0..80
+DAMAGEFLUSH
+  damage 5..6,0..80
