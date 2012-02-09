@@ -39,6 +39,9 @@ struct _VTermScreen
   const VTermScreenCallbacks *callbacks;
   void *cbdata;
 
+  VTermDamageSize damage_merge;
+  VTermRect damaged; /* start_row == -1 => no damage */
+
   int rows;
   int cols;
   int global_reverse;
@@ -83,8 +86,37 @@ static ScreenCell *realloc_buffer(VTermScreen *screen, ScreenCell *buffer, int n
 
 static void damagerect(VTermScreen *screen, VTermRect rect)
 {
+  VTermRect emit;
+
+  switch(screen->damage_merge) {
+  case VTERM_DAMAGE_CELL:
+    /* Always emit damage event */
+    emit = rect;
+    break;
+
+  case VTERM_DAMAGE_SCREEN:
+    /* Never emit damage event */
+    if(screen->damaged.start_row == -1)
+      screen->damaged = rect;
+    else {
+      if(screen->damaged.start_row > rect.start_row)
+        screen->damaged.start_row = rect.start_row;
+      if(screen->damaged.end_row < rect.end_row)
+        screen->damaged.end_row = rect.end_row;
+      if(screen->damaged.start_col > rect.start_col)
+        screen->damaged.start_col = rect.start_col;
+      if(screen->damaged.end_col < rect.end_col)
+        screen->damaged.end_col = rect.end_col;
+    }
+    return;
+
+  default:
+    fprintf(stderr, "TODO: Maybe merge damage for level %d\n", screen->damage_merge);
+    return;
+  }
+
   if(screen->callbacks && screen->callbacks->damage)
-    (*screen->callbacks->damage)(rect, screen->cbdata);
+    (*screen->callbacks->damage)(emit, screen->cbdata);
 }
 
 static void damagescreen(VTermScreen *screen)
@@ -330,6 +362,9 @@ static VTermScreen *screen_new(VTerm *vt)
   screen->vt = vt;
   screen->state = state;
 
+  screen->damage_merge = VTERM_DAMAGE_CELL;
+  screen->damaged.start_row = -1;
+
   screen->rows = rows;
   screen->cols = cols;
 
@@ -354,6 +389,7 @@ void vterm_screen_free(VTermScreen *screen)
 void vterm_screen_reset(VTermScreen *screen)
 {
   vterm_state_reset(screen->state);
+  vterm_screen_flush_damage(screen);
 }
 
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
@@ -447,4 +483,19 @@ void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks 
 {
   screen->callbacks = callbacks;
   screen->cbdata = user;
+}
+
+void vterm_screen_flush_damage(VTermScreen *screen)
+{
+  if(screen->damaged.start_row != -1)
+    if(screen->callbacks && screen->callbacks->damage)
+      (*screen->callbacks->damage)(screen->damaged, screen->cbdata);
+
+  screen->damaged.start_row = -1;
+}
+
+void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size)
+{
+  vterm_screen_flush_damage(screen);
+  screen->damage_merge = size;
 }
