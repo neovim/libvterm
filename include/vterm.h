@@ -158,6 +158,14 @@ VTermScreen *vterm_obtain_screen(VTerm *vt);
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen);
 void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
 
+typedef enum {
+  VTERM_DAMAGE_CELL,    /* every cell */
+  VTERM_DAMAGE_SCREEN,  /* entire screen */
+} VTermDamageSize;
+
+void vterm_screen_flush_damage(VTermScreen *screen);
+void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size);
+
 void   vterm_screen_reset(VTermScreen *screen);
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
 

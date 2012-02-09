@@ -509,6 +509,20 @@ int main(int argc, char **argv)
         (*mousefunc)(col, row, button, press, mousedata);
     }
 
+    else if(strstartswith(line, "DAMAGEMERGE ")) {
+      char *linep = line + 12;
+      while(linep[0] == ' ')
+        linep++;
+      if(streq(linep, "CELL"))
+        vterm_screen_set_damage_merge(screen, VTERM_DAMAGE_CELL);
+      else if(streq(linep, "SCREEN"))
+        vterm_screen_set_damage_merge(screen, VTERM_DAMAGE_SCREEN);
+    }
+
+    else if(strstartswith(line, "DAMAGEFLUSH")) {
+      vterm_screen_flush_damage(screen);
+    }
+
     else if(line[0] == '?') {
       if(streq(line, "?cursor")) {
         VTermPos pos;
