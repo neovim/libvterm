@@ -53,3 +53,13 @@ PUSH "a"
 PUSH "\x0f"
 PUSH "a"
   putglyph 0x61 1 0,8
+
+!Mixed US-ASCII and UTF-8
+# U+0108 == 0xc4 0x88
+RESET
+PUSH "\e(B"
+PUSH "AB\xc4\x88D"
+  putglyph 0x0041 1 0,0
+  putglyph 0x0042 1 0,1
+  putglyph 0x0108 1 0,2
+  putglyph 0x0044 1 0,3
