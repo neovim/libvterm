@@ -159,7 +159,7 @@ static int decode_usascii(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen
   for(; *pos < bytelen; (*pos)++) {
     unsigned char c = bytes[*pos];
 
-    if(c < 0x20 || (c >= 0x80 && c < 0xa0))
+    if(c < 0x20 || c >= 0x80)
       return 0;
 
     cp[(*cpi)++] = c;
