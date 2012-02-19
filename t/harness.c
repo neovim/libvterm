@@ -622,7 +622,7 @@ int main(int argc, char **argv)
           uint32_t *chars = malloc(sizeof(uint32_t) * len);
           vterm_screen_get_chars(screen, chars, len, rect);
           for(size_t i = 0; i < len; i++) {
-            printf("0x%x%s", chars[i], i < len-1 ? "," : "\n");
+            printf("0x%02x%s", chars[i], i < len-1 ? "," : "\n");
           }
           free(chars);
         }

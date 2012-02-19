@@ -7,7 +7,7 @@
 #endif
 
 #define UNICODE_SPACE 0x20
-#define UNICODE_LINEFEED 0x13
+#define UNICODE_LINEFEED 0x0a
 
 /* State of the pen at some moment in time, also used in a cell */
 typedef struct
