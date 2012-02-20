@@ -67,6 +67,8 @@ struct _VTermState
 
   VTermColor default_fg;
   VTermColor default_bg;
+  int fg_ansi;
+  int bold_is_highbright;
 
   /* Saved state under DEC mode 1048/1049 */
   struct {
