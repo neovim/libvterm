@@ -64,3 +64,35 @@ PUSH "\e[10m"
   ?pen font = 0
 PUSH "\e[11m\e[m"
   ?pen font = 0
+
+!Foreground
+PUSH "\e[31m"
+  ?pen foreground = rgb(240,0,0)
+PUSH "\e[32m"
+  ?pen foreground = rgb(0,240,0)
+PUSH "\e[34m"
+  ?pen foreground = rgb(64,64,240)
+PUSH "\e[91m"
+  ?pen foreground = rgb(255,96,96)
+PUSH "\e[38:2:10:20:30m"
+  ?pen foreground = rgb(10,20,30)
+PUSH "\e[38:5:1m"
+  ?pen foreground = rgb(240,0,0)
+PUSH "\e[39m"
+  ?pen foreground = rgb(240,240,240)
+
+!Background
+PUSH "\e[41m"
+  ?pen background = rgb(240,0,0)
+PUSH "\e[42m"
+  ?pen background = rgb(0,240,0)
+PUSH "\e[44m"
+  ?pen background = rgb(64,64,240)
+PUSH "\e[101m"
+  ?pen background = rgb(255,96,96)
+PUSH "\e[48:2:10:20:30m"
+  ?pen background = rgb(10,20,30)
+PUSH "\e[48:5:1m"
+  ?pen background = rgb(240,0,0)
+PUSH "\e[49m"
+  ?pen background = rgb(0,0,0)
