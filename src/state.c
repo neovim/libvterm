@@ -54,6 +54,8 @@ static VTermState *vterm_state_new(VTerm *vt)
   state->default_fg.red = state->default_fg.green = state->default_fg.blue = 240;
   state->default_bg.red = state->default_bg.green = state->default_bg.blue = 0;
 
+  state->bold_is_highbright = 0;
+
   return state;
 }
 

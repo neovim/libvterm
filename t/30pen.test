@@ -96,3 +96,11 @@ PUSH "\e[48:5:1m"
   ?pen background = rgb(240,0,0)
 PUSH "\e[49m"
   ?pen background = rgb(0,0,0)
+
+!Bold+ANSI colour == highbright
+PUSH "\e[m\e[1;37m"
+  ?pen bold = on
+  ?pen foreground = rgb(255,255,255)
+PUSH "\e[m\e[37;1m"
+  ?pen bold = on
+  ?pen foreground = rgb(255,255,255)

@@ -155,6 +155,7 @@ void vterm_state_resetpen(VTermState *state)
   state->pen.reverse = 0;   setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
   state->pen.strike = 0;    setpenattr_bool(state, VTERM_ATTR_STRIKE, 0);
   state->pen.font = 0;      setpenattr_int( state, VTERM_ATTR_FONT, 0);
+  state->fg_ansi = -1;
 
   setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
   setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
@@ -166,11 +167,17 @@ void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, V
   state->default_bg = *default_bg;
 }
 
+void vterm_state_set_bold_highbright(VTermState *state, int bold_is_highbright)
+{
+  state->bold_is_highbright = bold_is_highbright;
+}
+
 void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
 
   int argi = 0;
+  int value;
 
   while(argi < argcount) {
     // This logic is easier to do 'done' backwards; set it true, and make it
@@ -187,6 +194,8 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
     case 1: // Bold on
       state->pen.bold = 1;
       setpenattr_bool(state, VTERM_ATTR_BOLD, 1);
+      if(state->fg_ansi > -1 && state->bold_is_highbright)
+        setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, state->fg_ansi + (state->pen.bold ? 8 : 0));
       break;
 
     case 3: // Italic on
@@ -257,14 +266,20 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 
     case 30: case 31: case 32: case 33:
     case 34: case 35: case 36: case 37: // Foreground colour palette
-      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 30);
+      value = CSI_ARG(args[argi]) - 30;
+      state->fg_ansi = value;
+      if(state->pen.bold && state->bold_is_highbright)
+        value += 8;
+      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, value);
       break;
 
     case 38: // Foreground colour alternative palette
+      state->fg_ansi = -1;
       argi += setpenattr_col_palette(state, VTERM_ATTR_FOREGROUND, args + argi + 1, argcount - argi - 1);
       break;
 
     case 39: // Foreground colour default
+      state->fg_ansi = -1;
       setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
       break;
 
