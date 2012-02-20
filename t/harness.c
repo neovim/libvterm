@@ -361,6 +361,7 @@ int main(int argc, char **argv)
       if(!state)
         state = vterm_obtain_state(vt);
       vterm_state_set_callbacks(state, &state_cbs, NULL);
+      vterm_state_set_bold_highbright(state, 1);
       vterm_state_reset(state);
 
       int i = 9;
