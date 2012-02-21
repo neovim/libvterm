@@ -433,13 +433,13 @@ static size_t _get_chars(VTermScreen *screen, const int utf8, void *buffer, size
 #define PUT(c)                                             \
   if(utf8) {                                               \
     size_t thislen = utf8_seqlen(c);                       \
-    if(buffer && outpos + thislen < len)                   \
+    if(buffer && outpos + thislen <= len)                  \
       outpos += fill_utf8((c), (char *)buffer + outpos);   \
     else                                                   \
       outpos += thislen;                                   \
   }                                                        \
   else {                                                   \
-    if(buffer && outpos < len)                             \
+    if(buffer && outpos + 1 <= len)                        \
       ((uint32_t*)buffer)[outpos++] = (c);                 \
     else                                                   \
       outpos++;                                            \
@@ -470,10 +470,6 @@ static size_t _get_chars(VTermScreen *screen, const int utf8, void *buffer, size
       PUT(UNICODE_LINEFEED);
       padding = 0;
     }
-  }
-
-  if(utf8) {
-    PUT(0);
   }
 
   return outpos;
