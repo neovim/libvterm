@@ -628,6 +628,31 @@ int main(int argc, char **argv)
           free(chars);
         }
       }
+      else if(strstartswith(line, "?screen_text ")) {
+        char *linep = line + 12;
+        VTermRect rect;
+        size_t len;
+        while(linep[0] == ' ')
+          linep++;
+        if(sscanf(linep, "%d,%d,%d,%d", &rect.start_row, &rect.start_col, &rect.end_row, &rect.end_col) < 4) {
+          printf("! screen_text unrecognised input\n");
+          goto abort_line;
+        }
+        len = vterm_screen_get_text(screen, NULL, 0, rect);
+        if(len == (size_t)-1)
+          printf("! screen_text error\n");
+        else if(len == 0)
+          printf("\n");
+        else {
+          fprintf(stderr, "Allocating %d byte UTF-8 buffer\n", len);
+          char *text = malloc(len);
+          vterm_screen_get_text(screen, text, len, rect);
+          for(size_t i = 0; i < len; i++) {
+            printf("0x%02x%s", (unsigned char)text[i], i < len-1 ? "," : "\n");
+          }
+          free(text);
+        }
+      }
       else if(strstartswith(line, "?screen_cell ")) {
         char *linep = line + 12;
         VTermPos pos;

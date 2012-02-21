@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include "utf8.h"
+
 #ifndef MAX_CHARS_PER_CELL
 # define MAX_CHARS_PER_CELL 6
 #endif
@@ -423,11 +425,25 @@ void vterm_screen_reset(VTermScreen *screen)
   vterm_screen_flush_damage(screen);
 }
 
-size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
+static size_t _get_chars(VTermScreen *screen, const int utf8, void *buffer, size_t len, const VTermRect rect)
 {
   size_t outpos = 0;
   int padding = 0;
-#define PUT(c) (chars && outpos < len) ? chars[outpos++] = (c) : outpos++
+
+#define PUT(c)                                             \
+  if(utf8) {                                               \
+    size_t thislen = utf8_seqlen(c);                       \
+    if(buffer && outpos + thislen < len)                   \
+      outpos += fill_utf8((c), (char *)buffer + outpos);   \
+    else                                                   \
+      outpos += thislen;                                   \
+  }                                                        \
+  else {                                                   \
+    if(buffer && outpos < len)                             \
+      ((uint32_t*)buffer)[outpos++] = (c);                 \
+    else                                                   \
+      outpos++;                                            \
+  }
 
   for(int row = rect.start_row; row < rect.end_row; row++) {
     for(int col = rect.start_col; col < rect.end_col; col++) {
@@ -456,7 +472,21 @@ size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, 
     }
   }
 
+  if(utf8) {
+    PUT(0);
+  }
+
   return outpos;
+}
+
+size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
+{
+  return _get_chars(screen, 0, chars, len, rect);
+}
+
+size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const VTermRect rect)
+{
+  return _get_chars(screen, 1, str, len, rect);
 }
 
 /* Copy internal to external representation of a screen cell */
