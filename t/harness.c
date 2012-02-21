@@ -644,7 +644,6 @@ int main(int argc, char **argv)
         else if(len == 0)
           printf("\n");
         else {
-          fprintf(stderr, "Allocating %d byte UTF-8 buffer\n", len);
           char *text = malloc(len);
           vterm_screen_get_text(screen, text, len, rect);
           for(size_t i = 0; i < len; i++) {
