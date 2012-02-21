@@ -170,6 +170,7 @@ void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size);
 
 void   vterm_screen_reset(VTermScreen *screen);
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
+size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const VTermRect rect);
 
 typedef struct {
   uint32_t chars[6];
