@@ -5,23 +5,23 @@
 static const VTermColor ansi_colors[] = {
   /* R    G    B */
   {   0,   0,   0 }, // black
-  { 240,   0,   0 }, // red
-  {   0, 240,   0 }, // green
-  { 240, 240,   0 }, // yellow
-  {  64,  64, 240 }, // blue - make it more visible
-  { 240,   0, 240 }, // magenta
-  {   0, 240, 240 }, // cyan
-  { 240, 240, 240 }, // white == 90% grey
+  { 224,   0,   0 }, // red
+  {   0, 224,   0 }, // green
+  { 224, 224,   0 }, // yellow
+  {   0,   0, 224 }, // blue
+  { 224,   0, 224 }, // magenta
+  {   0, 224, 224 }, // cyan
+  { 224, 224, 224 }, // white == light grey
 
   // high intensity
-  {  96,  96,  96 }, // black
-  { 255,  96,  96 }, // red
-  {  96, 255,  96 }, // green
-  { 255, 255,  96 }, // yellow
-  { 128, 128, 255 }, // blue - make it more visible
-  { 255,  96, 255 }, // magenta
-  {  96, 255, 255 }, // cyan
-  { 255, 255, 255 }, // white == 90% grey
+  { 128, 128, 128 }, // black
+  { 255,  64,  64 }, // red
+  {  64, 255,  64 }, // green
+  { 255, 255,  64 }, // yellow
+  {  64,  64, 255 }, // blue
+  { 255,  64, 255 }, // magenta
+  {  64, 255, 255 }, // cyan
+  { 255, 255, 255 }, // white for real
 };
 
 /* Attempt at some gamma ramps */
