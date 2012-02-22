@@ -137,7 +137,22 @@ void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
 
 size_t vterm_output_bufferlen(VTerm *vt)
 {
+  return vterm_output_get_buffer_current(vt);
+}
+
+size_t vterm_output_get_buffer_size(VTerm *vt)
+{
+  return vt->outbuffer_len;
+}
+
+size_t vterm_output_get_buffer_current(VTerm *vt)
+{
   return vt->outbuffer_cur;
+}
+
+size_t vterm_output_get_buffer_remaining(VTerm *vt)
+{
+  return vt->outbuffer_len - vt->outbuffer_cur;
 }
 
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len)

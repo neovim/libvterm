@@ -195,7 +195,12 @@ void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 void vterm_parser_set_utf8(VTerm *vt, int is_utf8);
 void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len);
 
-size_t vterm_output_bufferlen(VTerm *vt);
+size_t vterm_output_bufferlen(VTerm *vt); /* deprecated */
+
+size_t vterm_output_get_buffer_size(VTerm *vt);
+size_t vterm_output_get_buffer_current(VTerm *vt);
+size_t vterm_output_get_buffer_remaining(VTerm *vt);
+
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
 
 void vterm_copy_cells(VTermRect dest,
