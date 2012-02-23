@@ -412,16 +412,20 @@ static void mousefunc(int col, int row, int button, int pressed, void *data)
   state->mouse_col = col;
   state->mouse_row = row;
 
-  if(button > 0) {
+  if(button > 0 && button <= 3) {
     if(pressed)
       state->mouse_buttons |= (1 << (button-1));
     else
       state->mouse_buttons &= ~(1 << (button-1));
   }
 
-  if(state->mouse_buttons != old_buttons) {
+  /* Most of the time we don't get button releases from 4/5 */
+  if(state->mouse_buttons != old_buttons || button >= 4) {
     if(button < 4) {
       vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", pressed ? button-1 + 0x20 : 0x23, col + 0x21, row + 0x21);
+    }
+    else if(button < 6) {
+      vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", button-4 + 0x60, col + 0x21, row + 0x21);
     }
   }
   else if(col != old_col || row != old_row) {

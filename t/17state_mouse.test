@@ -27,6 +27,14 @@ MOUSE 1 1 10,20
 MOUSE 0 0 10,21
   # no output
 
+!Wheel events
+MOUSE 1 4 10,21
+  output "\e[M\x60\x36\x2b"
+MOUSE 1 4 10,21
+  output "\e[M\x60\x36\x2b"
+MOUSE 1 5 10,21
+  output "\e[M\x61\x36\x2b"
+
 !Drag events
 RESET
 PUSH "\e[?1002h"
@@ -51,3 +59,4 @@ PUSH "\e[?1003h"
 
 MOUSE 0 0 6,8
   output "\e[M\x43\x29\x27"
+
