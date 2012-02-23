@@ -68,10 +68,10 @@ typedef struct {
 keycodes_s keycodes[] = {
   { KEYCODE_NONE }, // NONE
 
-  { KEYCODE_LITERAL, '\r' }, // ENTER
-  { KEYCODE_TAB,     '\t' }, // TAB
-  { KEYCODE_LITERAL, '\b' }, // BACKSPACE
-  { KEYCODE_LITERAL, '\e' }, // ESCAPE
+  { KEYCODE_LITERAL, '\r'   }, // ENTER
+  { KEYCODE_TAB,     '\t'   }, // TAB
+  { KEYCODE_LITERAL, '\x7f' }, // BACKSPACE == ASCII DEL
+  { KEYCODE_LITERAL, '\e'   }, // ESCAPE
 
   { KEYCODE_CSI_CURSOR, 'A' }, // UP
   { KEYCODE_CSI_CURSOR, 'B' }, // DOWN
