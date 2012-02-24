@@ -78,6 +78,7 @@ CSIs
   CSI l            = RM, Reset mode
   CSI ? l          = DECRM, DEC reset mode
   CSI m            = SGR, Set Graphic Rendition
+  CSI n            = DSR, Device Status Report
   CSI SP q         = DECSCUSR
   CSI r            = DECSTBM
 
