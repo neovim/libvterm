@@ -1,0 +1,133 @@
+Sequences documented in parens are implicit ones from parser.c, which move
+between states.
+
+C0 controls
+
+  0x00             = NUL
+  0x07             = BEL
+  0x08             = BS
+  0x09             = HT
+  0x0A             = LF
+  0x0B             = VT
+  0x0C             = FF
+  0x0D             = CR
+  0x0E             = LS1
+  0x0F             = LS0
+ (0x18             = CAN)
+ (0x1A             = SUB)
+ (0x1B             = ESC)
+
+C1 controls
+
+  0x84             = IND
+  0x85             = NEL
+  0x88             = HTS
+  0x8D             = RI
+ (0x90             = DCS)
+ (0x9B             = CSI)
+ (0x9D             = OSC)
+
+Escape sequences
+ - excluding sequences that are C1 aliases
+
+  ESC 0            = Designate DECdrawing
+  ESC # 8          = DECALN
+  ESC =            = Enable keypad mode
+  ESC >            = Disable keypad mode
+  ESC A            = Designate UK
+  ESC B            = Designate US
+ (ESC P            = DCS)
+ (ESC [            = CSI)
+ (ESC ]            = OSC)
+  ESC n            = LS2
+  ESC o            = LS3
+  ESC u            = Designate UTF-8
+
+DCSes
+
+CSIs
+  CSI @            = ICH
+  CSI A            = CUU
+  CSI B            = CUD
+  CSI C            = CUF
+  CSI D            = CUB
+  CSI E            = CNL
+  CSI F            = CPL
+  CSI G            = CHA
+  CSI H            = CUP
+  CSI I            = CHT
+  CSI J            = ED
+  CSI K            = EL
+  CSI L            = IL
+  CSI M            = DL
+  CSI P            = DCH
+  CSI S            = SU
+  CSI T            = SD
+  CSI [            = CBT
+  CSI `            = HPA
+  CSI a            = HPR
+  CSI > c          = DECSDA
+  CSI d            = VPA
+  CSI e            = VPR
+  CSI f            = HVP
+  CSI g            = TBC
+  CSI h            = SM, Set mode
+  CSI ? h          = DECSM, DEC set mode
+  CSI j            = HPB
+  CSI k            = VPB
+  CSI l            = RM, Reset mode
+  CSI ? l          = DECRM, DEC reset mode
+  CSI m            = SGR, Set Graphic Rendition
+  CSI SP q         = DECSCUSR
+  CSI r            = DECSTBM
+
+OSCs
+
+  0;               = Set icon name and title
+  1;               = Set icon name
+  2;               = Set title
+
+Standard modes
+
+  4                = IRM
+
+DEC modes
+
+  1                = Cursor
+  5                = RV entire screen
+  6                = Origin
+  7                = Autowrap
+  12               = Cursor blink
+  25               = Cursor visible
+  1000,
+  1002,
+  1003             = Mouse
+  1047             = Altscreen
+  1048             = Save cursor
+  1049             = 1047 + 1048
+
+Graphic Renditions
+
+  0                = Reset
+  1                = Bold on
+  3                = Italic on
+  4                = Underline single
+  5                = Blink on
+  7                = Reverse on
+  9                = Strikethrough on
+  10-19            = Select font
+  21               = Underline double
+  22               = Bold off
+  23               = Italic off
+  24               = Underline off
+  25               = Blink off
+  27               = Reverse off
+  29               = Strikethrough off
+  30-37            = Foreground ANSI
+  38               = Foreground alternative palette
+  39               = Foreground default
+  40-47            = Background ANSI
+  48               = Background alternative palette
+  49               = Background default
+  90-97            = Foreground ANSI high-intensity
+  100-107          = Background ANSI high-intensity
