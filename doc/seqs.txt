@@ -63,7 +63,7 @@ CSIs
   CSI P            = DCH
   CSI S            = SU
   CSI T            = SD
-  CSI [            = CBT
+  CSI Z            = CBT
   CSI `            = HPA
   CSI a            = HPR
   CSI > c          = DECSDA
@@ -83,9 +83,9 @@ CSIs
 
 OSCs
 
-  0;               = Set icon name and title
-  1;               = Set icon name
-  2;               = Set title
+  OSC 0;           = Set icon name and title
+  OSC 1;           = Set icon name
+  OSC 2;           = Set title
 
 Standard modes
 
@@ -99,35 +99,33 @@ DEC modes
   7                = Autowrap
   12               = Cursor blink
   25               = Cursor visible
-  1000,
-  1002,
-  1003             = Mouse
+  1000,1002,1003   = Mouse
   1047             = Altscreen
   1048             = Save cursor
   1049             = 1047 + 1048
 
 Graphic Renditions
 
-  0                = Reset
-  1                = Bold on
-  3                = Italic on
-  4                = Underline single
-  5                = Blink on
-  7                = Reverse on
-  9                = Strikethrough on
-  10-19            = Select font
-  21               = Underline double
-  22               = Bold off
-  23               = Italic off
-  24               = Underline off
-  25               = Blink off
-  27               = Reverse off
-  29               = Strikethrough off
-  30-37            = Foreground ANSI
-  38               = Foreground alternative palette
-  39               = Foreground default
-  40-47            = Background ANSI
-  48               = Background alternative palette
-  49               = Background default
-  90-97            = Foreground ANSI high-intensity
-  100-107          = Background ANSI high-intensity
+  SGR 0            = Reset
+  SGR 1            = Bold on
+  SGR 3            = Italic on
+  SGR 4            = Underline single
+  SGR 5            = Blink on
+  SGR 7            = Reverse on
+  SGR 9            = Strikethrough on
+  SGR 10-19        = Select font
+  SGR 21           = Underline double
+  SGR 22           = Bold off
+  SGR 23           = Italic off
+  SGR 24           = Underline off
+  SGR 25           = Blink off
+  SGR 27           = Reverse off
+  SGR 29           = Strikethrough off
+  SGR 30-37        = Foreground ANSI
+  SGR 38           = Foreground alternative palette
+  SGR 39           = Foreground default
+  SGR 40-47        = Background ANSI
+  SGR 48           = Background alternative palette
+  SGR 49           = Background default
+  SGR 90-97        = Foreground ANSI high-intensity
+  SGR 100-107      = Background ANSI high-intensity
