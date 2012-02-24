@@ -1034,6 +1034,22 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     vterm_state_setpen(state, args, argcount);
     break;
 
+  case 0x6e: // DSR - ECMA-48 8.3.35
+    val = CSI_ARG_OR(args[0], 0);
+
+    switch(val) {
+    case 0: case 1: case 2: case 3: case 4:
+      // ignore - these are replies
+      break;
+    case 5:
+      vterm_push_output_sprintf(state->vt, "\e[0n");
+      break;
+    case 6:
+      vterm_push_output_sprintf(state->vt, "\e[%d;%dR", state->pos.row + 1, state->pos.col + 1);
+      break;
+    }
+    break;
+
   case INTERMED(' ', 0x71): // DECSCUSR - DEC set cursor shape
     val = CSI_ARG_OR(args[0], 1);
 

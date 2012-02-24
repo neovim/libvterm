@@ -1,0 +1,13 @@
+INIT
+WANTSTATE
+
+!DSR
+RESET
+PUSH "\e[5n"
+  output "\e[0n"
+
+!CPR
+PUSH "\e[6n"
+  output "\e[1;1R"
+PUSH "\e[10;10H\e[6n"
+  output "\e[10;10R"
