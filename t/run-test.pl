@@ -97,7 +97,7 @@ sub do_line
       elsif( $line =~ m/^putglyph (\S+) (.*)$/ ) {
          $line = "putglyph " . join( ",", map sprintf("%x", $_), eval($1) ) . " $2";
       }
-      elsif( $line =~ m/^(?:movecursor|moverect|erase|damage|settermprop|setmousefunc) / ) {
+      elsif( $line =~ m/^(?:movecursor|scrollrect|moverect|erase|damage|settermprop|setmousefunc) / ) {
          # no conversion
       }
       else {

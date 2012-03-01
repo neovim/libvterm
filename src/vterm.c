@@ -200,6 +200,68 @@ VTermValueType vterm_get_prop_type(VTermProp prop)
   return 0; /* UNREACHABLE */
 }
 
+void vterm_scroll_rect(VTermRect rect,
+    int downward,
+    int rightward,
+    int (*moverect)(VTermRect src, VTermRect dest, void *user),
+    int (*eraserect)(VTermRect rect, void *user),
+    void *user)
+{
+  VTermRect src;
+  VTermRect dest;
+
+  if(rightward >= 0) {
+    /* rect: [XXX................]
+     * src:     [----------------]
+     * dest: [----------------]
+     */
+    dest.start_col = rect.start_col;
+    dest.end_col   = rect.end_col   - rightward;
+    src.start_col  = rect.start_col + rightward;
+    src.end_col    = rect.end_col;
+  }
+  else {
+    /* rect: [................XXX]
+     * src:  [----------------]
+     * dest:    [----------------]
+     */
+    int leftward = -rightward;
+    dest.start_col = rect.start_col + leftward;
+    dest.end_col   = rect.end_col;
+    src.start_col  = rect.start_col;
+    src.end_col    = rect.end_col - leftward;
+  }
+
+  if(downward >= 0) {
+    dest.start_row = rect.start_row;
+    dest.end_row   = rect.end_row   - downward;
+    src.start_row  = rect.start_row + downward;
+    src.end_row    = rect.end_row;
+  }
+  else {
+    int upward = -downward;
+    dest.start_row = rect.start_row + upward;
+    dest.end_row   = rect.end_row;
+    src.start_row  = rect.start_row;
+    src.end_row    = rect.end_row - upward;
+  }
+
+  if(moverect)
+    (*moverect)(dest, src, user);
+
+  if(downward > 0)
+    rect.start_row = rect.end_row - downward;
+  else if(downward < 0)
+    rect.end_row = rect.start_row - downward;
+
+  if(rightward > 0)
+    rect.start_col = rect.end_col - rightward;
+  else if(rightward < 0)
+    rect.end_col = rect.start_col - rightward;
+
+  (*eraserect)(rect, user);
+}
+
 void vterm_copy_cells(VTermRect dest,
     VTermRect src,
     void (*copycell)(VTermPos dest, VTermPos src, void *user),
