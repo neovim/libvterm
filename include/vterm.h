@@ -106,6 +106,7 @@ typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data
 typedef struct {
   int (*putglyph)(const uint32_t chars[], int width, VTermPos pos, void *user);
   int (*movecursor)(VTermPos pos, VTermPos oldpos, int visible, void *user);
+  int (*scrollrect)(VTermRect rect, int downward, int rightward, void *user);
   int (*moverect)(VTermRect dest, VTermRect src, void *user);
   int (*erase)(VTermRect rect, void *user);
   int (*initpen)(void *user);
@@ -202,6 +203,13 @@ size_t vterm_output_get_buffer_current(VTerm *vt);
 size_t vterm_output_get_buffer_remaining(VTerm *vt);
 
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
+
+void vterm_scroll_rect(VTermRect rect,
+                       int downward,
+                       int rightward,
+                       int (*moverect)(VTermRect src, VTermRect dest, void *user),
+                       int (*eraserect)(VTermRect rect, void *user),
+                       void *user);
 
 void vterm_copy_cells(VTermRect dest,
                       VTermRect src,
