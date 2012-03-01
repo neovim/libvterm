@@ -225,6 +225,16 @@ static int erase(VTermRect rect, void *user)
   return 1;
 }
 
+static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
+{
+  VTermScreen *screen = user;
+
+  vterm_scroll_rect(rect, downward, rightward,
+      moverect, erase, screen);
+
+  return 1;
+}
+
 static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
 {
   VTermScreen *screen = user;
@@ -365,7 +375,7 @@ static int resize(int new_rows, int new_cols, void *user)
 static VTermStateCallbacks state_cbs = {
   .putglyph     = &putglyph,
   .movecursor   = &movecursor,
-  .moverect     = &moverect,
+  .scrollrect   = &scrollrect,
   .erase        = &erase,
   .setpenattr   = &setpenattr,
   .settermprop  = &settermprop,
