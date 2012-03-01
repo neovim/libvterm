@@ -95,3 +95,30 @@ PUSH "\e[3;6r\e[6H\eD"
   ?screen_chars 1,0,2,5 = 0x45,0x46,0x47,0x48
 DAMAGEFLUSH
   damage 5..6,0..80
+
+!Merge scroll
+RESET
+  damage 0..25,0..80
+DAMAGEMERGE SCROLL
+
+PUSH "\e[25H\n\n\n"
+DAMAGEFLUSH
+  moverect 3..25,0..80 -> 0..22,0..80
+  damage 22..25,0..80
+
+!Merge scroll with damage
+PUSH "ABCDE\r\nEFGH\r\n"
+DAMAGEFLUSH
+  moverect 2..25,0..80 -> 0..23,0..80
+  damage 22..25,0..80
+  ?screen_chars 22,0,23,5 = 0x41,0x42,0x43,0x44,0x45
+  ?screen_chars 23,0,24,5 = 0x45,0x46,0x47,0x48
+
+!Merge scroll with damage past region
+PUSH "\e[3;6r\e[6H1\r\n2\r\n3\r\n4\r\n5"
+DAMAGEFLUSH
+  damage 2..6,0..80
+  ?screen_chars 2,0,3,1 = 0x32
+  ?screen_chars 3,0,4,1 = 0x33
+  ?screen_chars 4,0,5,1 = 0x34
+  ?screen_chars 5,0,6,1 = 0x35

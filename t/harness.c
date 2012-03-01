@@ -544,6 +544,8 @@ int main(int argc, char **argv)
         vterm_screen_set_damage_merge(screen, VTERM_DAMAGE_ROW);
       else if(streq(linep, "SCREEN"))
         vterm_screen_set_damage_merge(screen, VTERM_DAMAGE_SCREEN);
+      else if(streq(linep, "SCROLL"))
+        vterm_screen_set_damage_merge(screen, VTERM_DAMAGE_SCROLL);
     }
 
     else if(strstartswith(line, "DAMAGEFLUSH")) {

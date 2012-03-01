@@ -164,6 +164,7 @@ typedef enum {
   VTERM_DAMAGE_CELL,    /* every cell */
   VTERM_DAMAGE_ROW,     /* entire rows */
   VTERM_DAMAGE_SCREEN,  /* entire screen */
+  VTERM_DAMAGE_SCROLL,  /* entire screen + scrollrect */
 } VTermDamageSize;
 
 void vterm_screen_flush_damage(VTermScreen *screen);
