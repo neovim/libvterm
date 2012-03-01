@@ -8,11 +8,13 @@ PUSH "123"
   damage 0..1,0..1
   damage 0..1,1..2
   damage 0..1,2..3
+  ?screen_chars 0,0,1,3 = 0x31,0x32,0x33
 
 !Erase
 PUSH "\e[H"
 PUSH "\e[3X"
   damage 0..1,0..3
+  ?screen_chars 0,0,1,3 = 
 
 !Scroll damages entire line in two chunks
 PUSH "\e[H\e[5@"
@@ -40,10 +42,13 @@ DAMAGEMERGE CELL
 
 PUSH "A"
   damage 0..1,0..1
+  ?screen_chars 0,0,1,1 = 0x41
 PUSH "B"
   damage 0..1,1..2
+  ?screen_chars 0,1,1,2 = 0x42
 PUSH "C"
   damage 0..1,2..3
+  ?screen_chars 0,2,1,3 = 0x43
 
 !Merge entire rows
 RESET
@@ -52,8 +57,10 @@ DAMAGEMERGE ROW
 
 PUSH "ABCDE\r\nEFGH"
   damage 0..1,0..5
+  ?screen_chars 0,0,1,5 = 0x41,0x42,0x43,0x44,0x45
 DAMAGEFLUSH
   damage 1..2,0..4
+  ?screen_chars 1,0,2,5 = 0x45,0x46,0x47,0x48
 PUSH "\e[3;6r\e[6H\eD"
   damage 2..5,0..80
 DAMAGEFLUSH
@@ -67,6 +74,8 @@ DAMAGEMERGE SCREEN
 PUSH "ABCDE\r\nEFGH"
 DAMAGEFLUSH
   damage 0..2,0..5
+  ?screen_chars 0,0,1,5 = 0x41,0x42,0x43,0x44,0x45
+  ?screen_chars 1,0,2,5 = 0x45,0x46,0x47,0x48
 PUSH "\e[3;6r\e[6H\eD"
 DAMAGEFLUSH
   damage 2..6,0..80
@@ -82,5 +91,7 @@ PUSH "ABCDE\r\nEFGH"
 PUSH "\e[3;6r\e[6H\eD"
   damage 0..2,0..5
   moverect 3..6,0..80 -> 2..5,0..80
+  ?screen_chars 0,0,1,5 = 0x41,0x42,0x43,0x44,0x45
+  ?screen_chars 1,0,2,5 = 0x45,0x46,0x47,0x48
 DAMAGEFLUSH
   damage 5..6,0..80
