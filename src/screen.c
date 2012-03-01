@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include "rect.h"
 #include "utf8.h"
 
 #ifndef MAX_CHARS_PER_CELL
@@ -129,14 +130,7 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
     if(screen->damaged.start_row == -1)
       screen->damaged = rect;
     else {
-      if(screen->damaged.start_row > rect.start_row)
-        screen->damaged.start_row = rect.start_row;
-      if(screen->damaged.end_row < rect.end_row)
-        screen->damaged.end_row = rect.end_row;
-      if(screen->damaged.start_col > rect.start_col)
-        screen->damaged.start_col = rect.start_col;
-      if(screen->damaged.end_col < rect.end_col)
-        screen->damaged.end_col = rect.end_col;
+      rect_expand(&screen->damaged, &rect);
     }
     return;
 
