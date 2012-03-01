@@ -13,3 +13,43 @@ static void rect_expand(VTermRect *dst, VTermRect *src)
   if(dst->end_row   < src->end_row)   dst->end_row   = src->end_row;
   if(dst->end_col   < src->end_col)   dst->end_col   = src->end_col;
 }
+
+/* Clip the dst to ensure it does not step outside of bounds */
+static void rect_clip(VTermRect *dst, VTermRect *bounds)
+{
+  if(dst->start_row < bounds->start_row) dst->start_row = bounds->start_row;
+  if(dst->start_col < bounds->start_col) dst->start_col = bounds->start_col;
+  if(dst->end_row   > bounds->end_row)   dst->end_row   = bounds->end_row;
+  if(dst->end_col   > bounds->end_col)   dst->end_col   = bounds->end_col;
+  /* Ensure it doesn't end up negatively-sized */
+  if(dst->end_row < dst->start_row) dst->end_row = dst->start_row;
+  if(dst->end_col < dst->start_col) dst->end_col = dst->start_col;
+}
+
+/* True if the two rectangles are equal */
+static int rect_equal(VTermRect *a, VTermRect *b)
+{
+  return (a->start_row == b->start_row) &&
+         (a->start_col == b->start_col) &&
+         (a->end_row   == b->end_row)   &&
+         (a->end_col   == b->end_col);
+}
+
+/* True if small is contained entirely within big */
+static int rect_contains(VTermRect *big, VTermRect *small)
+{
+  if(small->start_row < big->start_row) return 0;
+  if(small->start_col < big->start_col) return 0;
+  if(small->end_row   > big->end_row)   return 0;
+  if(small->end_col   > big->end_col)   return 0;
+  return 1;
+}
+
+/* Move a rect */
+static void rect_move(VTermRect *rect, int row_delta, int col_delta)
+{
+  rect->start_row += row_delta;
+  rect->start_col += col_delta;
+  rect->end_row   += row_delta;
+  rect->end_col   += col_delta;
+}

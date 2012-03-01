@@ -43,7 +43,10 @@ struct _VTermScreen
   void *cbdata;
 
   VTermDamageSize damage_merge;
-  VTermRect damaged; /* start_row == -1 => no damage */
+  /* start_row == -1 => no damage */
+  VTermRect damaged;
+  VTermRect pending_scrollrect;
+  int pending_scroll_downward, pending_scroll_rightward;
 
   int rows;
   int cols;
@@ -126,6 +129,7 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
     break;
 
   case VTERM_DAMAGE_SCREEN:
+  case VTERM_DAMAGE_SCROLL:
     /* Never emit damage event */
     if(screen->damaged.start_row == -1)
       screen->damaged = rect;
@@ -192,14 +196,24 @@ static void copycell(VTermPos dest, VTermPos src, void *user)
   *destcell = *srccell;
 }
 
-static int moverect(VTermRect dest, VTermRect src, void *user)
+static int moverect_internal(VTermRect dest, VTermRect src, void *user)
 {
   VTermScreen *screen = user;
 
-  vterm_copy_cells(dest, src, &copycell, user);
+  vterm_copy_cells(dest, src, &copycell, screen);
+
+  return 1;
+}
+
+static int moverect_user(VTermRect dest, VTermRect src, void *user)
+{
+  VTermScreen *screen = user;
 
   if(screen->callbacks && screen->callbacks->moverect) {
-    vterm_screen_flush_damage(screen);
+    if(screen->damage_merge != VTERM_DAMAGE_SCROLL)
+      // Avoid an infinite loop
+      vterm_screen_flush_damage(screen);
+
     if((*screen->callbacks->moverect)(dest, src, screen->cbdata))
       return 1;
   }
@@ -209,7 +223,7 @@ static int moverect(VTermRect dest, VTermRect src, void *user)
   return 1;
 }
 
-static int erase(VTermRect rect, void *user)
+static int erase_internal(VTermRect rect, void *user)
 {
   VTermScreen *screen = user;
 
@@ -220,9 +234,22 @@ static int erase(VTermRect rect, void *user)
       cell->pen = screen->pen;
     }
 
+  return 1;
+}
+
+static int erase_user(VTermRect rect, void *user)
+{
+  VTermScreen *screen = user;
+
   damagerect(screen, rect);
 
   return 1;
+}
+
+static int erase(VTermRect rect, void *user)
+{
+  erase_internal(rect, user);
+  return erase_user(rect, user);
 }
 
 static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
@@ -230,7 +257,45 @@ static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
   VTermScreen *screen = user;
 
   vterm_scroll_rect(rect, downward, rightward,
-      moverect, erase, screen);
+      moverect_internal, erase_internal, screen);
+
+  if(screen->damage_merge == VTERM_DAMAGE_SCROLL) {
+    if(screen->pending_scrollrect.start_row == -1) {
+      screen->pending_scrollrect = rect;
+      screen->pending_scroll_downward  = downward;
+      screen->pending_scroll_rightward = rightward;
+    }
+    else if(rect_equal(&screen->pending_scrollrect, &rect) &&
+       ((screen->pending_scroll_downward  == 0 && downward  == 0) ||
+        (screen->pending_scroll_rightward == 0 && rightward == 0))) {
+      screen->pending_scroll_downward  += downward;
+      screen->pending_scroll_rightward += rightward;
+    }
+    else {
+      vterm_screen_flush_damage(screen);
+
+      screen->pending_scrollrect = rect;
+      screen->pending_scroll_downward  = downward;
+      screen->pending_scroll_rightward = rightward;
+    }
+
+    if(screen->damaged.start_row != -1) {
+      if(rect_contains(&rect, &screen->damaged)) {
+        rect_move(&screen->damaged, -downward, -rightward);
+        rect_clip(&screen->damaged, &rect);
+      }
+      else {
+        fprintf(stderr, "TODO: scrollrect split damage\n");
+      }
+    }
+
+    return 1;
+  }
+
+  vterm_screen_flush_damage(screen);
+
+  vterm_scroll_rect(rect, downward, rightward,
+      moverect_user, erase_user, screen);
 
   return 1;
 }
@@ -400,6 +465,7 @@ static VTermScreen *screen_new(VTerm *vt)
 
   screen->damage_merge = VTERM_DAMAGE_CELL;
   screen->damaged.start_row = -1;
+  screen->pending_scrollrect.start_row = -1;
 
   screen->rows = rows;
   screen->cols = cols;
@@ -425,6 +491,7 @@ void vterm_screen_free(VTermScreen *screen)
 void vterm_screen_reset(VTermScreen *screen)
 {
   screen->damaged.start_row = -1;
+  screen->pending_scrollrect.start_row = -1;
   vterm_state_reset(screen->state);
   vterm_screen_flush_damage(screen);
 }
@@ -548,11 +615,19 @@ void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks 
 
 void vterm_screen_flush_damage(VTermScreen *screen)
 {
-  if(screen->damaged.start_row != -1)
+  if(screen->pending_scrollrect.start_row != -1) {
+    vterm_scroll_rect(screen->pending_scrollrect, screen->pending_scroll_downward, screen->pending_scroll_rightward,
+        moverect_user, erase_user, screen);
+
+    screen->pending_scrollrect.start_row = -1;
+  }
+
+  if(screen->damaged.start_row != -1) {
     if(screen->callbacks && screen->callbacks->damage)
       (*screen->callbacks->damage)(screen->damaged, screen->cbdata);
 
-  screen->damaged.start_row = -1;
+    screen->damaged.start_row = -1;
+  }
 }
 
 void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size)
