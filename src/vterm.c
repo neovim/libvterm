@@ -210,6 +210,13 @@ void vterm_scroll_rect(VTermRect rect,
   VTermRect src;
   VTermRect dest;
 
+  if(abs(downward)  >= rect.end_row - rect.start_row ||
+     abs(rightward) >= rect.end_col - rect.start_col) {
+    /* Scroll more than area; just erase the lot */
+    (*eraserect)(rect, user);
+    return;
+  }
+
   if(rightward >= 0) {
     /* rect: [XXX................]
      * src:     [----------------]
