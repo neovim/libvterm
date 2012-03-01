@@ -70,59 +70,13 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
   if(!downward && !rightward)
     return;
 
-  VTermRect src;
-  VTermRect dest;
+  if(state->callbacks && state->callbacks->scrollrect)
+    if((*state->callbacks->scrollrect)(rect, downward, rightward, state->cbdata))
+      return;
 
-  if(rightward >= 0) {
-    /* rect: [XXX................]
-     * src:     [----------------]
-     * dest: [----------------]
-     */
-    dest.start_col = rect.start_col;
-    dest.end_col   = rect.end_col   - rightward;
-    src.start_col  = rect.start_col + rightward;
-    src.end_col    = rect.end_col;
-  }
-  else {
-    /* rect: [................XXX]
-     * src:  [----------------]
-     * dest:    [----------------]
-     */
-    int leftward = -rightward;
-    dest.start_col = rect.start_col + leftward;
-    dest.end_col   = rect.end_col;
-    src.start_col  = rect.start_col;
-    src.end_col    = rect.end_col - leftward;
-  }
-
-  if(downward >= 0) {
-    dest.start_row = rect.start_row;
-    dest.end_row   = rect.end_row   - downward;
-    src.start_row  = rect.start_row + downward;
-    src.end_row    = rect.end_row;
-  }
-  else {
-    int upward = -downward;
-    dest.start_row = rect.start_row + upward;
-    dest.end_row   = rect.end_row;
-    src.start_row  = rect.start_row;
-    src.end_row    = rect.end_row - upward;
-  }
-
-  if(state->callbacks && state->callbacks->moverect)
-    (*state->callbacks->moverect)(dest, src, state->cbdata);
-
-  if(downward > 0)
-    rect.start_row = rect.end_row - downward;
-  else if(downward < 0)
-    rect.end_row = rect.start_row - downward;
-
-  if(rightward > 0)
-    rect.start_col = rect.end_col - rightward;
-  else if(rightward < 0)
-    rect.end_col = rect.start_col - rightward;
-
-  erase(state, rect);
+  if(state->callbacks)
+    vterm_scroll_rect(rect, downward, rightward,
+        state->callbacks->moverect, state->callbacks->erase, state->cbdata);
 }
 
 static void linefeed(VTermState *state)

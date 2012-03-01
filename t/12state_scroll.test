@@ -1,34 +1,28 @@
 INIT
 UTF8 1
-WANTSTATE me
+WANTSTATE s
 
 !Linefeed
 PUSH "\n"x24
   ?cursor = 24,0
 PUSH "\n"
-  moverect 1..25,0..80 -> 0..24,0..80
-  erase 24..25,0..80
+  scrollrect 0..25,0..80 => +1,+0
   ?cursor = 24,0
 
 RESET
-  erase 0..25,0..80
 
 !Index
 PUSH "\e[25H"
 PUSH "\eD"
-  moverect 1..25,0..80 -> 0..24,0..80
-  erase 24..25,0..80
+  scrollrect 0..25,0..80 => +1,+0
 
 RESET
-  erase 0..25,0..80
 
 !Reverse Index
 PUSH "\eM"
-  moverect 0..24,0..80 -> 1..25,0..80
-  erase 0..1,0..80
+  scrollrect 0..25,0..80 => -1,+0
 
 RESET
-  erase 0..25,0..80
 
 !DEC scrolling region
 PUSH "\e[1;10r"
@@ -36,27 +30,42 @@ PUSH "\e[1;10r"
 PUSH "\n"x9
   ?cursor = 9,0
 PUSH "\n"
-  moverect 1..10,0..80 -> 0..9,0..80
-  erase 9..10,0..80
+  scrollrect 0..10,0..80 => +1,+0
   ?cursor = 9,0
 
 PUSH "\e[9;10r"
 PUSH "\eM"
   ?cursor = 8,0
 PUSH "\eM"
-  moverect 8..9,0..80 -> 9..10,0..80
-  erase 8..9,0..80
+  scrollrect 8..10,0..80 => -1,+0
 
 PUSH "\e[25H"
   ?cursor = 24,0
 PUSH "\n"
-  # no moverect or erase
+  # no scrollrect
   ?cursor = 24,0
 
 RESET
-  erase 0..25,0..80
 
 !Scroll Down
+PUSH "\e[S"
+  scrollrect 0..25,0..80 => +1,+0
+  ?cursor = 0,0
+PUSH "\e[2S"
+  scrollrect 0..25,0..80 => +2,+0
+  ?cursor = 0,0
+
+!Scroll Up
+PUSH "\e[T"
+  scrollrect 0..25,0..80 => -1,+0
+  ?cursor = 0,0
+PUSH "\e[2T"
+  scrollrect 0..25,0..80 => -2,+0
+  ?cursor = 0,0
+
+WANTSTATE -s+me
+
+!Scroll Down move+erase emulation
 PUSH "\e[S"
   moverect 1..25,0..80 -> 0..24,0..80
   erase 24..25,0..80
@@ -66,7 +75,7 @@ PUSH "\e[2S"
   erase 23..25,0..80
   ?cursor = 0,0
 
-!Scroll Up
+!Scroll Up move+erase emulation
 PUSH "\e[T"
   moverect 0..24,0..80 -> 1..25,0..80
   erase 0..1,0..80

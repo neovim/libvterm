@@ -176,6 +176,19 @@ static int movecursor(VTermPos pos, VTermPos oldpos, int visible, void *user)
   return 1;
 }
 
+static int want_scrollrect = 0;
+static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
+{
+  if(!want_scrollrect)
+    return 0;
+
+  printf("scrollrect %d..%d,%d..%d => %+d,%+d\n",
+      rect.start_row, rect.end_row, rect.start_col, rect.end_col,
+      downward, rightward);
+
+  return 1;
+}
+
 static int want_moverect = 0;
 static int moverect(VTermRect dest, VTermRect src, void *user)
 {
@@ -305,6 +318,7 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
 VTermStateCallbacks state_cbs = {
   .putglyph     = state_putglyph,
   .movecursor   = movecursor,
+  .scrollrect   = scrollrect,
   .moverect     = moverect,
   .erase        = state_erase,
   .setpenattr   = state_setpenattr,
@@ -365,24 +379,34 @@ int main(int argc, char **argv)
       vterm_state_reset(state);
 
       int i = 9;
+      int sense = 1;
       while(line[i] == ' ')
         i++;
       for( ; line[i]; i++)
         switch(line[i]) {
+        case '+':
+          sense = 1;
+          break;
+        case '-':
+          sense = 0;
+          break;
         case 'g':
-          want_state_putglyph = 1;
+          want_state_putglyph = sense;
+          break;
+        case 's':
+          want_scrollrect = sense;
           break;
         case 'm':
-          want_moverect = 1;
+          want_moverect = sense;
           break;
         case 'e':
-          want_state_erase = 1;
+          want_state_erase = sense;
           break;
         case 'p':
-          want_settermprop = 1;
+          want_settermprop = sense;
           break;
         case 'M':
-          want_mouse = 1;
+          want_mouse = sense;
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
