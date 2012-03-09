@@ -520,7 +520,16 @@ static int on_escape(const char *bytes, size_t len, void *user)
 
     return 2;
 
+  case '7':
+    savecursor(state, 1);
+    return 1;
+
   case 0x38:
+    if(len == 1) {
+      savecursor(state, 0);
+      return 1;
+    }
+
     if(len == 2 && bytes[0] == '#') { // DECALN
       VTermPos pos;
       uint32_t E[] = { 'E', 0 };
@@ -1035,6 +1044,14 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
     if(state->scrollregion_start == 0 && state->scrollregion_end == state->rows)
       state->scrollregion_end = -1;
+    break;
+
+  case 0x73: // ANSI SAVE
+    savecursor(state, 1);
+    break;
+
+  case 0x75: // ANSI RESTORE
+    savecursor(state, 0);
     break;
 
   default:

@@ -31,6 +31,8 @@ Escape sequences
  - excluding sequences that are C1 aliases
 
   ESC 0            = Designate DECdrawing
+  ESC 7            = DECSC - save cursor
+  ESC 8            = DECRC - restore cursor
   ESC # 8          = DECALN
   ESC =            = Enable keypad mode
   ESC >            = Disable keypad mode
@@ -81,6 +83,8 @@ CSIs
   CSI n            = DSR, Device Status Report
   CSI SP q         = DECSCUSR
   CSI r            = DECSTBM
+  CSI s            = ANSI SAVE
+  CSI u            = ANSI RESTORE
 
 OSCs
 
@@ -130,3 +134,5 @@ Graphic Renditions
   SGR 49           = Background default
   SGR 90-97        = Foreground ANSI high-intensity
   SGR 100-107      = Background ANSI high-intensity
+
+The state storage used by CSI s, ESC 7 and DECSM 1048/1049 is shared.
