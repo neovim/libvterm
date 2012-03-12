@@ -1,11 +1,11 @@
 ifeq ($(shell uname),Darwin)
-    LIBTOOL ?= glibtool
+  LIBTOOL ?= glibtool
 else
-    LIBTOOL ?= libtool
+  LIBTOOL ?= libtool
 endif
 
 ifneq ($(VERBOSE),1)
-    LIBTOOL +=--quiet
+  LIBTOOL +=--quiet
 endif
 
 CFLAGS  +=-Wall -Iinclude -std=c99
