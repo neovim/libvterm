@@ -24,15 +24,13 @@ static const VTermColor ansi_colors[] = {
   { 255, 255, 255 }, // white for real
 };
 
-/* Attempt at some gamma ramps */
-static int gamma6[] = {
-  0, 105, 149, 182, 209, 233, 255
+static int ramp6[] = {
+  0x00, 0x33, 0x66, 0x99, 0xCC, 0xFF,
 };
 
-static int gamma24[] = {
-  0, 49, 72, 90, 105, 117, 129, 139, 149,
-  158, 166, 174, 182, 189, 196, 203, 209,
-  215, 222, 227, 233, 239, 244, 249, 255,
+static int ramp24[] = {
+  0x00, 0x0B, 0x16, 0x21, 0x2C, 0x37, 0x42, 0x4D, 0x58, 0x63, 0x6E, 0x79,
+  0x85, 0x90, 0x9B, 0xA6, 0xB1, 0xBC, 0xC7, 0xD2, 0xDD, 0xE8, 0xF3, 0xFF,
 };
 
 static void lookup_colour_ansi(long index, char is_bg, VTermColor *col)
@@ -68,17 +66,17 @@ static int lookup_colour(int palette, const long args[], int argcount, char is_b
       // 216-colour cube
       index -= 16;
 
-      col->blue  = gamma6[index     % 6];
-      col->green = gamma6[index/6   % 6];
-      col->red   = gamma6[index/6/6 % 6];
+      col->blue  = ramp6[index     % 6];
+      col->green = ramp6[index/6   % 6];
+      col->red   = ramp6[index/6/6 % 6];
     }
     else if(index >= 232 && index < 256) {
       // 24 greyscales
       index -= 232;
 
-      col->red   = gamma24[index];
-      col->green = gamma24[index];
-      col->blue  = gamma24[index];
+      col->red   = ramp24[index];
+      col->green = ramp24[index];
+      col->blue  = ramp24[index];
     }
 
     return argcount ? 1 : 0;
