@@ -58,8 +58,9 @@ PUSH "Hello\r\nWorld"
 RESET
 PUSH "P"
   ?screen_chars 0,0,1,80 = 0x50
-PUSH "\e[?1049h\e[2K\e[H"
-PUSH "A"
+PUSH "\e[?1049h"
+  ?screen_chars 0,0,1,80 = 
+PUSH "\e[2K\e[HA"
   ?screen_chars 0,0,1,80 = 0x41
 PUSH "\e[?1049l"
   ?screen_chars 0,0,1,80 = 0x50
