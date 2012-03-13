@@ -357,7 +357,11 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
       return 0;
 
     screen->buffer = val->boolean ? screen->buffers[1] : screen->buffers[0];
-    damagescreen(screen);
+    /* only send a damage event on disable; because during enable there's an
+     * erase that sends a damage anyway
+     */
+    if(!val->boolean)
+      damagescreen(screen);
     break;
   case VTERM_PROP_REVERSE:
     screen->global_reverse = val->boolean;
@@ -370,7 +374,7 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
   if(screen->callbacks && screen->callbacks->settermprop)
     return (*screen->callbacks->settermprop)(prop, val, screen->cbdata);
 
-  return 0;
+  return 1;
 }
 
 static int setmousefunc(VTermMouseFunc func, void *data, void *user)
