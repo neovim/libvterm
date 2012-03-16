@@ -44,12 +44,3 @@ static int rect_contains(VTermRect *big, VTermRect *small)
   if(small->end_col   > big->end_col)   return 0;
   return 1;
 }
-
-/* Move a rect */
-static void rect_move(VTermRect *rect, int row_delta, int col_delta)
-{
-  rect->start_row += row_delta;
-  rect->start_col += col_delta;
-  rect->end_row   += row_delta;
-  rect->end_col   += col_delta;
-}

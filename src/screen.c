@@ -281,7 +281,7 @@ static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
 
     if(screen->damaged.start_row != -1) {
       if(rect_contains(&rect, &screen->damaged)) {
-        rect_move(&screen->damaged, -downward, -rightward);
+        vterm_rect_move(&screen->damaged, -downward, -rightward);
         rect_clip(&screen->damaged, &rect);
       }
       else {

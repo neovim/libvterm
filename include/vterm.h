@@ -15,12 +15,34 @@ typedef struct {
   int col;
 } VTermPos;
 
+/* some small utility functions; we can just keep these static here */
+
+/* order points by on-screen flow order */
+static inline int vterm_pos_cmp(VTermPos a, VTermPos b)
+{
+  return (a.row == b.row) ? a.col - b.col : a.row - b.row;
+}
+
 typedef struct {
   int start_row;
   int end_row;
   int start_col;
   int end_col;
 } VTermRect;
+
+/* true if the rect contains the point */
+static inline int vterm_rect_contains(VTermRect r, VTermPos p)
+{
+  return p.row >= r.start_row && p.row < r.end_row &&
+         p.col >= r.start_col && p.col < r.end_col;
+}
+
+/* move a rect */
+static inline void vterm_rect_move(VTermRect *rect, int row_delta, int col_delta)
+{
+  rect->start_row += row_delta; rect->end_row += row_delta;
+  rect->start_col += col_delta; rect->end_col += col_delta;
+}
 
 /* Flag to indicate non-final subparameters in a single CSI parameter.
  * Consider
