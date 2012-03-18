@@ -128,3 +128,10 @@ DAMAGEFLUSH
   ?screen_chars 3,0,4,1 = 0x33
   ?screen_chars 4,0,5,1 = 0x34
   ?screen_chars 5,0,6,1 = 0x35
+
+!Damage entirely outside scroll region
+PUSH "\e[HABC\e[3;6r\e[6H\r\n6"
+  damage 0..1,0..3
+DAMAGEFLUSH
+  moverect 3..6,0..80 -> 2..5,0..80
+  damage 5..6,0..80

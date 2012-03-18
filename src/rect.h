@@ -44,3 +44,13 @@ static int rect_contains(VTermRect *big, VTermRect *small)
   if(small->end_col   > big->end_col)   return 0;
   return 1;
 }
+
+/* True if the rectangles overlap at all */
+static int rect_intersects(VTermRect *a, VTermRect *b)
+{
+  if(a->start_row > b->end_row || b->start_row > a->end_row)
+    return 0;
+  if(a->start_col > b->end_col || b->start_col > a->end_col)
+    return 0;
+  return 1;
+}
