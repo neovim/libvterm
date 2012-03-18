@@ -260,6 +260,11 @@ static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
       moverect_internal, erase_internal, screen);
 
   if(screen->damage_merge == VTERM_DAMAGE_SCROLL) {
+    if(screen->damaged.start_row != -1 &&
+       !rect_intersects(&rect, &screen->damaged)) {
+      vterm_screen_flush_damage(screen);
+    }
+
     if(screen->pending_scrollrect.start_row == -1) {
       screen->pending_scrollrect = rect;
       screen->pending_scroll_downward  = downward;
