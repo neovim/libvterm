@@ -1216,12 +1216,16 @@ void vterm_state_reset(VTermState *state)
   state->scrollregion_start = 0;
   state->scrollregion_end = -1;
 
-  state->mode.autowrap = 1;
-  state->mode.newline = 0;
+  state->mode.keypad         = 0;
+  state->mode.cursor         = 0;
+  state->mode.autowrap       = 1;
+  state->mode.insert         = 0;
+  state->mode.newline        = 0;
   state->mode.cursor_visible = 1;
-  state->mode.cursor_blink = 1;
-  state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
-  state->mode.origin = 0;
+  state->mode.cursor_blink   = 1;
+  state->mode.cursor_shape   = VTERM_PROP_CURSORSHAPE_BLOCK;
+  state->mode.alt_screen     = 0;
+  state->mode.origin         = 0;
 
   for(int col = 0; col < state->cols; col++)
     if(col % 8 == 0)
