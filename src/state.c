@@ -554,6 +554,15 @@ static int on_escape(const char *bytes, size_t len, void *user)
     state->mode.keypad = 0;
     return 1;
 
+  case 'c': // RIS - ECMA-48 8.3.105
+  {
+    VTermPos oldpos = state->pos;
+    vterm_state_reset(state);
+    if(state->callbacks && state->callbacks->movecursor)
+      (*state->callbacks->movecursor)(state->pos, oldpos, state->mode.cursor_visible, state->cbdata);
+    return 1;
+  }
+
   case 'n': // LS2 - ECMA-48 8.3.78
     state->gl_set = 2;
     return 1;
