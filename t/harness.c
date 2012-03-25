@@ -43,9 +43,10 @@ static VTermKey strp_key(char *str)
     char *name;
     VTermKey key;
   } keys[] = {
-    { "Up",  VTERM_KEY_UP },
-    { "Tab", VTERM_KEY_TAB },
-    { NULL,  VTERM_KEY_NONE },
+    { "Up",    VTERM_KEY_UP },
+    { "Tab",   VTERM_KEY_TAB },
+    { "Enter", VTERM_KEY_ENTER },
+    { NULL,    VTERM_KEY_NONE },
   };
 
   for(int i = 0; keys[i].name; i++) {

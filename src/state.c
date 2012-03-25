@@ -300,6 +300,8 @@ static int on_control(unsigned char control, void *user)
   case 0x0b: // VT
   case 0x0c: // FF
     linefeed(state);
+    if(state->mode.newline)
+      state->pos.col = 0;
     break;
 
   case 0x0d: // CR - ECMA-48 8.3.15
@@ -581,6 +583,10 @@ static void set_mode(VTermState *state, int num, int val)
   switch(num) {
   case 4: // IRM - ECMA-48 7.2.10
     state->mode.insert = val;
+    break;
+
+  case 20: // LNM - ANSI X3.4-1977
+    state->mode.newline = val;
     break;
 
   default:
@@ -1211,6 +1217,7 @@ void vterm_state_reset(VTermState *state)
   state->scrollregion_end = -1;
 
   state->mode.autowrap = 1;
+  state->mode.newline = 0;
   state->mode.cursor_visible = 1;
   state->mode.cursor_blink = 1;
   state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;

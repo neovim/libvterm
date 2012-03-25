@@ -99,6 +99,7 @@ between states.
  Standard modes
   
     4                = IRM
+1   20               = NLM, linefeed/newline
   
  DEC modes
   

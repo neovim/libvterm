@@ -45,6 +45,7 @@ struct _VTermState
     int cursor:1;
     int autowrap:1;
     int insert:1;
+    int newline:1;
     int cursor_visible:1;
     int cursor_blink:1;
     unsigned int cursor_shape:2;
