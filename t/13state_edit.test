@@ -142,7 +142,6 @@ PUSH "\e[2J"
   ?cursor = 1,1
 
 WANTSTATE -s+m
-  erase 0..25,0..80
 
 !ICH move+erase emuation
 RESET
