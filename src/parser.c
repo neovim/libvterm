@@ -220,6 +220,18 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       ENTER_STRING_STATE(ESC);
       continue;
     }
+    else if(c == 0x07 &&  // BEL, can stand for ST in OSC or DCS state
+            (vt->parser_state == OSC || vt->parser_state == DCS)) {
+      // fallthrough
+    }
+    else if(c < 0x20) { // other C0
+      if(vt->parser_state != NORMAL)
+        append_strbuffer(vt, string_start, bytes + pos - string_start);
+      do_control(vt, c);
+      if(vt->parser_state != NORMAL)
+        string_start = bytes + pos + 1;
+      continue;
+    }
     // else fallthrough
 
     switch(vt->parser_state) {
@@ -243,11 +255,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         else if(c >= 0x20 && c < 0x30) {
           /* intermediate byte */
         }
-        else if(c < 0x20) {
-          append_strbuffer(vt, string_start, bytes + pos - string_start);
-          do_control(vt, c);
-          string_start = bytes + pos + 1;
-        }
         else {
           fprintf(stderr, "TODO: Unhandled byte %02x in Escape\n", c);
         }
@@ -259,11 +266,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         /* +1 to pos because we want to include this command byte as well */
         do_string(vt, string_start, bytes + pos - string_start + 1);
         ENTER_NORMAL_STATE();
-      }
-      else if(c < 0x20) {
-        append_strbuffer(vt, string_start, bytes + pos - string_start);
-        do_control(vt, c);
-        string_start = bytes + pos + 1;
       }
       break;
 
@@ -277,15 +279,10 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         do_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
       }
-      else if(c < 0x20) {
-        append_strbuffer(vt, string_start, bytes + pos - string_start);
-        do_control(vt, c);
-        string_start = bytes + pos + 1;
-      }
       break;
 
     case NORMAL:
-      if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !vt->is_utf8)) {
+      if(c >= 0x80 && c < 0xa0 && !vt->is_utf8) {
         switch(c) {
         case 0x90: // DCS
           ENTER_STRING_STATE(DCS);
