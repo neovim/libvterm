@@ -57,6 +57,7 @@ typedef struct {
     KEYCODE_NONE,
     KEYCODE_LITERAL,
     KEYCODE_TAB,
+    KEYCODE_ENTER,
     KEYCODE_CSI,
     KEYCODE_CSI_CURSOR,
     KEYCODE_CSINUM,
@@ -68,7 +69,7 @@ typedef struct {
 keycodes_s keycodes[] = {
   { KEYCODE_NONE }, // NONE
 
-  { KEYCODE_LITERAL, '\r'   }, // ENTER
+  { KEYCODE_ENTER,   '\r'   }, // ENTER
   { KEYCODE_TAB,     '\t'   }, // TAB
   { KEYCODE_LITERAL, '\x7f' }, // BACKSPACE == ASCII DEL
   { KEYCODE_LITERAL, '\e'   }, // ESCAPE
@@ -127,7 +128,18 @@ void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
     else if(mod & VTERM_MOD_SHIFT)
       vterm_push_output_sprintf(vt, "\e[1;%dZ", mod+1);
     else
-      /* FALLTHROUGH */
+      goto literal;
+    break;
+
+  case KEYCODE_ENTER:
+    /* Enter is CRLF in newline mode, but just LF in linefeed */
+    if(vt->state->mode.newline)
+      vterm_push_output_sprintf(vt, "\r\n");
+    else
+      goto literal;
+    break;
+
+literal:
   case KEYCODE_LITERAL:
     if(mod & (VTERM_MOD_SHIFT|VTERM_MOD_CTRL))
       vterm_push_output_sprintf(vt, "\e[%d;%du", k.literal, mod+1);

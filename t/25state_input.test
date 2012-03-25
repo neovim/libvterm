@@ -102,3 +102,12 @@ INKEY A Tab
   output "\e\x09"
 INKEY CA Tab
   output "\e[9;7u"
+
+!Enter in linefeed mode
+INKEY 0 Enter
+  output "\x0d"
+
+!Enter in newline mode
+PUSH "\e[20h"
+INKEY 0 Enter
+  output "\x0d\x0a"

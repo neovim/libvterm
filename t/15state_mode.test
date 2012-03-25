@@ -31,6 +31,16 @@ PUSH "e"
 PUSH "\xCC\x81"
   putglyph 0x65,0x301 1 0,2
 
+!Newline/Linefeed mode
+RESET
+  erase 0..25,0..80
+  ?cursor = 0,0
+PUSH "\e[5G\n"
+  ?cursor = 1,4
+PUSH "\e[20h"
+PUSH "\e[5G\n"
+  ?cursor = 2,0
+
 !DEC origin mode
 RESET
   erase 0..25,0..80
