@@ -372,11 +372,12 @@ int main(int argc, char **argv)
     }
 
     else if(strstartswith(line, "WANTSTATE") && (line[9] == '\0' || line[9] == ' ')) {
-      if(!state)
+      if(!state) {
         state = vterm_obtain_state(vt);
-      vterm_state_set_callbacks(state, &state_cbs, NULL);
-      vterm_state_set_bold_highbright(state, 1);
-      vterm_state_reset(state);
+        vterm_state_set_callbacks(state, &state_cbs, NULL);
+        vterm_state_set_bold_highbright(state, 1);
+        vterm_state_reset(state);
+      }
 
       int i = 9;
       int sense = 1;
