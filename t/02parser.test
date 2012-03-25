@@ -169,3 +169,17 @@ PUSH "\eP12\x{18}AB"
 PUSH "\ePBy\ne\x07"
   control 10
   dcs "Bye"
+
+!NUL ignored
+PUSH "\x{00}"
+
+!NUL ignored within CSI
+PUSH "\e[12\x{00}3m"
+  csi 0x6d 123
+
+!DEL ignored
+PUSH "\x{7f}"
+
+!DEL ignored within CSI
+PUSH "\e[12\x{7f}3m"
+  csi 0x6d 123
