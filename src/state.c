@@ -524,7 +524,7 @@ static int on_escape(const char *bytes, size_t len, void *user)
     savecursor(state, 1);
     return 1;
 
-  case 0x38:
+  case '8':
     if(len == 1) {
       savecursor(state, 0);
       return 1;
@@ -541,19 +541,19 @@ static int on_escape(const char *bytes, size_t len, void *user)
     }
     return 0;
 
-  case 0x3d:
+  case '=':
     state->mode.keypad = 1;
     return 1;
 
-  case 0x3e:
+  case '>':
     state->mode.keypad = 0;
     return 1;
 
-  case 0x6e: // LS2 - ECMA-48 8.3.78
+  case 'n': // LS2 - ECMA-48 8.3.78
     state->gl_set = 2;
     return 1;
 
-  case 0x6f: // LS3 - ECMA-48 8.3.80
+  case 'o': // LS3 - ECMA-48 8.3.80
     state->gl_set = 3;
     return 1;
 
