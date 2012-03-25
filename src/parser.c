@@ -205,6 +205,13 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
   for( ; pos < len; pos++) {
     unsigned char c = bytes[pos];
 
+    if(c == 0x00 || c == 0x7f) { // NUL, DEL
+      if(vt->parser_state != NORMAL) {
+        append_strbuffer(vt, string_start, bytes + pos - string_start);
+        string_start = bytes + pos + 1;
+      }
+      continue;
+    }
     if(c == 0x18 || c == 0x1a) { // CAN, SUB
       ENTER_NORMAL_STATE();
       continue;
@@ -214,6 +221,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       continue;
     }
     // else fallthrough
+
     switch(vt->parser_state) {
     case ESC:
       switch(c) {

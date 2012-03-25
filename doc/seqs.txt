@@ -18,6 +18,8 @@ between states.
    (0x18             = CAN)
    (0x1A             = SUB)
    (0x1B             = ESC)
+
+1   0x7f             = DEL (ignored)
   
  C1 controls
   
