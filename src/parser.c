@@ -205,13 +205,18 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
   for( ; pos < len; pos++) {
     unsigned char c = bytes[pos];
 
+    if(c == 0x18 || c == 0x1a) { // CAN, SUB
+      ENTER_NORMAL_STATE();
+      continue;
+    }
+    else if(c == 0x1b) { // ESC
+      ENTER_STRING_STATE(ESC);
+      continue;
+    }
+    // else fallthrough
     switch(vt->parser_state) {
     case ESC:
       switch(c) {
-      case 0x1b: // ESC
-        /* Cancel this escape, start another */
-        ENTER_STRING_STATE(ESC);
-        break;
       case 0x50: // DCS
         ENTER_STRING_STATE(DCS);
         break;
@@ -220,11 +225,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         break;
       case 0x5d: // OSC
         ENTER_STRING_STATE(OSC);
-        break;
-      case 0x18: // CAN
-      case 0x1a: // SUB
-        /* Cancel back to normal mode */
-        ENTER_NORMAL_STATE();
         break;
       default:
         if(c >= 0x30 && c < 0x7f) {
@@ -252,14 +252,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         do_string(vt, string_start, bytes + pos - string_start + 1);
         ENTER_NORMAL_STATE();
       }
-      else if(c == 0x1b) {
-        /* Cancel this sequence, start another Escape */
-        ENTER_STRING_STATE(ESC);
-      }
-      else if(c == 0x18 || c == 0x1a) {
-        /* Cancel back to normal mode */
-        ENTER_NORMAL_STATE();
-      }
       else if(c < 0x20) {
         append_strbuffer(vt, string_start, bytes + pos - string_start);
         do_control(vt, c);
@@ -277,14 +269,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
         do_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
       }
-      else if(c == 0x1b) {
-        /* Cancel this sequence, start another Escape */
-        ENTER_STRING_STATE(ESC);
-      }
-      else if(c == 0x18 || c == 0x1a) {
-        /* Cancel back to normal mode */
-        ENTER_NORMAL_STATE();
-      }
       else if(c < 0x20) {
         append_strbuffer(vt, string_start, bytes + pos - string_start);
         do_control(vt, c);
@@ -295,9 +279,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     case NORMAL:
       if(c < 0x20 || (c >= 0x80 && c < 0xa0 && !vt->is_utf8)) {
         switch(c) {
-        case 0x1b: // ESC
-          ENTER_STRING_STATE(ESC);
-          break;
         case 0x90: // DCS
           ENTER_STRING_STATE(DCS);
           break;
@@ -327,7 +308,7 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
   }
 
 pause:
-  if(string_start && len > (string_start - bytes)) {
+  if(string_start && string_start < len + bytes) {
     size_t remaining = len - (string_start - bytes);
     append_strbuffer(vt, string_start, remaining);
   }
