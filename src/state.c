@@ -919,6 +919,13 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     state->at_phantom = 0;
     break;
 
+  case 0x63: // DA - ECMA-48 8.3.24
+    val = CSI_ARG_OR(args[0], 0);
+    if(val == 0)
+      // DEC VT100 response
+      vterm_push_output_sprintf(state->vt, "\e[?1;2c");
+    break;
+
   case LEADER('>', 0x63): // DEC secondary Device Attributes
     vterm_push_output_sprintf(state->vt, "\e[>%d;%d;%dc", 0, 100, 0);
     break;
