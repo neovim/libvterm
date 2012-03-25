@@ -504,9 +504,31 @@ static int on_escape(const char *bytes, size_t len, void *user)
 {
   VTermState *state = user;
 
-  /* Command byte is the final byte */
-  switch(bytes[len-1]) {
-  case '0': case 'A': case 'B': case 'u':
+  /* Easier to decode this from the first byte, even though the final
+   * byte terminates it
+   */
+  switch(bytes[0]) {
+  case '#':
+    if(len != 2)
+      return 0;
+
+    switch(bytes[1]) {
+      case '8': // DECALN
+      {
+        VTermPos pos;
+        uint32_t E[] = { 'E', 0 };
+        for(pos.row = 0; pos.row < state->rows; pos.row++)
+          for(pos.col = 0; pos.col < state->cols; pos.col++)
+            putglyph(state, E, 1, pos);
+        break;
+      }
+
+      default:
+        return 0;
+    }
+    return 2;
+
+  case '(': case ')': case '*': case '+': // SCS
     if(len != 2)
       return 0;
 
@@ -520,32 +542,19 @@ static int on_escape(const char *bytes, size_t len, void *user)
 
     return 2;
 
-  case '7':
+  case '7': // DECSC
     savecursor(state, 1);
     return 1;
 
-  case '8':
-    if(len == 1) {
-      savecursor(state, 0);
-      return 1;
-    }
+  case '8': // DECRC
+    savecursor(state, 0);
+    return 1;
 
-    if(len == 2 && bytes[0] == '#') { // DECALN
-      VTermPos pos;
-      uint32_t E[] = { 'E', 0 };
-      for(pos.row = 0; pos.row < state->rows; pos.row++)
-        for(pos.col = 0; pos.col < state->cols; pos.col++)
-          putglyph(state, E, 1, pos);
-
-      return 2;
-    }
-    return 0;
-
-  case '=':
+  case '=': // DECKPAM
     state->mode.keypad = 1;
     return 1;
 
-  case '>':
+  case '>': // DECKPNM
     state->mode.keypad = 0;
     return 1;
 
