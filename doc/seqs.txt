@@ -2,142 +2,144 @@ Sequences documented in parens are implicit ones from parser.c, which move
 between states.
 
 1 = VT100
+2 = VT220
  
- C0 controls
-  
-1   0x00             = NUL
-1   0x07             = BEL
-1   0x08             = BS
-1   0x09             = HT
-1   0x0A             = LF
-1   0x0B             = VT
-1   0x0C             = FF
-1   0x0D             = CR
-1   0x0E             = LS1
-1   0x0F             = LS0
-   (0x18             = CAN)
-   (0x1A             = SUB)
-   (0x1B             = ESC)
+  C0 controls
+   
+12   0x00             = NUL
+12   0x07             = BEL
+12   0x08             = BS
+12   0x09             = HT
+12   0x0A             = LF
+12   0x0B             = VT
+12   0x0C             = FF
+12   0x0D             = CR
+12   0x0E             = LS1
+12   0x0F             = LS0
+    (0x18             = CAN)
+    (0x1A             = SUB)
+    (0x1B             = ESC)
 
-1   0x7f             = DEL (ignored)
-  
- C1 controls
-  
-1   0x84             = IND
-1   0x85             = NEL
-1   0x88             = HTS
-1   0x8D             = RI
-   (0x90             = DCS)
-   (0x9B             = CSI)
-   (0x9D             = OSC)
-  
- Escape sequences
-  - excluding sequences that are C1 aliases
-  
-1   ESC ()           = SCS, select character set (G0, G1)
-    ESC *+           = SCS, select character set (G2, G3)
-1   ESC 7            = DECSC - save cursor
-1   ESC 8            = DECRC - restore cursor
-1   ESC # 8          = DECALN
-1   ESC =            = DECKPAM, keypad application mode
-1   ESC >            = DECKPNM, keypad numeric mode
-   (ESC P            = DCS)
-   (ESC [            = CSI)
-   (ESC ]            = OSC)
-1   ESC c            = RIS, reset initial state
-    ESC n            = LS2
-    ESC o            = LS3
-  
- DCSes
-  
- CSIs
-    CSI @            = ICH
-1   CSI A            = CUU
-1   CSI B            = CUD
-1   CSI C            = CUF
-1   CSI D            = CUB
-    CSI E            = CNL
-    CSI F            = CPL
-    CSI G            = CHA
-1   CSI H            = CUP
-    CSI I            = CHT
-1   CSI J            = ED
-1   CSI K            = EL
-    CSI L            = IL
-    CSI M            = DL
-    CSI P            = DCH
-    CSI S            = SU
-    CSI T            = SD
-    CSI Z            = CBT
-    CSI `            = HPA
-    CSI a            = HPR
-1   CSI c            = DA
-    CSI > c          = DECSDA
-    CSI d            = VPA
-    CSI e            = VPR
-1   CSI f            = HVP
-1   CSI g            = TBC
-1   CSI h            = SM, Set mode
-1   CSI ? h          = DECSM, DEC set mode
-    CSI j            = HPB
-    CSI k            = VPB
-1   CSI l            = RM, Reset mode
-1   CSI ? l          = DECRM, DEC reset mode
-1   CSI m            = SGR, Set Graphic Rendition
-1   CSI n            = DSR, Device Status Report
-    CSI SP q         = DECSCUSR
-1   CSI r            = DECSTBM
-    CSI s            = ANSI SAVE
-    CSI u            = ANSI RESTORE
-  
- OSCs
-  
-    OSC 0;           = Set icon name and title
-    OSC 1;           = Set icon name
-    OSC 2;           = Set title
-  
- Standard modes
-  
-    4                = IRM
-1   20               = NLM, linefeed/newline
-  
- DEC modes
-  
-1   1                = DECCKM, cursor keys
-1   5                = DECSCNM, screen
-1   6                = DECOM, origin
-1   7                = DECAWM, autowrap
-    12               = Cursor blink
-    25               = Cursor visible
-    1000,1002,1003   = Mouse
-    1047             = Altscreen
-    1048             = Save cursor
-    1049             = 1047 + 1048
-  
- Graphic Renditions
-  
-1   SGR 0            = Reset
-1   SGR 1            = Bold on
-    SGR 3            = Italic on
-1   SGR 4            = Underline single
-1   SGR 5            = Blink on
-1   SGR 7            = Reverse on
-    SGR 9            = Strikethrough on
-    SGR 10-19        = Select font
-    SGR 21           = Underline double
-    SGR 22           = Bold off
-    SGR 23           = Italic off
-    SGR 24           = Underline off
-    SGR 25           = Blink off
-    SGR 27           = Reverse off
-    SGR 29           = Strikethrough off
-    SGR 30-37        = Foreground ANSI
-    SGR 38           = Foreground alternative palette
-    SGR 39           = Foreground default
-    SGR 40-47        = Background ANSI
-    SGR 48           = Background alternative palette
-    SGR 49           = Background default
-    SGR 90-97        = Foreground ANSI high-intensity
-    SGR 100-107      = Background ANSI high-intensity
+12   0x7f             = DEL (ignored)
+   
+  C1 controls
+   
+12   0x84             = IND
+12   0x85             = NEL
+12   0x88             = HTS
+12   0x8D             = RI
+    (0x90             = DCS)
+    (0x9B             = CSI)
+    (0x9D             = OSC)
+   
+  Escape sequences
+   - excluding sequences that are C1 aliases
+   
+12   ESC ()           = SCS, select character set (G0, G1)
+ 2   ESC *+           = SCS, select character set (G2, G3)
+12   ESC 7            = DECSC - save cursor
+12   ESC 8            = DECRC - restore cursor
+12   ESC # 8          = DECALN
+12   ESC =            = DECKPAM, keypad application mode
+12   ESC >            = DECKPNM, keypad numeric mode
+    (ESC P            = DCS)
+    (ESC [            = CSI)
+    (ESC ]            = OSC)
+12   ESC c            = RIS, reset initial state
+     ESC n            = LS2
+     ESC o            = LS3
+   
+  DCSes
+   
+  CSIs
+ 2   CSI @            = ICH
+12   CSI A            = CUU
+12   CSI B            = CUD
+12   CSI C            = CUF
+12   CSI D            = CUB
+     CSI E            = CNL
+     CSI F            = CPL
+     CSI G            = CHA
+12   CSI H            = CUP
+     CSI I            = CHT
+12   CSI J            = ED
+12   CSI K            = EL
+ 2   CSI L            = IL
+ 2   CSI M            = DL
+ 2   CSI P            = DCH
+     CSI S            = SU
+     CSI T            = SD
+ 2   CSI X            = ECH
+     CSI Z            = CBT
+     CSI `            = HPA
+     CSI a            = HPR
+12   CSI c            = DA
+ 2   CSI > c          = DECSDA
+     CSI d            = VPA
+     CSI e            = VPR
+12   CSI f            = HVP
+12   CSI g            = TBC
+1    CSI h            = SM, Set mode
+1    CSI ? h          = DECSM, DEC set mode
+     CSI j            = HPB
+     CSI k            = VPB
+1    CSI l            = RM, Reset mode
+1    CSI ? l          = DECRM, DEC reset mode
+12   CSI m            = SGR, Set Graphic Rendition
+12   CSI n            = DSR, Device Status Report
+     CSI SP q         = DECSCUSR
+12   CSI r            = DECSTBM
+     CSI s            = ANSI SAVE
+     CSI u            = ANSI RESTORE
+   
+  OSCs
+   
+     OSC 0;           = Set icon name and title
+     OSC 1;           = Set icon name
+     OSC 2;           = Set title
+   
+  Standard modes
+   
+ 2   4                = IRM
+12   20               = NLM, linefeed/newline
+   
+  DEC modes
+   
+12   1                = DECCKM, cursor keys
+12   5                = DECSCNM, screen
+12   6                = DECOM, origin
+12   7                = DECAWM, autowrap
+     12               = Cursor blink
+ 2   25               = DECTCEM, text cursor enable
+     1000,1002,1003   = Mouse
+     1047             = Altscreen
+     1048             = Save cursor
+     1049             = 1047 + 1048
+   
+  Graphic Renditions
+   
+12   SGR 0            = Reset
+12   SGR 1            = Bold on
+     SGR 3            = Italic on
+12   SGR 4            = Underline single
+12   SGR 5            = Blink on
+12   SGR 7            = Reverse on
+     SGR 9            = Strikethrough on
+     SGR 10-19        = Select font
+     SGR 21           = Underline double
+ 2   SGR 22           = Bold off
+     SGR 23           = Italic off
+ 2   SGR 24           = Underline off
+ 2   SGR 25           = Blink off
+ 2   SGR 27           = Reverse off
+     SGR 29           = Strikethrough off
+     SGR 30-37        = Foreground ANSI
+     SGR 38           = Foreground alternative palette
+     SGR 39           = Foreground default
+     SGR 40-47        = Background ANSI
+     SGR 48           = Background alternative palette
+     SGR 49           = Background default
+     SGR 90-97        = Foreground ANSI high-intensity
+     SGR 100-107      = Background ANSI high-intensity
  
 The state storage used by CSI s, ESC 7 and DECSM 1048/1049 is shared.
