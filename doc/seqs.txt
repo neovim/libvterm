@@ -68,6 +68,7 @@ between states.
     CSI Z            = CBT
     CSI `            = HPA
     CSI a            = HPR
+1   CSI c            = DA
     CSI > c          = DECSDA
     CSI d            = VPA
     CSI e            = VPR
