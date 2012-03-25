@@ -44,6 +44,7 @@ between states.
    (ESC P            = DCS)
    (ESC [            = CSI)
    (ESC ]            = OSC)
+1   ESC c            = RIS, reset initial state
     ESC n            = LS2
     ESC o            = LS3
   
