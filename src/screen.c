@@ -34,7 +34,7 @@ typedef struct
   ScreenPen pen;
 } ScreenCell;
 
-struct _VTermScreen
+struct VTermScreen
 {
   VTerm *vt;
   VTermState *state;
