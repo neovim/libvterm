@@ -5,9 +5,9 @@
 
 #include <stdarg.h>
 
-typedef struct _VTermEncoding VTermEncoding;
+typedef struct VTermEncoding VTermEncoding;
 
-struct _VTermState
+struct VTermState
 {
   VTerm *vt;
 
@@ -83,7 +83,7 @@ struct _VTermState
   } saved;
 };
 
-struct _VTerm
+struct VTerm
 {
   VTermAllocatorFunctions *allocator;
   void *allocdata;
@@ -116,7 +116,7 @@ struct _VTerm
   VTermScreen *screen;
 };
 
-struct _VTermEncoding {
+struct VTermEncoding {
   int (*decode)(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
                   const char bytes[], size_t *pos, size_t len);
 };
