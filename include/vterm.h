@@ -6,9 +6,9 @@
 
 #include "vterm_input.h"
 
-typedef struct _VTerm VTerm;
-typedef struct _VTermState VTermState;
-typedef struct _VTermScreen VTermScreen;
+typedef struct VTerm VTerm;
+typedef struct VTermState VTermState;
+typedef struct VTermScreen VTermScreen;
 
 typedef struct {
   int row;
