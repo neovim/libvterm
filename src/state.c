@@ -353,7 +353,7 @@ static int on_control(unsigned char control, void *user)
   return 1;
 }
 
-static void mousefunc(int col, int row, int button, int pressed, void *data)
+static void mousefunc(int col, int row, int button, int pressed, int modifiers, void *data)
 {
   VTermState *state = data;
 
