@@ -531,9 +531,12 @@ int main(int argc, char **argv)
       int press, button, row, col;
       while(linep[0] == ' ')
         linep++;
+      VTermModifier state = strpe_modifiers(&linep);
+      while(linep[0] == ' ')
+        linep++;
       sscanf(linep, "%d %d %d,%d", &press, &button, &row, &col);
       if(mousefunc)
-        (*mousefunc)(col, row, button, press, mousedata);
+        (*mousefunc)(col, row, button, press, state, mousedata);
     }
 
     else if(strstartswith(line, "DAMAGEMERGE ")) {
