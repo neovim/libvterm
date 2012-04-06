@@ -123,7 +123,7 @@ enum {
   VTERM_PROP_CURSORSHAPE_UNDERLINE,
 };
 
-typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, void *data);
+typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, int modifiers, void *data);
 
 typedef struct {
   int (*putglyph)(const uint32_t chars[], int width, VTermPos pos, void *user);
