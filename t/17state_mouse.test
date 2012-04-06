@@ -14,6 +14,12 @@ MOUSE 0 1 1 0,0
 MOUSE 0 0 1 0,0
   output "\e[M\x23\x21\x21"
 
+!Ctrl-Press 1
+MOUSE C 1 1 0,0
+  output "\e[M\x30\x21\x21"
+MOUSE C 0 1 0,0
+  output "\e[M\x33\x21\x21"
+
 !Button 2
 MOUSE 0 1 2 0,0
   output "\e[M\x21\x21\x21"
