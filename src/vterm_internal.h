@@ -33,7 +33,7 @@ struct VTermState
   int mouse_col, mouse_row;
   int mouse_buttons;
   int mouse_flags;
-  enum { MOUSE_X10, MOUSE_SGR, MOUSE_RXVT } mouse_protocol;
+  enum { MOUSE_X10, MOUSE_UTF8, MOUSE_SGR, MOUSE_RXVT } mouse_protocol;
 
   /* Last glyph output, for Unicode recombining purposes */
   uint32_t *combine_chars;
