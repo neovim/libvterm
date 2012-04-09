@@ -355,6 +355,11 @@ static int on_control(unsigned char control, void *user)
 
 static void output_mouse(VTermState *state, int status, int col, int row)
 {
+  if(col + 0x21 > 0xff)
+    col = 0xff - 0x21;
+  if(row + 0x21 > 0xff)
+    row = 0xff - 0x21;
+
   vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", status + 0x20, col + 0x21, row + 0x21);
 }
 

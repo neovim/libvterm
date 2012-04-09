@@ -66,3 +66,8 @@ PUSH "\e[?1003h"
 MOUSE 0 0 0 6,8
   output "\e[M\x43\x29\x27"
 
+!Bounds checking
+MOUSE 0 1 1 300,300
+  output "\e[M\x20\xff\xff"
+MOUSE 0 0 1 300,300
+  output "\e[M\x23\xff\xff"
