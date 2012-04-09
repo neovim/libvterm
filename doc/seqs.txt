@@ -112,6 +112,7 @@ between states.
      12               = Cursor blink
  2   25               = DECTCEM, text cursor enable
      1000,1002,1003   = Mouse
+     1006,1015        = Mouse protocol
      1047             = Altscreen
      1048             = Save cursor
      1049             = 1047 + 1048
