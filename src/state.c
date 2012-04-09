@@ -353,14 +353,17 @@ static int on_control(unsigned char control, void *user)
   return 1;
 }
 
-static void output_mouse(VTermState *state, int status, int col, int row)
+static void output_mouse(VTermState *state, int code, int pressed, int modifiers, int col, int row)
 {
   if(col + 0x21 > 0xff)
     col = 0xff - 0x21;
   if(row + 0x21 > 0xff)
     row = 0xff - 0x21;
 
-  vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", status + 0x20, col + 0x21, row + 0x21);
+  if(!pressed)
+    code = 3;
+
+  vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", (code | (modifiers << 2)) + 0x20, col + 0x21, row + 0x21);
 }
 
 static void mousefunc(int col, int row, int button, int pressed, int modifiers, void *data)
@@ -381,15 +384,16 @@ static void mousefunc(int col, int row, int button, int pressed, int modifiers, 
       state->mouse_buttons &= ~(1 << (button-1));
   }
 
-  modifiers = (modifiers & 0x07) << 2;
+  modifiers &= 0x7;
+
 
   /* Most of the time we don't get button releases from 4/5 */
   if(state->mouse_buttons != old_buttons || button >= 4) {
     if(button < 4) {
-      output_mouse(state, (pressed ? button-1 : 3) + modifiers, col, row);
+      output_mouse(state, button-1, pressed, modifiers, col, row);
     }
     else if(button < 6) {
-      output_mouse(state, button-4 + 0x40 + modifiers, col, row);
+      output_mouse(state, button-4 + 0x40, pressed, modifiers, col, row);
     }
   }
   else if(col != old_col || row != old_row) {
@@ -398,7 +402,7 @@ static void mousefunc(int col, int row, int button, int pressed, int modifiers, 
       int button = state->mouse_buttons & 0x01 ? 1 :
                    state->mouse_buttons & 0x02 ? 2 :
                    state->mouse_buttons & 0x04 ? 3 : 4;
-      output_mouse(state, button-1 + 0x20 + modifiers, col, row);
+      output_mouse(state, button-1 + 0x20, 1, modifiers, col, row);
     }
   }
 }
