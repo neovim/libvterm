@@ -355,15 +355,35 @@ static int on_control(unsigned char control, void *user)
 
 static void output_mouse(VTermState *state, int code, int pressed, int modifiers, int col, int row)
 {
-  if(col + 0x21 > 0xff)
-    col = 0xff - 0x21;
-  if(row + 0x21 > 0xff)
-    row = 0xff - 0x21;
+  modifiers <<= 2;
 
-  if(!pressed)
-    code = 3;
+  switch(state->mouse_protocol) {
+  case MOUSE_X10:
+    if(col + 0x21 > 0xff)
+      col = 0xff - 0x21;
+    if(row + 0x21 > 0xff)
+      row = 0xff - 0x21;
 
-  vterm_push_output_sprintf(state->vt, "\e[M%c%c%c", (code | (modifiers << 2)) + 0x20, col + 0x21, row + 0x21);
+    if(!pressed)
+      code = 3;
+
+    vterm_push_output_sprintf(state->vt, "\e[M%c%c%c",
+        (code | modifiers) + 0x20, col + 0x21, row + 0x21);
+    break;
+
+  case MOUSE_SGR:
+    vterm_push_output_sprintf(state->vt, "\e[<%d;%d;%d%c",
+        code | modifiers, col + 1, row + 1, pressed ? 'M' : 'm');
+    break;
+
+  case MOUSE_RXVT:
+    if(!pressed)
+      code = 3;
+
+    vterm_push_output_sprintf(state->vt, "\e[%d;%d;%dM",
+        code | modifiers, col + 1, row + 1);
+    break;
+  }
 }
 
 static void mousefunc(int col, int row, int button, int pressed, int modifiers, void *data)
@@ -655,6 +675,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
       state->mouse_buttons = 0;
 
       state->mouse_flags = 0;
+      state->mouse_protocol = MOUSE_X10;
 
       if(num == 1002)
         state->mouse_flags |= MOUSE_WANT_DRAG;
@@ -665,6 +686,14 @@ static void set_dec_mode(VTermState *state, int num, int val)
     if(state->callbacks && state->callbacks->setmousefunc)
       (*state->callbacks->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata);
 
+    break;
+
+  case 1006:
+    state->mouse_protocol = val ? MOUSE_SGR : MOUSE_X10;
+    break;
+
+  case 1015:
+    state->mouse_protocol = val ? MOUSE_RXVT : MOUSE_X10;
     break;
 
   case 1047:

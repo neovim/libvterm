@@ -71,3 +71,17 @@ MOUSE 0 1 1 300,300
   output "\e[M\x20\xff\xff"
 MOUSE 0 0 1 300,300
   output "\e[M\x23\xff\xff"
+
+!SGR extended encoding mode
+PUSH "\e[?1006h"
+MOUSE 0 1 1 300,300
+  output "\e[<0;301;301M"
+MOUSE 0 0 1 300,300
+  output "\e[<0;301;301m"
+
+!rxvt extended encoding mode
+PUSH "\e[?1015h"
+MOUSE 0 1 1 300,300
+  output "\e[0;301;301M"
+MOUSE 0 0 1 300,300
+  output "\e[3;301;301M"
