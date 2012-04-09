@@ -725,7 +725,7 @@ int main(int argc, char **argv)
 
       printf("output ");
       for(int i = 0; i < outlen; i++)
-        printf("%x%s", outbuff[i], i < outlen-1 ? "," : "\n");
+        printf("%x%s", (unsigned char)outbuff[i], i < outlen-1 ? "," : "\n");
     }
 
     printf(err ? "?\n" : "DONE\n");
