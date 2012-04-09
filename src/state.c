@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "utf8.h"
+
 #ifdef DEBUG
 # define DEBUG_GLYPH_COMBINE
 #endif
@@ -371,6 +373,21 @@ static void output_mouse(VTermState *state, int code, int pressed, int modifiers
         (code | modifiers) + 0x20, col + 0x21, row + 0x21);
     break;
 
+  case MOUSE_UTF8:
+    {
+      char utf8[18]; size_t len = 0;
+
+      if(!pressed)
+        code = 3;
+
+      len += fill_utf8((code | modifiers) + 0x20, utf8 + len);
+      len += fill_utf8(col + 0x21, utf8 + len);
+      len += fill_utf8(row + 0x21, utf8 + len);
+
+      vterm_push_output_sprintf(state->vt, "\e[M%s", utf8);
+    }
+    break;
+
   case MOUSE_SGR:
     vterm_push_output_sprintf(state->vt, "\e[<%d;%d;%d%c",
         code | modifiers, col + 1, row + 1, pressed ? 'M' : 'm');
@@ -686,6 +703,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
     if(state->callbacks && state->callbacks->setmousefunc)
       (*state->callbacks->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata);
 
+    break;
+
+  case 1005:
+    state->mouse_protocol = val ? MOUSE_UTF8 : MOUSE_X10;
     break;
 
   case 1006:
