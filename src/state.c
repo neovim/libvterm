@@ -100,9 +100,9 @@ static void linefeed(VTermState *state)
 static void grow_combine_buffer(VTermState *state)
 {
   size_t    new_size = state->combine_chars_size * 2;
-  uint32_t *new_chars = vterm_allocator_malloc(state->vt, new_size);
+  uint32_t *new_chars = vterm_allocator_malloc(state->vt, new_size * sizeof(new_chars[0]));
 
-  memcpy(new_chars, state->combine_chars, state->combine_chars_size);
+  memcpy(new_chars, state->combine_chars, state->combine_chars_size * sizeof(new_chars[0]));
 
   vterm_allocator_free(state->vt, state->combine_chars);
   state->combine_chars = new_chars;
@@ -162,11 +162,11 @@ static int on_text(const char bytes[], size_t len, void *user)
     /* See if the cursor has moved since */
     if(state->pos.row == state->combine_pos.row && state->pos.col == state->combine_pos.col + state->combine_width) {
 #ifdef DEBUG_GLYPH_COMBINE
-    int printpos;
-    printf("DEBUG: COMBINING SPLIT GLYPH of chars {");
-    for(printpos = 0; state->combine_chars[printpos]; printpos++)
-      printf("U+%04x ", state->combine_chars[printpos]);
-    printf("} + {");
+      int printpos;
+      printf("DEBUG: COMBINING SPLIT GLYPH of chars {");
+      for(printpos = 0; state->combine_chars[printpos]; printpos++)
+        printf("U+%04x ", state->combine_chars[printpos]);
+      printf("} + {");
 #endif
 
       /* Find where we need to append these combining chars */
@@ -1264,7 +1264,7 @@ VTermState *vterm_obtain_state(VTerm *vt)
   vt->state = state;
 
   state->combine_chars_size = 16;
-  state->combine_chars = vterm_allocator_malloc(state->vt, sizeof(uint32_t) * state->combine_chars_size);
+  state->combine_chars = vterm_allocator_malloc(state->vt, state->combine_chars_size * sizeof(state->combine_chars[0]));
 
   state->tabstops = vterm_allocator_malloc(state->vt, (state->cols + 7) / 8);
 

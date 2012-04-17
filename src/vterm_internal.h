@@ -37,7 +37,7 @@ struct VTermState
 
   /* Last glyph output, for Unicode recombining purposes */
   uint32_t *combine_chars;
-  size_t combine_chars_size;
+  size_t combine_chars_size; // Number of ELEMENTS in the above
   int combine_width; // The width of the glyph above
   VTermPos combine_pos;   // Position before movement
 
