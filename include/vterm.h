@@ -197,7 +197,8 @@ size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, 
 size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const VTermRect rect);
 
 typedef struct {
-  uint32_t chars[6];
+#define VTERM_MAX_CHARS_PER_CELL 6
+  uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
   char     width;
   struct {
     unsigned int bold      : 1;

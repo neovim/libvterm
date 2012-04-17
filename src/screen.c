@@ -5,10 +5,6 @@
 #include "rect.h"
 #include "utf8.h"
 
-#ifndef MAX_CHARS_PER_CELL
-# define MAX_CHARS_PER_CELL 6
-#endif
-
 #define UNICODE_SPACE 0x20
 #define UNICODE_LINEFEED 0x0a
 
@@ -30,7 +26,7 @@ typedef struct
 /* Internal representation of a screen cell */
 typedef struct
 {
-  uint32_t chars[MAX_CHARS_PER_CELL];
+  uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
   ScreenPen pen;
 } ScreenCell;
 
@@ -165,11 +161,11 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   ScreenCell *cell = getcell(screen, pos.row, pos.col);
   int i;
 
-  for(i = 0; i < MAX_CHARS_PER_CELL && chars[i]; i++) {
+  for(i = 0; i < VTERM_MAX_CHARS_PER_CELL && chars[i]; i++) {
     cell->chars[i] = chars[i];
     cell->pen = screen->pen;
   }
-  if(i < MAX_CHARS_PER_CELL)
+  if(i < VTERM_MAX_CHARS_PER_CELL)
     cell->chars[i] = 0;
 
   for(int col = 1; col < width; col++)
@@ -540,7 +536,7 @@ static size_t _get_chars(VTermScreen *screen, const int utf8, void *buffer, size
           PUT(UNICODE_SPACE);
           padding--;
         }
-        for(int i = 0; i < MAX_CHARS_PER_CELL && cell->chars[i]; i++) {
+        for(int i = 0; i < VTERM_MAX_CHARS_PER_CELL && cell->chars[i]; i++) {
           PUT(cell->chars[i]);
         }
       }
