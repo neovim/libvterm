@@ -28,3 +28,8 @@ PUSH "e\xCC\x81"
   ?screen_chars 0,0,1,80 = 0x65,0x301,0x31,0x32,0x33
   ?screen_text 0,0,1,80 = 0x65,0xcc,0x81,0x31,0x32,0x33
   ?screen_cell 0,0 = {0x65,0x301} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
+
+!10 combining accents should not crash
+RESET
+PUSH "e\xCC\x81\xCC\x82\xCC\x83\xCC\x84\xCC\x85\xCC\x86\xCC\x87\xCC\x88\xCC\x89\xCC\x8A"
+  ?screen_cell 0,0 = {0x65,0x301,0x302,0x303,0x304,0x305} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)

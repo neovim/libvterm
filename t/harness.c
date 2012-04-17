@@ -695,7 +695,7 @@ int main(int argc, char **argv)
         VTermScreenCell cell;
         vterm_screen_get_cell(screen, pos, &cell);
         printf("{");
-        for(int i = 0; cell.chars[i]; i++) {
+        for(int i = 0; cell.chars[i] && i < VTERM_MAX_CHARS_PER_CELL; i++) {
           printf("%s0x%x", i ? "," : "", cell.chars[i]);
         }
         printf("} width=%d attrs={", cell.width);
