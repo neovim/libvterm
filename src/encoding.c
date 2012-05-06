@@ -6,7 +6,8 @@
 # define DEBUG_PRINT_UTF8
 #endif
 
-static int decode_utf8(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+static int decode_utf8(VTermEncoding *enc, void *data,
+                       uint32_t cp[], int *cpi, int cplen,
                        const char bytes[], size_t *pos, size_t bytelen)
 {
   // number of bytes remaining in this codepoint
@@ -153,7 +154,8 @@ static VTermEncoding encoding_utf8 = {
   .decode = &decode_utf8,
 };
 
-static int decode_usascii(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+static int decode_usascii(VTermEncoding *enc, void *data,
+                          uint32_t cp[], int *cpi, int cplen,
                           const char bytes[], size_t *pos, size_t bytelen)
 {
   for(; *pos < bytelen; (*pos)++) {
@@ -177,7 +179,8 @@ struct StaticTableEncoding {
   const uint32_t chars[128];
 };
 
-static int decode_table(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
+static int decode_table(VTermEncoding *enc, void *data,
+                        uint32_t cp[], int *cpi, int cplen,
                         const char bytes[], size_t *pos, size_t bytelen)
 {
   struct StaticTableEncoding *table = (struct StaticTableEncoding *)enc;
