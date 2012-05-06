@@ -7,6 +7,13 @@
 
 typedef struct VTermEncoding VTermEncoding;
 
+typedef struct {
+  VTermEncoding *enc;
+
+  // This size should be increased if required by other stateful encodings
+  char           data[4*sizeof(uint32_t)];
+} VTermEncodingInstance;
+
 struct VTermState
 {
   VTerm *vt;
@@ -54,7 +61,7 @@ struct VTermState
     int origin:1;
   } mode;
 
-  VTermEncoding *encoding[4];
+  VTermEncodingInstance encoding[4], encoding_utf8;
   int gl_set, gr_set;
 
   struct {
@@ -118,8 +125,10 @@ struct VTerm
 };
 
 struct VTermEncoding {
-  int (*decode)(VTermEncoding *enc, uint32_t cp[], int *cpi, int cplen,
-                  const char bytes[], size_t *pos, size_t len);
+  void (*init) (VTermEncoding *enc, void *data);
+  int  (*decode)(VTermEncoding *enc, void *data,
+                 uint32_t cp[], int *cpi, int cplen,
+                 const char bytes[], size_t *pos, size_t len);
 };
 
 typedef enum {
