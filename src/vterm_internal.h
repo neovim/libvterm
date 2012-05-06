@@ -126,7 +126,7 @@ struct VTerm
 
 struct VTermEncoding {
   void (*init) (VTermEncoding *enc, void *data);
-  int  (*decode)(VTermEncoding *enc, void *data,
+  void (*decode)(VTermEncoding *enc, void *data,
                  uint32_t cp[], int *cpi, int cplen,
                  const char bytes[], size_t *pos, size_t len);
 };

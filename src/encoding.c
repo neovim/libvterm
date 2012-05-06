@@ -25,9 +25,9 @@ static void init_utf8(VTermEncoding *enc, void *data_)
   data->bytes_total     = 0;
 }
 
-static int decode_utf8(VTermEncoding *enc, void *data_,
-                       uint32_t cp[], int *cpi, int cplen,
-                       const char bytes[], size_t *pos, size_t bytelen)
+static void decode_utf8(VTermEncoding *enc, void *data_,
+                        uint32_t cp[], int *cpi, int cplen,
+                        const char bytes[], size_t *pos, size_t bytelen)
 {
   struct UTF8DecoderData *data = data_;
 
@@ -43,7 +43,7 @@ static int decode_utf8(VTermEncoding *enc, void *data_,
 #endif
 
     if(c < 0x20)
-      return 0;
+      return;
 
     else if(c >= 0x20 && c < 0x80) {
       if(data->bytes_remaining)
@@ -144,8 +144,6 @@ static int decode_utf8(VTermEncoding *enc, void *data_,
       cp[(*cpi)++] = UNICODE_INVALID;
     }
   }
-
-  return 1;
 }
 
 static VTermEncoding encoding_utf8 = {
@@ -153,20 +151,18 @@ static VTermEncoding encoding_utf8 = {
   .decode = &decode_utf8,
 };
 
-static int decode_usascii(VTermEncoding *enc, void *data,
-                          uint32_t cp[], int *cpi, int cplen,
-                          const char bytes[], size_t *pos, size_t bytelen)
+static void decode_usascii(VTermEncoding *enc, void *data,
+                           uint32_t cp[], int *cpi, int cplen,
+                           const char bytes[], size_t *pos, size_t bytelen)
 {
   for(; *pos < bytelen; (*pos)++) {
     unsigned char c = bytes[*pos];
 
     if(c < 0x20 || c >= 0x80)
-      return 0;
+      return;
 
     cp[(*cpi)++] = c;
   }
-
-  return 1;
 }
 
 static VTermEncoding encoding_usascii = {
@@ -178,9 +174,9 @@ struct StaticTableEncoding {
   const uint32_t chars[128];
 };
 
-static int decode_table(VTermEncoding *enc, void *data,
-                        uint32_t cp[], int *cpi, int cplen,
-                        const char bytes[], size_t *pos, size_t bytelen)
+static void decode_table(VTermEncoding *enc, void *data,
+                         uint32_t cp[], int *cpi, int cplen,
+                         const char bytes[], size_t *pos, size_t bytelen)
 {
   struct StaticTableEncoding *table = (struct StaticTableEncoding *)enc;
 
@@ -188,15 +184,13 @@ static int decode_table(VTermEncoding *enc, void *data,
     unsigned char c = (bytes[*pos]) & 0x7f;
 
     if(c < 0x20)
-      return 0;
+      return;
 
     if(table->chars[c])
       cp[(*cpi)++] = table->chars[c];
     else
       cp[(*cpi)++] = c;
   }
-
-  return 1;
 }
 
 #include "encoding/DECdrawing.inc"
