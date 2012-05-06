@@ -148,11 +148,13 @@ static int on_text(const char bytes[], size_t len, void *user)
   int npoints = 0;
   size_t eaten = 0;
 
-  VTermEncoding *enc = !(bytes[eaten] & 0x80) ? state->encoding[state->gl_set] :
-                       state->vt->is_utf8     ? vterm_lookup_encoding(ENC_UTF8, 'u') :
-                                                state->encoding[state->gr_set];
+  VTermEncodingInstance *encoding =
+    !(bytes[eaten] & 0x80) ? &state->encoding[state->gl_set] :
+    state->vt->is_utf8     ? &state->encoding_utf8 :
+                             &state->encoding[state->gr_set];
 
-  (*enc->decode)(enc, codepoints, &npoints, len, bytes, &eaten, len);
+  (*encoding->enc->decode)(encoding->enc, encoding->data,
+      codepoints, &npoints, len, bytes, &eaten, len);
 
   int i = 0;
 
@@ -587,8 +589,12 @@ static int on_escape(const char *bytes, size_t len, void *user)
       int setnum = bytes[0] - 0x28;
       VTermEncoding *newenc = vterm_lookup_encoding(ENC_SINGLE_94, bytes[1]);
 
-      if(newenc)
-        state->encoding[setnum] = newenc;
+      if(newenc) {
+        state->encoding[setnum].enc = newenc;
+
+        if(newenc->init)
+          (*newenc->init)(newenc, state->encoding[setnum].data);
+      }
     }
 
     return 2;
@@ -1268,6 +1274,10 @@ VTermState *vterm_obtain_state(VTerm *vt)
 
   state->tabstops = vterm_allocator_malloc(state->vt, (state->cols + 7) / 8);
 
+  state->encoding_utf8.enc = vterm_lookup_encoding(ENC_UTF8, 'u');
+  if(*state->encoding_utf8.enc->init)
+    (*state->encoding_utf8.enc->init)(state->encoding_utf8.enc, state->encoding_utf8.data);
+
   vterm_set_parser_callbacks(vt, &parser_callbacks, state);
 
   return state;
@@ -1311,8 +1321,11 @@ void vterm_state_reset(VTermState *state)
       vterm_lookup_encoding(ENC_UTF8,      'u') :
       vterm_lookup_encoding(ENC_SINGLE_94, 'B');
 
-  for(int i = 0; i < 4; i++)
-    state->encoding[i] = default_enc;
+  for(int i = 0; i < 4; i++) {
+    state->encoding[i].enc = default_enc;
+    if(default_enc->init)
+      (*default_enc->init)(default_enc, state->encoding[i].data);
+  }
 
   state->gl_set = 0;
   state->gr_set = 0;

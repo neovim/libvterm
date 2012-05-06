@@ -61,7 +61,7 @@ static VTerm *vt;
 static VTermState *state;
 static VTermScreen *screen;
 
-static VTermEncoding *encoding;
+static VTermEncodingInstance encoding;
 
 static int parser_text(const char bytes[], size_t len, void *user)
 {
@@ -483,7 +483,9 @@ int main(int argc, char **argv)
       /* This isn't really external API but it's hard to get this out any
        * other way
        */
-      encoding = vterm_lookup_encoding(ENC_UTF8, 'u');
+      encoding.enc = vterm_lookup_encoding(ENC_UTF8, 'u');
+      if(encoding.enc->init)
+        (*encoding.enc->init)(encoding.enc, encoding.data);
     }
 
     else if(strstartswith(line, "ENCIN ")) {
@@ -494,7 +496,8 @@ int main(int argc, char **argv)
       int cpi = 0;
       size_t pos = 0;
 
-      (*encoding->decode)(encoding, cp, &cpi, len, bytes, &pos, len);
+      (*encoding.enc->decode)(encoding.enc, encoding.data,
+          cp, &cpi, len, bytes, &pos, len);
 
       printf("encout ");
       for(int i = 0; i < cpi; i++) {
