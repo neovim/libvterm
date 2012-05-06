@@ -6,17 +6,30 @@
 # define DEBUG_PRINT_UTF8
 #endif
 
-static int decode_utf8(VTermEncoding *enc, void *data,
+struct UTF8DecoderData {
+  // number of bytes remaining in this codepoint
+  int bytes_remaining;
+
+  // number of bytes total in this codepoint once it's finished
+  // (for detecting overlongs)
+  int bytes_total;
+
+  int this_cp;
+};
+
+static void init_utf8(VTermEncoding *enc, void *data_)
+{
+  struct UTF8DecoderData *data = data_;
+
+  data->bytes_remaining = 0;
+  data->bytes_total     = 0;
+}
+
+static int decode_utf8(VTermEncoding *enc, void *data_,
                        uint32_t cp[], int *cpi, int cplen,
                        const char bytes[], size_t *pos, size_t bytelen)
 {
-  // number of bytes remaining in this codepoint
-  int bytes_remaining = 0;
-  // number of bytes total in this codepoint once it's finished
-  // (for detecting overlongs)
-  int bytes_total     = 0;
-
-  int this_cp;
+  struct UTF8DecoderData *data = data_;
 
 #ifdef DEBUG_PRINT_UTF8
   printf("BEGIN UTF-8\n");
@@ -26,120 +39,105 @@ static int decode_utf8(VTermEncoding *enc, void *data,
     unsigned char c = bytes[*pos];
 
 #ifdef DEBUG_PRINT_UTF8
-    printf(" pos=%zd c=%02x rem=%d\n", *pos, c, bytes_remaining);
+    printf(" pos=%zd c=%02x rem=%d\n", *pos, c, data->bytes_remaining);
 #endif
 
     if(c < 0x20)
       return 0;
 
     else if(c >= 0x20 && c < 0x80) {
-      if(bytes_remaining)
+      if(data->bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
       cp[(*cpi)++] = c;
 #ifdef DEBUG_PRINT_UTF8
       printf(" UTF-8 char: U+%04x\n", c);
 #endif
-      bytes_remaining = 0;
+      data->bytes_remaining = 0;
     }
 
     else if(c >= 0x80 && c < 0xc0) {
-      if(!bytes_remaining) {
+      if(!data->bytes_remaining) {
         cp[(*cpi)++] = UNICODE_INVALID;
         continue;
       }
 
-      this_cp <<= 6;
-      this_cp |= c & 0x3f;
-      bytes_remaining--;
+      data->this_cp <<= 6;
+      data->this_cp |= c & 0x3f;
+      data->bytes_remaining--;
 
-      if(!bytes_remaining) {
+      if(!data->bytes_remaining) {
 #ifdef DEBUG_PRINT_UTF8
-        printf(" UTF-8 raw char U+%04x bytelen=%d ", this_cp, bytes_total);
+        printf(" UTF-8 raw char U+%04x bytelen=%d ", data->this_cp, data->bytes_total);
 #endif
         // Check for overlong sequences
-        switch(bytes_total) {
+        switch(data->bytes_total) {
         case 2:
-          if(this_cp <  0x0080) this_cp = UNICODE_INVALID; break;
+          if(data->this_cp <  0x0080) data->this_cp = UNICODE_INVALID; break;
         case 3:
-          if(this_cp <  0x0800) this_cp = UNICODE_INVALID; break;
+          if(data->this_cp <  0x0800) data->this_cp = UNICODE_INVALID; break;
         case 4:
-          if(this_cp < 0x10000) this_cp = UNICODE_INVALID; break;
+          if(data->this_cp < 0x10000) data->this_cp = UNICODE_INVALID; break;
         case 5:
-          if(this_cp < 0x200000) this_cp = UNICODE_INVALID; break;
+          if(data->this_cp < 0x200000) data->this_cp = UNICODE_INVALID; break;
         case 6:
-          if(this_cp < 0x4000000) this_cp = UNICODE_INVALID; break;
+          if(data->this_cp < 0x4000000) data->this_cp = UNICODE_INVALID; break;
         }
         // Now look for plain invalid ones
-        if((this_cp >= 0xD800 && this_cp <= 0xDFFF) ||
-           this_cp == 0xFFFE ||
-           this_cp == 0xFFFF)
-          this_cp = UNICODE_INVALID;
+        if((data->this_cp >= 0xD800 && data->this_cp <= 0xDFFF) ||
+           data->this_cp == 0xFFFE ||
+           data->this_cp == 0xFFFF)
+          data->this_cp = UNICODE_INVALID;
 #ifdef DEBUG_PRINT_UTF8
-        printf(" char: U+%04x\n", this_cp);
+        printf(" char: U+%04x\n", data->this_cp);
 #endif
-        cp[(*cpi)++] = this_cp;
+        cp[(*cpi)++] = data->this_cp;
       }
     }
 
     else if(c >= 0xc0 && c < 0xe0) {
-      if(bytes_remaining)
+      if(data->bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(bytelen - *pos < 2)
-        return 1;
-
-      this_cp = c & 0x1f;
-      bytes_total = 2;
-      bytes_remaining = 1;
+      data->this_cp = c & 0x1f;
+      data->bytes_total = 2;
+      data->bytes_remaining = 1;
     }
 
     else if(c >= 0xe0 && c < 0xf0) {
-      if(bytes_remaining)
+      if(data->bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(bytelen - *pos < 3)
-        return 1;
-
-      this_cp = c & 0x0f;
-      bytes_total = 3;
-      bytes_remaining = 2;
+      data->this_cp = c & 0x0f;
+      data->bytes_total = 3;
+      data->bytes_remaining = 2;
     }
 
     else if(c >= 0xf0 && c < 0xf8) {
-      if(bytes_remaining)
+      if(data->bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(bytelen - *pos < 4)
-        return 1;
-
-      this_cp = c & 0x07;
-      bytes_total = 4;
-      bytes_remaining = 3;
+      data->this_cp = c & 0x07;
+      data->bytes_total = 4;
+      data->bytes_remaining = 3;
     }
 
     else if(c >= 0xf8 && c < 0xfc) {
-      if(bytes_remaining)
+      if(data->bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(bytelen - *pos < 5)
-        return 1;
-
-      this_cp = c & 0x03;
-      bytes_total = 5;
-      bytes_remaining = 4;
+      data->this_cp = c & 0x03;
+      data->bytes_total = 5;
+      data->bytes_remaining = 4;
     }
 
     else if(c >= 0xfc && c < 0xfe) {
-      if(bytes_remaining)
+      if(data->bytes_remaining)
         cp[(*cpi)++] = UNICODE_INVALID;
 
-      if(bytelen - *pos < 6)
-        return 1;
-
-      this_cp = c & 0x01;
-      bytes_total = 6;
-      bytes_remaining = 5;
+      data->this_cp = c & 0x01;
+      data->bytes_total = 6;
+      data->bytes_remaining = 5;
     }
 
     else {
@@ -151,6 +149,7 @@ static int decode_utf8(VTermEncoding *enc, void *data,
 }
 
 static VTermEncoding encoding_utf8 = {
+  .init   = &init_utf8,
   .decode = &decode_utf8,
 };
 
