@@ -499,11 +499,13 @@ int main(int argc, char **argv)
       (*encoding.enc->decode)(encoding.enc, encoding.data,
           cp, &cpi, len, bytes, &pos, len);
 
-      printf("encout ");
-      for(int i = 0; i < cpi; i++) {
-        printf(i ? ",%x" : "%x", cp[i]);
+      if(cpi > 0) {
+        printf("encout ");
+        for(int i = 0; i < cpi; i++) {
+          printf(i ? ",%x" : "%x", cp[i]);
+        }
+        printf("\n");
       }
-      printf("\n");
     }
 
     else if(strstartswith(line, "INCHAR ")) {
