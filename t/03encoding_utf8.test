@@ -98,3 +98,25 @@ ENCIN "\xF0\x80\x80\x80\xF0\x8F\xBF\xBF"
 !UTF-16 Surrogates
 ENCIN "\xED\xA0\x80\xED\xBF\xBF"
   encout 0xfffd,0xfffd
+
+!Split write
+ENCIN "\xC2"
+ENCIN "\xA0"
+  encout 0x000A0
+
+ENCIN "\xE0"
+ENCIN "\xA0\x80"
+  encout 0x00800
+ENCIN "\xE0\xA0"
+ENCIN "\x80"
+  encout 0x00800
+
+ENCIN "\xF0"
+ENCIN "\x90\x80\x80"
+  encout 0x10000
+ENCIN "\xF0\x90"
+ENCIN "\x80\x80"
+  encout 0x10000
+ENCIN "\xF0\x90\x80"
+ENCIN "\x80"
+  encout 0x10000
