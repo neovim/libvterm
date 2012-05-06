@@ -4,11 +4,12 @@ use strict;
 use warnings;
 use IO::Handle;
 use IPC::Open2 qw( open2 );
+use POSIX qw( WIFEXITED WEXITSTATUS WIFSIGNALED WTERMSIG );
 
-my ( $hin, $hout );
+my ( $hin, $hout, $hpid );
 {
    local $ENV{LD_LIBRARY_PATH} = ".";
-   open2 $hout, $hin, "t/harness" or die "Cannot open2 harness - $!";
+   $hpid = open2 $hout, $hin, "t/harness" or die "Cannot open2 harness - $!";
 }
 
 my $exitcode = 0;
@@ -172,5 +173,14 @@ while( my $line = <$test> ) {
 }
 
 do_onetest if defined $command;
+
+close $hin;
+close $hout;
+
+waitpid $hpid, 0;
+if( $? ) {
+   printf STDERR "Harness exited %d\n", WEXITSTATUS($?)   if WIFEXITED($?);
+   printf STDERR "Harness exit signal %d\n", WTERMSIG($?) if WIFSIGNALED($?);
+}
 
 exit $exitcode;
