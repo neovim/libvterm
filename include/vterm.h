@@ -214,6 +214,8 @@ typedef struct {
 
 void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
 
+int vterm_screen_is_eol(VTermScreen *screen, VTermPos pos);
+
 void vterm_input_push_char(VTerm *vt, VTermModifier state, uint32_t c);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 

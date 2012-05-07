@@ -714,6 +714,17 @@ int main(int argc, char **argv)
         printf("fg=rgb(%d,%d,%d) ",  cell.fg.red, cell.fg.green, cell.fg.blue);
         printf("bg=rgb(%d,%d,%d)\n", cell.bg.red, cell.bg.green, cell.bg.blue);
       }
+      else if(strstartswith(line, "?screen_eol ")) {
+        char *linep = line + 12;
+        while(linep[0] == ' ')
+          linep++;
+        VTermPos pos;
+        if(sscanf(linep, "%d,%d\n", &pos.row, &pos.col) < 2) {
+          printf("! screen_eol unrecognised input\n");
+          goto abort_line;
+        }
+        printf("%d\n", vterm_screen_is_eol(screen, pos));
+      }
       else
         printf("?\n");
 
