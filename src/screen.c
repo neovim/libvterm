@@ -590,6 +590,18 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
     cell->width = 1;
 }
 
+int vterm_screen_is_eol(VTermScreen *screen, VTermPos pos)
+{
+  /* This cell is EOL if this and every cell to the right is black */
+  for(; pos.col < screen->cols; pos.col++) {
+    ScreenCell *cell = getcell(screen, pos.row, pos.col);
+    if(cell->chars[0] != 0)
+      return 0;
+  }
+
+  return 1;
+}
+
 VTermScreen *vterm_obtain_screen(VTerm *vt)
 {
   if(vt->screen)
