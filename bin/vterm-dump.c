@@ -20,9 +20,24 @@ static int parser_text(const char bytes[], size_t len, void *user)
   return i;
 }
 
+/* 0     1      2      3       4     5      6      7      8      9      A      B      C      D      E      F    */
+static const char *name_c0[] = {
+  "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS",  "HT",  "LF",  "VT",  "FF",  "CR",  "LS0", "LS1",
+  "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM",  "SUB", "ESC", "FS",  "GS",  "RS",  "US",
+};
+static const char *name_c1[] = {
+  NULL,  NULL,  "BPH", "NBH", NULL,  "NEL", "SSA", "ESA", "HTS", "HTJ", "VTS", "PLD", "PLU", "RI",  "SS2", "SS3",
+  "DCS", "PU1", "PU2", "STS", "CCH", "MW",  "SPA", "EPA", "SOS", NULL,  "SCI", "CSI", "ST",  "OSC", "PM",  "APC",
+};
+
 static int parser_control(unsigned char control, void *user)
 {
-  printf("CONTROL 0x%02x\n", control);
+  if(control < 0x20)
+    printf("%s\n", name_c0[control]);
+  else if(control >= 0x80 && control < 0xa0 && name_c1[control - 0x80])
+    printf("%s\n", name_c1[control]);
+  else
+    printf("CONTROL 0x%02x\n", control);
   return 1;
 }
 
@@ -45,9 +60,23 @@ static int parser_escape(const char bytes[], size_t len, void *user)
   return len;
 }
 
+/* 0     1      2      3       4     5      6      7      8      9      A      B      C      D      E      F    */
+static const char *name_csi_plain[] = {
+  "ICH", "CUU", "CUD", "CUF", "CUB", "CNL", "CPL", "CHA", "CUP", "CHT", "ED",  "EL",  "IL",  "DL",  "EF",  "EA",
+  "DCH", "SSE", "CPR", "SU",  "SD",  "NP",  "PP",  "CTC", "ECH", "CVT", "CBT", "SRS", "PTX", "SDS", "SIMD",NULL,
+  "HPA", "HPR", "REP", "DA",  "VPA", "VPR", "HVP", "TBC", "SM",  "MC",  "HPB", "VPB", "RM",  "SGR", "DSR", "DAQ",
+};
+
 static int parser_csi(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user)
 {
-  printf("CSI ");
+  const char *name = NULL;
+  if(!leader && !intermed && command < 0x70)
+    name = name_csi_plain[command - 0x40];
+
+  if(name)
+    printf("%s ", name);
+  else
+    printf("CSI ");
 
   if(leader && leader[0])
     printf("%s ", leader);
@@ -65,7 +94,10 @@ static int parser_csi(const char *leader, const long args[], int argcount, const
   if(intermed && intermed[0])
     printf("%s ", intermed);
 
-  printf("%c\n", command);
+  if(name)
+    printf("\n");
+  else
+    printf("%c\n", command);
 
   return 1;
 }
