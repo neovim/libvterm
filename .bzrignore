@@ -2,6 +2,9 @@
 *.lo
 *.la
 
+bin/*
+!bin/*.c
+
 pangoterm
 t/test
 t/suites.h

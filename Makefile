@@ -57,6 +57,10 @@ src/encoding/%.inc: src/encoding/%.tbl
 
 src/encoding.lo: $(INCFILES)
 
+bin/%: bin/%.c $(LIBRARY)
+	@echo CC $<
+	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $< -lvterm
+
 t/harness.lo: t/harness.c $(HFILES)
 	@echo CC $<
 	@$(LIBTOOL) --mode=compile --tag=CC $(CC) $(CFLAGS) -o $@ -c $<
