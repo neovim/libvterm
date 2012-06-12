@@ -87,6 +87,7 @@ struct VTermState
   /* Saved state under DEC mode 1048/1049 */
   struct {
     VTermPos pos;
+    struct VTermPen pen;
 
     struct {
       int cursor_visible:1;
@@ -152,6 +153,7 @@ void vterm_state_free(VTermState *state);
 
 void vterm_state_resetpen(VTermState *state);
 void vterm_state_setpen(VTermState *state, const long args[], int argcount);
+void vterm_state_savepen(VTermState *state, int save);
 
 void vterm_screen_free(VTermScreen *screen);
 

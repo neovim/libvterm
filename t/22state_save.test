@@ -9,6 +9,8 @@ RESET
 !Set up state
 PUSH "\e[2;2H"
   ?cursor = 1,1
+PUSH "\e[1m"
+  ?pen bold = on
 
 !Save
 PUSH "\e[?1048h"
@@ -19,6 +21,9 @@ PUSH "\e[5;5H"
 PUSH "\e[4 q"
   settermprop 2 false
   settermprop 7 2
+PUSH "\e[22;4m"
+  ?pen bold = off
+  ?pen underline = 1
 
 !Restore
 PUSH "\e[?1048l"
@@ -26,6 +31,8 @@ PUSH "\e[?1048l"
   settermprop 2 true
   settermprop 7 1
   ?cursor = 1,1
+  ?pen bold = on
+  ?pen underline = 0
 
 !Save/restore using DECSC/DECRC
 PUSH "\e[2;2H\e7"
