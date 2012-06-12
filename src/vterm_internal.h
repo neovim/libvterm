@@ -14,6 +14,17 @@ typedef struct {
   char           data[4*sizeof(uint32_t)];
 } VTermEncodingInstance;
 
+struct VTermPen
+{
+  unsigned int bold:1;
+  unsigned int underline:2;
+  unsigned int italic:1;
+  unsigned int blink:1;
+  unsigned int reverse:1;
+  unsigned int strike:1;
+  unsigned int font:4; /* To store 0-9 */
+};
+
 struct VTermState
 {
   VTerm *vt;
@@ -64,15 +75,7 @@ struct VTermState
   VTermEncodingInstance encoding[4], encoding_utf8;
   int gl_set, gr_set;
 
-  struct {
-    unsigned int bold:1;
-    unsigned int underline:2;
-    unsigned int italic:1;
-    unsigned int blink:1;
-    unsigned int reverse:1;
-    unsigned int strike:1;
-    unsigned int font:4; /* To store 0-9 */
-  } pen;
+  struct VTermPen pen;
 
   VTermColor default_fg;
   VTermColor default_bg;
