@@ -144,6 +144,26 @@ void vterm_state_resetpen(VTermState *state)
   state->pen.bg = state->default_bg;  setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->default_bg);
 }
 
+void vterm_state_savepen(VTermState *state, int save)
+{
+  if(save) {
+    state->saved.pen = state->pen;
+  }
+  else {
+    state->pen = state->saved.pen;
+
+    setpenattr_bool(state, VTERM_ATTR_BOLD,       state->pen.bold);
+    setpenattr_int( state, VTERM_ATTR_UNDERLINE,  state->pen.underline);
+    setpenattr_bool(state, VTERM_ATTR_ITALIC,     state->pen.italic);
+    setpenattr_bool(state, VTERM_ATTR_BLINK,      state->pen.blink);
+    setpenattr_bool(state, VTERM_ATTR_REVERSE,    state->pen.reverse);
+    setpenattr_bool(state, VTERM_ATTR_STRIKE,     state->pen.strike);
+    setpenattr_int( state, VTERM_ATTR_FONT,       state->pen.font);
+    setpenattr_col( state, VTERM_ATTR_FOREGROUND, state->pen.fg);
+    setpenattr_col( state, VTERM_ATTR_BACKGROUND, state->pen.bg);
+  }
+}
+
 void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg)
 {
   state->default_fg = *default_fg;
