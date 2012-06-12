@@ -114,34 +114,19 @@ static void setpenattr_int(VTermState *state, VTermAttr attr, int number)
   setpenattr(state, attr, VTERM_VALUETYPE_INT, &val);
 }
 
-static void setpenattr_col_ansi(VTermState *state, VTermAttr attr, long col)
+static void setpenattr_col(VTermState *state, VTermAttr attr, VTermColor color)
 {
-  VTermValue val;
-
-  if(col == -1) {
-    if(attr == VTERM_ATTR_BACKGROUND)
-      val.color = state->default_bg;
-    else
-      val.color = state->default_fg;
-  }
-  else
-    lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, &val.color);
-
+  VTermValue val = { .color = color };
   setpenattr(state, attr, VTERM_VALUETYPE_COLOR, &val);
 }
 
-static int setpenattr_col_palette(VTermState *state, VTermAttr attr, const long args[], int argcount)
+static void set_pen_col_ansi(VTermState *state, VTermAttr attr, long col)
 {
-  VTermValue val;
+  VTermColor *colp = (attr == VTERM_ATTR_BACKGROUND) ? &state->pen.bg : &state->pen.fg;
 
-  if(!argcount)
-    return 0;
+  lookup_colour_ansi(col, attr == VTERM_ATTR_BACKGROUND, colp);
 
-  int eaten = lookup_colour(CSI_ARG(args[0]), args + 1, argcount - 1, attr == VTERM_ATTR_BACKGROUND, &val.color);
-
-  setpenattr(state, attr, VTERM_VALUETYPE_COLOR, &val);
-
-  return eaten + 1; // we ate palette
+  setpenattr_col(state, attr, *colp);
 }
 
 void vterm_state_resetpen(VTermState *state)
@@ -153,10 +138,10 @@ void vterm_state_resetpen(VTermState *state)
   state->pen.reverse = 0;   setpenattr_bool(state, VTERM_ATTR_REVERSE, 0);
   state->pen.strike = 0;    setpenattr_bool(state, VTERM_ATTR_STRIKE, 0);
   state->pen.font = 0;      setpenattr_int( state, VTERM_ATTR_FONT, 0);
-  state->fg_ansi = -1;
 
-  setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
-  setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
+  state->fg_ansi = -1;
+  state->pen.fg = state->default_fg;  setpenattr_col(state, VTERM_ATTR_FOREGROUND, state->default_fg);
+  state->pen.bg = state->default_bg;  setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->default_bg);
 }
 
 void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg)
@@ -193,7 +178,7 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
       state->pen.bold = 1;
       setpenattr_bool(state, VTERM_ATTR_BOLD, 1);
       if(state->fg_ansi > -1 && state->bold_is_highbright)
-        setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, state->fg_ansi + (state->pen.bold ? 8 : 0));
+        set_pen_col_ansi(state, VTERM_ATTR_FOREGROUND, state->fg_ansi + (state->pen.bold ? 8 : 0));
       break;
 
     case 3: // Italic on
@@ -268,40 +253,48 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
       state->fg_ansi = value;
       if(state->pen.bold && state->bold_is_highbright)
         value += 8;
-      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, value);
+      set_pen_col_ansi(state, VTERM_ATTR_FOREGROUND, value);
       break;
 
     case 38: // Foreground colour alternative palette
       state->fg_ansi = -1;
-      argi += setpenattr_col_palette(state, VTERM_ATTR_FOREGROUND, args + argi + 1, argcount - argi - 1);
+      if(argcount - argi < 1)
+        return;
+      argi += 1 + lookup_colour(CSI_ARG(args[argi+1]), args+argi+2, argcount-argi-2, 0, &state->pen.fg);
+      setpenattr_col(state, VTERM_ATTR_FOREGROUND, state->pen.fg);
       break;
 
     case 39: // Foreground colour default
       state->fg_ansi = -1;
-      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, -1);
+      state->pen.fg = state->default_fg;
+      setpenattr_col(state, VTERM_ATTR_FOREGROUND, state->pen.fg);
       break;
 
     case 40: case 41: case 42: case 43:
     case 44: case 45: case 46: case 47: // Background colour palette
-      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 40);
+      set_pen_col_ansi(state, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 40);
       break;
 
     case 48: // Background colour alternative palette
-      argi += setpenattr_col_palette(state, VTERM_ATTR_BACKGROUND, args + argi + 1, argcount - argi - 1);
+      if(argcount - argi < 1)
+        return;
+      argi += 1 + lookup_colour(CSI_ARG(args[argi+1]), args+argi+2, argcount-argi-2, 1, &state->pen.bg);
+      setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->pen.bg);
       break;
 
     case 49: // Default background
-      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, -1);
+      state->pen.bg = state->default_bg;
+      setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->pen.bg);
       break;
 
     case 90: case 91: case 92: case 93:
     case 94: case 95: case 96: case 97: // Foreground colour high-intensity palette
-      setpenattr_col_ansi(state, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 90 + 8);
+      set_pen_col_ansi(state, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 90 + 8);
       break;
 
     case 100: case 101: case 102: case 103:
     case 104: case 105: case 106: case 107: // Background colour high-intensity palette
-      setpenattr_col_ansi(state, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 100 + 8);
+      set_pen_col_ansi(state, VTERM_ATTR_BACKGROUND, CSI_ARG(args[argi]) - 100 + 8);
       break;
 
     default:
@@ -348,10 +341,12 @@ int vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val)
     return 1;
 
   case VTERM_ATTR_FOREGROUND:
+    val->color = state->pen.fg;
+    return 1;
+
   case VTERM_ATTR_BACKGROUND:
-    /* For now we don't store these.
-     * TODO: Think about whether we should store index, or RGB value, or what... */
-    return 0;
+    val->color = state->pen.bg;
+    return 1;
   }
 
   return 0;
