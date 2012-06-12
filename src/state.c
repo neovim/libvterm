@@ -517,6 +517,8 @@ static void savecursor(VTermState *state, int save)
     state->saved.mode.cursor_visible = state->mode.cursor_visible;
     state->saved.mode.cursor_blink   = state->mode.cursor_blink;
     state->saved.mode.cursor_shape   = state->mode.cursor_shape;
+
+    vterm_state_savepen(state, 1);
   }
   else {
     VTermPos oldpos = state->pos;
@@ -529,6 +531,8 @@ static void savecursor(VTermState *state, int save)
     settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
     settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->mode.cursor_blink);
     settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->mode.cursor_shape);
+
+    vterm_state_savepen(state, 0);
 
     updatecursor(state, &oldpos, 1);
   }
