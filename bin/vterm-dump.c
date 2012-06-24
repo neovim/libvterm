@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#define streq(a,b) (strcmp(a,b)==0)
 
 #include <errno.h>
 #include <fcntl.h>
@@ -85,8 +86,17 @@ static int parser_csi(const char *leader, const long args[], int argcount, const
   const char *name = NULL;
   if(!leader && !intermed && command < 0x70)
     name = name_csi_plain[command - 0x40];
+  else if(leader && streq(leader, "?") && !intermed) {
+    /* DEC */
+    switch(command) {
+      case 'h': name = "DECSM"; break;
+      case 'l': name = "DECRM"; break;
+    }
+    if(name)
+      leader = NULL;
+  }
 
-  if(newline_csi_plain[command - 0x40])
+  if(!leader && !intermed && command < 0x70 && newline_csi_plain[command - 0x40])
     printf("\n");
 
   if(name)
