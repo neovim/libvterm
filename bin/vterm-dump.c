@@ -59,10 +59,7 @@ static int parser_escape(const char bytes[], size_t len, void *user)
     len = 1;
   }
 
-  printf("%sESC ", special_begin);
-  for(int i = 0; i < len; i++)
-    printf("%c ", bytes[i]);
-  printf("%s", special_end);
+  printf("%sESC %.*s%s", special_begin, (int)len, bytes, special_end);
 
   return len;
 }
