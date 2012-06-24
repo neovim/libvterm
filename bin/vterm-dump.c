@@ -9,6 +9,9 @@
 
 #include "vterm.h"
 
+static const char *special_begin = "{";
+static const char *special_end   = "}";
+
 static int parser_text(const char bytes[], size_t len, void *user)
 {
   int i;
@@ -33,11 +36,11 @@ static const char *name_c1[] = {
 static int parser_control(unsigned char control, void *user)
 {
   if(control < 0x20)
-    printf("{%s}", name_c0[control]);
+    printf("%s%s%s", special_begin, name_c0[control], special_end);
   else if(control >= 0x80 && control < 0xa0 && name_c1[control - 0x80])
-    printf("{%s}", name_c1[control]);
+    printf("%s%s%s", special_begin, name_c1[control], special_end);
   else
-    printf("{CONTROL 0x%02x}", control);
+    printf("%sCONTROL 0x%02x%s", special_begin, control, special_end);
 
   if(control == 0x0a)
     printf("\n");
@@ -55,10 +58,10 @@ static int parser_escape(const char bytes[], size_t len, void *user)
     len = 1;
   }
 
-  printf("{ESC ");
+  printf("%sESC ", special_begin);
   for(int i = 0; i < len; i++)
     printf("%c ", bytes[i]);
-  printf("}");
+  printf("%s", special_end);
 
   return len;
 }
@@ -87,9 +90,9 @@ static int parser_csi(const char *leader, const long args[], int argcount, const
     printf("\n");
 
   if(name)
-    printf("{%s", name);
+    printf("%s%s", special_begin, name);
   else
-    printf("{CSI");
+    printf("%sCSI", special_begin);
 
   if(leader && leader[0])
     printf(" %s", leader);
@@ -108,23 +111,23 @@ static int parser_csi(const char *leader, const long args[], int argcount, const
     printf(" %s", intermed);
 
   if(name)
-    printf("}");
+    printf("%s", special_end);
   else
-    printf(" %c}", command);
+    printf(" %c%s", command, special_end);
 
   return 1;
 }
 
 static int parser_osc(const char *command, size_t cmdlen, void *user)
 {
-  printf("{OSC %.*s}", (int)cmdlen, command);
+  printf("%sOSC %.*s%s", special_begin, (int)cmdlen, command, special_end);
 
   return 1;
 }
 
 static int parser_dcs(const char *command, size_t cmdlen, void *user)
 {
-  printf("{DCS %.*s}", (int)cmdlen, command);
+  printf("%sDCS %.*s%s", special_begin, (int)cmdlen, command, special_end);
 
   return 1;
 }
@@ -144,6 +147,11 @@ int main(int argc, char *argv[])
   if(fd == -1) {
     fprintf(stderr, "Cannot open %s - %s\n", argv[1], strerror(errno));
     exit(1);
+  }
+
+  if(isatty(1)) {
+    special_begin = "\e[7m{";
+    special_end   = "}\e[m";
   }
 
   /* Size matters not for the parser */
