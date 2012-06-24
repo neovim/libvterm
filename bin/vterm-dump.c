@@ -16,7 +16,7 @@ static int parser_text(const char bytes[], size_t len, void *user)
     if(bytes[i] < 0x20 || (bytes[i] >= 0x80 && bytes[i] < 0xa0))
       break;
 
-  printf("TEXT %.*s\n", i, bytes);
+  printf("%.*s", i, bytes);
   return i;
 }
 
@@ -33,11 +33,14 @@ static const char *name_c1[] = {
 static int parser_control(unsigned char control, void *user)
 {
   if(control < 0x20)
-    printf("%s\n", name_c0[control]);
+    printf("{%s}", name_c0[control]);
   else if(control >= 0x80 && control < 0xa0 && name_c1[control - 0x80])
-    printf("%s\n", name_c1[control]);
+    printf("{%s}", name_c1[control]);
   else
-    printf("CONTROL 0x%02x\n", control);
+    printf("{CONTROL 0x%02x}", control);
+
+  if(control == 0x0a)
+    printf("\n");
   return 1;
 }
 
@@ -52,10 +55,10 @@ static int parser_escape(const char bytes[], size_t len, void *user)
     len = 1;
   }
 
-  printf("ESC ");
+  printf("{ESC ");
   for(int i = 0; i < len; i++)
     printf("%c ", bytes[i]);
-  printf("\n");
+  printf("}");
 
   return len;
 }
@@ -67,51 +70,61 @@ static const char *name_csi_plain[] = {
   "HPA", "HPR", "REP", "DA",  "VPA", "VPR", "HVP", "TBC", "SM",  "MC",  "HPB", "VPB", "RM",  "SGR", "DSR", "DAQ",
 };
 
+/*0           4           8           B         */
+static const int newline_csi_plain[] = {
+  0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+};
+
 static int parser_csi(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user)
 {
   const char *name = NULL;
   if(!leader && !intermed && command < 0x70)
     name = name_csi_plain[command - 0x40];
 
+  if(newline_csi_plain[command - 0x40])
+    printf("\n");
+
   if(name)
-    printf("%s ", name);
+    printf("{%s", name);
   else
-    printf("CSI ");
+    printf("{CSI");
 
   if(leader && leader[0])
-    printf("%s ", leader);
+    printf(" %s", leader);
 
   for(int i = 0; i < argcount; i++) {
-    if(i)
-      printf(",");
+    printf(i ? "," : " ");
 
     if(args[i] == CSI_ARG_MISSING)
       printf("*");
-    else
-      printf("%ld%s", CSI_ARG(args[i]), CSI_ARG_HAS_MORE(args[i]) ? "+" : " ");
+    while(CSI_ARG_HAS_MORE(args[i]))
+      printf("%ld+", CSI_ARG(args[i++]));
+    printf("%ld", CSI_ARG(args[i]));
   }
 
   if(intermed && intermed[0])
-    printf("%s ", intermed);
+    printf(" %s", intermed);
 
   if(name)
-    printf("\n");
+    printf("}");
   else
-    printf("%c\n", command);
+    printf(" %c}", command);
 
   return 1;
 }
 
 static int parser_osc(const char *command, size_t cmdlen, void *user)
 {
-  printf("OSC %.*s\n", (int)cmdlen, command);
+  printf("{OSC %.*s}", (int)cmdlen, command);
 
   return 1;
 }
 
 static int parser_dcs(const char *command, size_t cmdlen, void *user)
 {
-  printf("DCS %.*s\n", (int)cmdlen, command);
+  printf("{DCS %.*s}", (int)cmdlen, command);
 
   return 1;
 }
@@ -142,6 +155,8 @@ int main(int argc, char *argv[])
   while((len = read(fd, buffer, sizeof(buffer))) > 0) {
     vterm_push_bytes(vt, buffer, len);
   }
+
+  printf("\n");
 
   close(fd);
   vterm_free(vt);
