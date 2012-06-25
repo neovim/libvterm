@@ -109,10 +109,12 @@ struct VTerm
 
   enum VTermParserState {
     NORMAL,
-    ESC,
     CSI,
     OSC,
     DCS,
+    ESC,
+    ESC_IN_OSC,
+    ESC_IN_DCS,
   } parser_state;
   const VTermParserCallbacks *parser_callbacks;
   void *cbdata;
