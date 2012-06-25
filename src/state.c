@@ -1216,6 +1216,19 @@ static void request_status_string(VTermState *state, const char *command, size_t
         return;
     }
 
+  if(cmdlen == 2)
+    if(strneq(command, " q", 2)) {
+      int reply;
+      switch(state->mode.cursor_shape) {
+        case VTERM_PROP_CURSORSHAPE_BLOCK:     reply = 2; break;
+        case VTERM_PROP_CURSORSHAPE_UNDERLINE: reply = 4; break;
+      }
+      if(state->mode.cursor_blink)
+        reply--;
+      vterm_push_output_sprintf(state->vt, "\eP1$r%d q\e\\", reply);
+      return;
+    }
+
   vterm_push_output_sprintf(state->vt, "\eP0$r%.s\e\\", (int)cmdlen, command);
 }
 
