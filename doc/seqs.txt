@@ -52,6 +52,7 @@ between states.
   DCSes
 
      DCS $q           = DECRQSS
+           SP q       = Request DECSCUSR
            r          = Request DECSTBM
    
   CSIs
