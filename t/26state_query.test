@@ -20,3 +20,8 @@ PUSH "\e[10;10H\e[6n"
 !DECRQSS on DECSTBM
 PUSH "\eP\$qr\e\\"
   output "\eP1\$r1;25r\e\\"
+
+!DECRQSS on DECSCUSR
+PUSH "\e[3 q"
+PUSH "\eP\$q q\e\\"
+  output "\eP1\$r3 q\e\\"
