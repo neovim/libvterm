@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define strneq(a,b,n) (strncmp(a,b,n)==0)
+
 #include "utf8.h"
 
 #ifdef DEBUG
@@ -1188,16 +1190,16 @@ static int on_osc(const char *command, size_t cmdlen, void *user)
   if(cmdlen < 2)
     return 0;
 
-  if(strncmp(command, "0;", 2) == 0) {
+  if(strneq(command, "0;", 2)) {
     settermprop_string(state, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
     settermprop_string(state, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
     return 1;
   }
-  else if(strncmp(command, "1;", 2) == 0) {
+  else if(strneq(command, "1;", 2)) {
     settermprop_string(state, VTERM_PROP_ICONNAME, command + 2, cmdlen - 2);
     return 1;
   }
-  else if(strncmp(command, "2;", 2) == 0) {
+  else if(strneq(command, "2;", 2)) {
     settermprop_string(state, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
     return 1;
   }
