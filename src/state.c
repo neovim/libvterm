@@ -1207,6 +1207,30 @@ static int on_osc(const char *command, size_t cmdlen, void *user)
   return 0;
 }
 
+static void request_status_string(VTermState *state, const char *command, size_t cmdlen)
+{
+  if(cmdlen == 1)
+    switch(command[0]) {
+      case 'r': // Query DECSTBM
+        vterm_push_output_sprintf(state->vt, "\eP1$r%d;%dr\e\\", state->scrollregion_start+1, SCROLLREGION_END(state));
+        return;
+    }
+
+  vterm_push_output_sprintf(state->vt, "\eP0$r%.s\e\\", (int)cmdlen, command);
+}
+
+static int on_dcs(const char *command, size_t cmdlen, void *user)
+{
+  VTermState *state = user;
+
+  if(cmdlen >= 2 && strneq(command, "$q", 2)) {
+    request_status_string(state, command+2, cmdlen-2);
+    return 1;
+  }
+
+  return 0;
+}
+
 static int on_resize(int rows, int cols, void *user)
 {
   VTermState *state = user;
@@ -1264,6 +1288,7 @@ static const VTermParserCallbacks parser_callbacks = {
   .escape  = on_escape,
   .csi     = on_csi,
   .osc     = on_osc,
+  .dcs     = on_dcs,
   .resize  = on_resize,
 };
 

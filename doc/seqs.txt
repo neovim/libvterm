@@ -50,6 +50,9 @@ between states.
      ESC o            = LS3
    
   DCSes
+
+     DCS $q           = DECRQSS
+           r          = Request DECSTBM
    
   CSIs
  2   CSI @            = ICH
