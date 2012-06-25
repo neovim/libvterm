@@ -177,6 +177,11 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
 
     fprintf(stderr, "libvterm: Unhandled DCS %.*s\n", (int)len, str_frag);
     return 0;
+
+  case ESC_IN_OSC:
+  case ESC_IN_DCS:
+    fprintf(stderr, "libvterm: ARGH! Should never do_string() in ESC_IN_{OSC,DCS}\n");
+    return 0;
   }
 
   return 0;
@@ -192,6 +197,8 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     string_start = NULL;
     break;
   case ESC:
+  case ESC_IN_OSC:
+  case ESC_IN_DCS:
   case CSI:
   case OSC:
   case DCS:
@@ -217,7 +224,12 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
       continue;
     }
     else if(c == 0x1b) { // ESC
-      ENTER_STRING_STATE(ESC);
+      if(vt->parser_state == OSC)
+        vt->parser_state = ESC_IN_OSC;
+      else if(vt->parser_state == DCS)
+        vt->parser_state = ESC_IN_DCS;
+      else
+        ENTER_STRING_STATE(ESC);
       continue;
     }
     else if(c == 0x07 &&  // BEL, can stand for ST in OSC or DCS state
@@ -235,6 +247,22 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     // else fallthrough
 
     switch(vt->parser_state) {
+    case ESC_IN_OSC:
+    case ESC_IN_DCS:
+      if(c == 0x5c) { // ST
+        switch(vt->parser_state) {
+          case ESC_IN_OSC: vt->parser_state = OSC; break;
+          case ESC_IN_DCS: vt->parser_state = DCS; break;
+          default: break;
+        }
+        do_string(vt, string_start, bytes + pos - string_start - 1);
+        ENTER_NORMAL_STATE();
+        break;
+      }
+      vt->parser_state = ESC;
+      string_start = bytes + pos;
+      // else fallthrough
+
     case ESC:
       switch(c) {
       case 0x50: // DCS
@@ -273,10 +301,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
     case DCS:
       if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
         do_string(vt, string_start, bytes + pos - string_start);
-        ENTER_NORMAL_STATE();
-      }
-      else if(c == 0x5c && bytes[pos-1] == 0x1b) {
-        do_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
       }
       break;

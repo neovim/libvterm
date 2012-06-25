@@ -130,10 +130,15 @@ PUSH "\e[12\n;3X"
   control 10
   csi 0x58 12,3
 
-!OSC
+!OSC BEL
 PUSH "\e]1;Hello\x07"
   osc "1;Hello"
 
+!OSC ST (7bit)
+PUSH "\e]1;Hello\e\\"
+  osc "1;Hello"
+
+!OSC ST (8bit)
 PUSH "\x{9d}1;Hello\x9c"
   osc "1;Hello"
 
@@ -150,10 +155,15 @@ PUSH "\e]2;\nBye\x07"
   control 10
   osc "2;Bye"
 
-!DCS
+!DCS BEL
 PUSH "\ePHello\x07"
   dcs "Hello"
 
+!DCS ST (7bit)
+PUSH "\ePHello\e\\"
+  dcs "Hello"
+
+!DCS ST (8bit)
 PUSH "\x{90}Hello\x9c"
   dcs "Hello"
 
