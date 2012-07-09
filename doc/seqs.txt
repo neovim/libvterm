@@ -152,3 +152,21 @@ between states.
      SGR 100-107      = Background ANSI high-intensity
  
 The state storage used by CSI s, ESC 7 and DECSM 1048/1049 is shared.
+
+  Unimplemented sequences:
+
+The following sequences are not recognised by libvterm.
+
+1    ESC # 3          = DECDHL, double-height line (top half)
+1    ESC # 4          = DECDHL, double-height line (bottom half)
+1    ESC # 5          = DECSWL, single-width line
+1    ESC # 6          = DECDWL, double-width line
+1    ESC Z            = DECID, identify terminal
+1    CSI q            = DECLL, load LEDs
+1    CSI x            = DECREQTPARM, request terminal parameters
+1    CSI y            = DECTST, invoke confidence test
+1    DECSM 2          = DECANM, ANSI/VT52
+1    DECSM 3          = DECCOLM, 132 column
+1    DECSM 4          = DECSCLM, scrolling
+1    DECSM 8          = DECARM, auto-repeat
+1    DECSM 9          = DECINLM, interlace
