@@ -104,22 +104,26 @@ between states.
    
   Standard modes
    
- 2   4                = IRM
-12   20               = NLM, linefeed/newline
+ 2   SM 4             = IRM
+12   SM 20            = NLM, linefeed/newline
    
   DEC modes
    
-12   1                = DECCKM, cursor keys
-12   5                = DECSCNM, screen
-12   6                = DECOM, origin
-12   7                = DECAWM, autowrap
-     12               = Cursor blink
- 2   25               = DECTCEM, text cursor enable
-     1000,1002,1003   = Mouse
-     1005,1006,1015   = Mouse protocol
-     1047             = Altscreen
-     1048             = Save cursor
-     1049             = 1047 + 1048
+12   DECSM 1          = DECCKM, cursor keys
+12   DECSM 5          = DECSCNM, screen
+12   DECSM 6          = DECOM, origin
+12   DECSM 7          = DECAWM, autowrap
+     DECSM 12         = Cursor blink
+ 2   DECSM 25         = DECTCEM, text cursor enable
+     DECSM 1000       = Mouse click/release tracking
+     DECSM 1002       = Mouse click/release/drag tracking
+     DECSM 1003       = Mouse all movements tracking
+     DECSM 1005       = Mouse protocol extended (UTF-8) - not recommended
+     DECSM 1006       = Mouse protocol SGR
+     DECSM 1015       = Mouse protocol rxvt
+     DECSM 1047       = Altscreen
+     DECSM 1048       = Save cursor
+     DECSM 1049       = 1047 + 1048
    
   Graphic Renditions
    
