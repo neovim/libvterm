@@ -493,11 +493,11 @@ void vterm_screen_free(VTermScreen *screen)
   vterm_allocator_free(screen->vt, screen);
 }
 
-void vterm_screen_reset(VTermScreen *screen)
+void vterm_screen_reset(VTermScreen *screen, int hard)
 {
   screen->damaged.start_row = -1;
   screen->pending_scrollrect.start_row = -1;
-  vterm_state_reset(screen->state);
+  vterm_state_reset(screen->state, hard);
   vterm_screen_flush_damage(screen);
 }
 
