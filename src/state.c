@@ -624,7 +624,7 @@ static int on_escape(const char *bytes, size_t len, void *user)
   case 'c': // RIS - ECMA-48 8.3.105
   {
     VTermPos oldpos = state->pos;
-    vterm_state_reset(state);
+    vterm_state_reset(state, 1);
     if(state->callbacks && state->callbacks->movecursor)
       (*state->callbacks->movecursor)(state->pos, oldpos, state->mode.cursor_visible, state->cbdata);
     return 1;
@@ -1118,6 +1118,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     }
     break;
 
+  case LEADER('!', 0x70): // DECSTR - DEC soft terminal reset
+    vterm_state_reset(state, 0);
+    break;
+
   case INTERMED(' ', 0x71): // DECSCUSR - DEC set cursor shape
     val = CSI_ARG_OR(args[0], 1);
 
@@ -1327,12 +1331,8 @@ VTermState *vterm_obtain_state(VTerm *vt)
   return state;
 }
 
-void vterm_state_reset(VTermState *state)
+void vterm_state_reset(VTermState *state, int hard)
 {
-  state->pos.row = 0;
-  state->pos.col = 0;
-  state->at_phantom = 0;
-
   state->scrollregion_start = 0;
   state->scrollregion_end = -1;
 
@@ -1358,9 +1358,6 @@ void vterm_state_reset(VTermState *state)
 
   vterm_state_resetpen(state);
 
-  VTermRect rect = { 0, state->rows, 0, state->cols };
-  erase(state, rect);
-
   VTermEncoding *default_enc = state->vt->is_utf8 ?
       vterm_lookup_encoding(ENC_UTF8,      'u') :
       vterm_lookup_encoding(ENC_SINGLE_94, 'B');
@@ -1378,6 +1375,15 @@ void vterm_state_reset(VTermState *state)
   settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
   settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->mode.cursor_blink);
   settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->mode.cursor_shape);
+
+  if(hard) {
+    state->pos.row = 0;
+    state->pos.col = 0;
+    state->at_phantom = 0;
+
+    VTermRect rect = { 0, state->rows, 0, state->cols };
+    erase(state, rect);
+  }
 }
 
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)

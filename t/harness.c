@@ -377,7 +377,7 @@ int main(int argc, char **argv)
         state = vterm_obtain_state(vt);
         vterm_state_set_callbacks(state, &state_cbs, NULL);
         vterm_state_set_bold_highbright(state, 1);
-        vterm_state_reset(state);
+        vterm_state_reset(state, 1);
       }
 
       int i = 9;
@@ -456,11 +456,11 @@ int main(int argc, char **argv)
 
     else if(streq(line, "RESET")) {
       if(state) {
-        vterm_state_reset(state);
+        vterm_state_reset(state, 1);
         vterm_state_get_cursorpos(state, &state_pos);
       }
       if(screen) {
-        vterm_screen_reset(screen);
+        vterm_screen_reset(screen, 1);
       }
     }
 

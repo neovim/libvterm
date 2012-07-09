@@ -91,6 +91,7 @@ between states.
 1    CSI ? l          = DECRM, DEC reset mode
 12   CSI m            = SGR, Set Graphic Rendition
 12   CSI n            = DSR, Device Status Report
+ 2   CSI ! p          = DECSTR, soft terminal reset
      CSI SP q         = DECSCUSR
 12   CSI r            = DECSTBM
      CSI s            = ANSI SAVE
@@ -172,7 +173,6 @@ The following sequences are not recognised by libvterm.
  2   CSI ? J          = DECSED, selective erase in display
  2   CSI ? K          = DECSEL, selective erase in line
  2   CSI i            = DEC printer control
- 2   CSI ! p          = DECSTR, soft terminal reset
  2   CSI " p          = DECSCL, set compatibility level
 1    CSI q            = DECLL, load LEDs
  2   CSI " q          = DECSCA, select character attributes
