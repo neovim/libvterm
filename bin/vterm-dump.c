@@ -42,7 +42,7 @@ static int parser_control(unsigned char control, void *user)
   if(control < 0x20)
     printf("%s%s%s", special_begin, name_c0[control], special_end);
   else if(control >= 0x80 && control < 0xa0 && name_c1[control - 0x80])
-    printf("%s%s%s", special_begin, name_c1[control], special_end);
+    printf("%s%s%s", special_begin, name_c1[control - 0x80], special_end);
   else
     printf("%sCONTROL 0x%02x%s", special_begin, control, special_end);
 
