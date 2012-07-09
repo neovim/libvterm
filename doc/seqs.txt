@@ -157,10 +157,15 @@ The state storage used by CSI s, ESC 7 and DECSM 1048/1049 is shared.
 
 The following sequences are not recognised by libvterm.
 
+12   0x05             = ENQ
+ 2   0x8e             = SS2
+ 2   0x8f             = SS3
 12   ESC # 3          = DECDHL, double-height line (top half)
 12   ESC # 4          = DECDHL, double-height line (bottom half)
 12   ESC # 5          = DECSWL, single-width line
 12   ESC # 6          = DECDWL, double-width line
+ 2   ESC Sp F         = S7C1T
+ 2   ESC Sp G         = S8C1T
 12   ESC Z            = DECID, identify terminal
  2   DCS (            = DECDLD, down-line-loadable character set
  2   DCS |            = DECUDK, user-defined key
@@ -173,6 +178,7 @@ The following sequences are not recognised by libvterm.
  2   CSI " q          = DECSCA, select character attributes
 1    CSI x            = DECREQTPARM, request terminal parameters
 12   CSI y            = DECTST, invoke confidence test
+ 2   SM 2             = KAM, keyboard action
 12   SM 12            = SRM, send/receive
 12   DECSM 2          = DECANM, ANSI/VT52
 12   DECSM 3          = DECCOLM, 132 column
