@@ -167,7 +167,7 @@ void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks
 
 VTermState *vterm_obtain_state(VTerm *vt);
 
-void vterm_state_reset(VTermState *state);
+void vterm_state_reset(VTermState *state, int hard);
 void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
 void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
 void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg);
@@ -192,7 +192,7 @@ typedef enum {
 void vterm_screen_flush_damage(VTermScreen *screen);
 void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size);
 
-void   vterm_screen_reset(VTermScreen *screen);
+void   vterm_screen_reset(VTermScreen *screen, int hard);
 size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
 size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const VTermRect rect);
 
