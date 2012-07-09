@@ -1,3 +1,6 @@
+// Require getopt(3)
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #define streq(a,b) (strcmp(a,b)==0)
@@ -152,13 +155,23 @@ static VTermParserCallbacks parser_cbs = {
 
 int main(int argc, char *argv[])
 {
-  int fd = open(argv[1], O_RDONLY);
+  int use_colour = isatty(1);
+
+  int opt;
+  while((opt = getopt(argc, argv, "c")) != -1) {
+    switch(opt) {
+      case 'c': use_colour = 1; break;
+    }
+  }
+
+  const char *file = argv[optind++];
+  int fd = open(file, O_RDONLY);
   if(fd == -1) {
-    fprintf(stderr, "Cannot open %s - %s\n", argv[1], strerror(errno));
+    fprintf(stderr, "Cannot open %s - %s\n", file, strerror(errno));
     exit(1);
   }
 
-  if(isatty(1)) {
+  if(use_colour) {
     special_begin = "\e[7m{";
     special_end   = "}\e[m";
   }
