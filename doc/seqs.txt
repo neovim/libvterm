@@ -157,16 +157,28 @@ The state storage used by CSI s, ESC 7 and DECSM 1048/1049 is shared.
 
 The following sequences are not recognised by libvterm.
 
-1    ESC # 3          = DECDHL, double-height line (top half)
-1    ESC # 4          = DECDHL, double-height line (bottom half)
-1    ESC # 5          = DECSWL, single-width line
-1    ESC # 6          = DECDWL, double-width line
-1    ESC Z            = DECID, identify terminal
+12   ESC # 3          = DECDHL, double-height line (top half)
+12   ESC # 4          = DECDHL, double-height line (bottom half)
+12   ESC # 5          = DECSWL, single-width line
+12   ESC # 6          = DECDWL, double-width line
+12   ESC Z            = DECID, identify terminal
+ 2   DCS (            = DECDLD, down-line-loadable character set
+ 2   DCS |            = DECUDK, user-defined key
+ 2   CSI ? J          = DECSED, selective erase in display
+ 2   CSI ? K          = DECSEL, selective erase in line
+ 2   CSI i            = DEC printer control
+ 2   CSI ! p          = DECSTR, soft terminal reset
+ 2   CSI " p          = DECSCL, set compatibility level
 1    CSI q            = DECLL, load LEDs
+ 2   CSI " q          = DECSCA, select character attributes
 1    CSI x            = DECREQTPARM, request terminal parameters
-1    CSI y            = DECTST, invoke confidence test
-1    DECSM 2          = DECANM, ANSI/VT52
-1    DECSM 3          = DECCOLM, 132 column
-1    DECSM 4          = DECSCLM, scrolling
-1    DECSM 8          = DECARM, auto-repeat
-1    DECSM 9          = DECINLM, interlace
+12   CSI y            = DECTST, invoke confidence test
+12   SM 12            = SRM, send/receive
+12   DECSM 2          = DECANM, ANSI/VT52
+12   DECSM 3          = DECCOLM, 132 column
+12   DECSM 4          = DECSCLM, scrolling
+12   DECSM 8          = DECARM, auto-repeat
+12   DECSM 9          = DECINLM, interlace
+ 2   DECSM 18         = DECPFF, print form feed
+ 2   DECSM 19         = DECPEX, print extent
+ 2   DECSM 42         = DECNRCM, national/multinational character
