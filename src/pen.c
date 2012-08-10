@@ -309,6 +309,7 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 
     case 90: case 91: case 92: case 93:
     case 94: case 95: case 96: case 97: // Foreground colour high-intensity palette
+      state->fg_ansi = -1;
       set_pen_col_ansi(state, VTERM_ATTR_FOREGROUND, CSI_ARG(args[argi]) - 90 + 8);
       break;
 
