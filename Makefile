@@ -25,6 +25,9 @@ HFILES=$(wildcard include/*.h)
 OBJECTS=$(CFILES:.c=.lo)
 LIBRARY=libvterm.la
 
+BINFILES_SRC=$(wildcard bin/*.c)
+BINFILES=$(BINFILES_SRC:.c=)
+
 TBLFILES=$(wildcard src/encoding/*.tbl)
 INCFILES=$(TBLFILES:.tbl=.inc)
 
@@ -41,7 +44,7 @@ INCDIR=$(PREFIX)/include
 MANDIR=$(PREFIX)/share/man
 MAN3DIR=$(MANDIR)/man3
 
-all: $(LIBRARY)
+all: $(LIBRARY) $(BINFILES)
 
 $(LIBRARY): $(OBJECTS)
 	@echo LINK $@
