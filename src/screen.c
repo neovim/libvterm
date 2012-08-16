@@ -1,6 +1,7 @@
 #include "vterm_internal.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "rect.h"
 #include "utf8.h"
@@ -196,7 +197,25 @@ static int moverect_internal(VTermRect dest, VTermRect src, void *user)
 {
   VTermScreen *screen = user;
 
-  vterm_copy_cells(dest, src, &copycell, screen);
+  int cols = src.end_col - src.start_col;
+  int downward = src.start_row - dest.start_row;
+
+  int init_row, test_row, inc_row;
+  if(downward < 0) {
+    init_row = dest.end_row - 1;
+    test_row = dest.start_row - 1;
+    inc_row  = -1;
+  }
+  else {
+    init_row = dest.start_row;
+    test_row = dest.end_row;
+    inc_row  = +1;
+  }
+
+  for(int row = init_row; row != test_row; row += inc_row)
+    memmove(getcell(screen, row, dest.start_col),
+            getcell(screen, row + downward, src.start_col),
+            cols * sizeof(ScreenCell));
 
   return 1;
 }
