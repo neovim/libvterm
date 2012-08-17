@@ -184,15 +184,6 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
   return 1;
 }
 
-static void copycell(VTermPos dest, VTermPos src, void *user)
-{
-  VTermScreen *screen = user;
-  ScreenCell *destcell = getcell(screen, dest.row, dest.col);
-  ScreenCell *srccell = getcell(screen, src.row, src.col);
-
-  *destcell = *srccell;
-}
-
 static int moverect_internal(VTermRect dest, VTermRect src, void *user)
 {
   VTermScreen *screen = user;
