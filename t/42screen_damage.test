@@ -32,14 +32,15 @@ PUSH "\e[?1049h"
 PUSH "\e[?1049l"
   damage 0..25,0..80
 
-WANTSCREEN m
+WANTSCREEN ms
 
 !Scroll invokes moverect but not damage
 PUSH "\e[5@"
+  prescroll 0..1,75..80
   moverect 0..1,0..75 -> 0..1,5..80
   damage 0..1,0..5
 
-WANTSCREEN -m
+WANTSCREEN -ms
 
 !Merge to cells
 RESET
@@ -87,7 +88,7 @@ DAMAGEFLUSH
   damage 2..6,0..80
 
 !Merge entire screen with moverect
-WANTSCREEN m
+WANTSCREEN ms
 
 RESET
   damage 0..25,0..80
@@ -96,6 +97,7 @@ DAMAGEMERGE SCREEN
 PUSH "ABCDE\r\nEFGH"
 PUSH "\e[3;6r\e[6H\eD"
   damage 0..2,0..5
+  prescroll 2..3,0..80
   moverect 3..6,0..80 -> 2..5,0..80
   ?screen_chars 0,0,1,5 = 0x41,0x42,0x43,0x44,0x45
   ?screen_chars 1,0,2,5 = 0x45,0x46,0x47,0x48
@@ -109,12 +111,14 @@ DAMAGEMERGE SCROLL
 
 PUSH "\e[25H\n\n\n"
 DAMAGEFLUSH
+  prescroll 0..3,0..80
   moverect 3..25,0..80 -> 0..22,0..80
   damage 22..25,0..80
 
 !Merge scroll with damage
 PUSH "ABCDE\r\nEFGH\r\n"
 DAMAGEFLUSH
+  prescroll 0..2,0..80
   moverect 2..25,0..80 -> 0..23,0..80
   damage 22..25,0..80
   ?screen_chars 22,0,23,5 = 0x41,0x42,0x43,0x44,0x45
@@ -133,5 +137,6 @@ DAMAGEFLUSH
 PUSH "\e[HABC\e[3;6r\e[6H\r\n6"
   damage 0..1,0..3
 DAMAGEFLUSH
+  prescroll 2..3,0..80
   moverect 3..6,0..80 -> 2..5,0..80
   damage 5..6,0..80
