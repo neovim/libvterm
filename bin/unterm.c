@@ -33,6 +33,17 @@ void dump_row(int row)
   free(text);
 }
 
+static int screen_prescroll(VTermRect rect, void *user)
+{
+  if(rect.start_row != 0 || rect.start_col != 0 || rect.end_col != cols)
+    return 0;
+
+  for(int row = 0; row < rect.end_row; row++)
+    dump_row(row);
+
+  return 1;
+}
+
 static int screen_resize(int new_rows, int new_cols, void *user)
 {
   rows = new_rows;
@@ -41,7 +52,8 @@ static int screen_resize(int new_rows, int new_cols, void *user)
 }
 
 static VTermScreenCallbacks cb_screen = {
-  .resize = &screen_resize,
+  .prescroll = &screen_prescroll,
+  .resize    = &screen_resize,
 };
 
 int main(int argc, char *argv[])
