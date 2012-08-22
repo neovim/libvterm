@@ -285,12 +285,7 @@ void vterm_copy_cells(VTermRect dest,
     test_row = dest.start_row - 1;
     inc_row = -1;
   }
-  else if(downward == 0) {
-    init_row = dest.start_row;
-    test_row = dest.end_row;
-    inc_row = +1;
-  }
-  else /* downward > 0 */ {
+  else /* downward >= 0 */ {
     init_row = dest.start_row;
     test_row = dest.end_row;
     inc_row = +1;
@@ -301,12 +296,7 @@ void vterm_copy_cells(VTermRect dest,
     test_col = dest.start_col - 1;
     inc_col = -1;
   }
-  else if(rightward == 0) {
-    init_col = dest.start_col;
-    test_col = dest.end_col;
-    inc_col = +1;
-  }
-  else /* rightward > 0 */ {
+  else /* rightward >= 0 */ {
     init_col = dest.start_col;
     test_col = dest.end_col;
     inc_col = +1;
