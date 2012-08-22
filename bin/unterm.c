@@ -7,10 +7,13 @@
 
 #include "vterm.h"
 
+static VTerm *vt;
+
+static int cols;
+static int rows;
+
 void dump_row(VTerm *vt, VTermScreen *vts, int row)
 {
-  int cols;
-  vterm_get_size(vt, NULL, &cols);
   VTermRect rect = {
     .start_row = row,
     .start_col = 0,
@@ -29,6 +32,17 @@ void dump_row(VTerm *vt, VTermScreen *vts, int row)
   free(text);
 }
 
+static int screen_resize(int new_rows, int new_cols, void *user)
+{
+  rows = new_rows;
+  cols = new_cols;
+  return 1;
+}
+
+static VTermScreenCallbacks cb_screen = {
+  .resize = &screen_resize,
+};
+
 int main(int argc, char *argv[])
 {
   const char *file = argv[1];
@@ -38,9 +52,12 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  VTerm *vt = vterm_new(25, 80);
+  rows = 25;
+  cols = 80;
+
+  vt = vterm_new(rows, cols);
   VTermScreen *vts = vterm_obtain_screen(vt);
-  vterm_screen_set_callbacks(vts, NULL, NULL);
+  vterm_screen_set_callbacks(vts, &cb_screen, NULL);
 
   vterm_screen_reset(vts, 1);
 
@@ -50,8 +67,6 @@ int main(int argc, char *argv[])
     vterm_push_bytes(vt, buffer, len);
   }
 
-  int rows;
-  vterm_get_size(vt, &rows, NULL);
   for(int row = 0; row < rows; row++) {
     dump_row(vt, vts, row);
   }
