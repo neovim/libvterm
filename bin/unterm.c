@@ -8,11 +8,12 @@
 #include "vterm.h"
 
 static VTerm *vt;
+static VTermScreen *vts;
 
 static int cols;
 static int rows;
 
-void dump_row(VTerm *vt, VTermScreen *vts, int row)
+void dump_row(int row)
 {
   VTermRect rect = {
     .start_row = row,
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
   cols = 80;
 
   vt = vterm_new(rows, cols);
-  VTermScreen *vts = vterm_obtain_screen(vt);
+  vts = vterm_obtain_screen(vt);
   vterm_screen_set_callbacks(vts, &cb_screen, NULL);
 
   vterm_screen_reset(vts, 1);
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
   }
 
   for(int row = 0; row < rows; row++) {
-    dump_row(vt, vts, row);
+    dump_row(row);
   }
 
   close(fd);
