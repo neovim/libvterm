@@ -215,52 +215,52 @@ static int moverect_user(VTermRect dest, VTermRect src, void *user)
 {
   VTermScreen *screen = user;
 
+  if(screen->callbacks && screen->callbacks->prescroll) {
+    // TODO: These calculations don't properly take account of combined
+    // horizontal and vertical movements
+    if(dest.start_row < src.start_row) {
+      VTermRect rect = {
+        .start_row = dest.start_row,
+        .end_row   = src.start_row,
+        .start_col = dest.start_col,
+        .end_col   = dest.end_col,
+      };
+      (*screen->callbacks->prescroll)(rect, screen->cbdata);
+    }
+    else if(dest.start_row > src.start_row) {
+      VTermRect rect = {
+        .start_row = src.end_row,
+        .end_row   = dest.end_row,
+        .start_col = dest.start_col,
+        .end_col   = dest.end_col,
+      };
+      (*screen->callbacks->prescroll)(rect, screen->cbdata);
+    }
+
+    if(dest.start_col < src.start_col) {
+      VTermRect rect = {
+        .start_row = dest.start_row,
+        .end_row   = dest.end_row,
+        .start_col = dest.start_col,
+        .end_col   = src.start_col,
+      };
+      (*screen->callbacks->prescroll)(rect, screen->cbdata);
+    }
+    else if(dest.start_col > src.start_col) {
+      VTermRect rect = {
+        .start_row = dest.start_row,
+        .end_row   = dest.end_row,
+        .start_col = src.end_col,
+        .end_col   = dest.end_col,
+      };
+      (*screen->callbacks->prescroll)(rect, screen->cbdata);
+    }
+  }
+
   if(screen->callbacks && screen->callbacks->moverect) {
     if(screen->damage_merge != VTERM_DAMAGE_SCROLL)
       // Avoid an infinite loop
       vterm_screen_flush_damage(screen);
-
-    if(screen->callbacks && screen->callbacks->prescroll) {
-      // TODO: These calculations don't properly take account of combined
-      // horizontal and vertical movements
-      if(dest.start_row < src.start_row) {
-        VTermRect rect = {
-          .start_row = dest.start_row,
-          .end_row   = src.start_row,
-          .start_col = dest.start_col,
-          .end_col   = dest.end_col,
-        };
-        (*screen->callbacks->prescroll)(rect, screen->cbdata);
-      }
-      else if(dest.start_row > src.start_row) {
-        VTermRect rect = {
-          .start_row = src.end_row,
-          .end_row   = dest.end_row,
-          .start_col = dest.start_col,
-          .end_col   = dest.end_col,
-        };
-        (*screen->callbacks->prescroll)(rect, screen->cbdata);
-      }
-
-      if(dest.start_col < src.start_col) {
-        VTermRect rect = {
-          .start_row = dest.start_row,
-          .end_row   = dest.end_row,
-          .start_col = dest.start_col,
-          .end_col   = src.start_col,
-        };
-        (*screen->callbacks->prescroll)(rect, screen->cbdata);
-      }
-      else if(dest.start_col > src.start_col) {
-        VTermRect rect = {
-          .start_row = dest.start_row,
-          .end_row   = dest.end_row,
-          .start_col = src.end_col,
-          .end_col   = dest.end_col,
-        };
-        (*screen->callbacks->prescroll)(rect, screen->cbdata);
-      }
-    }
 
     if((*screen->callbacks->moverect)(dest, src, screen->cbdata))
       return 1;
