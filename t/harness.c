@@ -339,8 +339,22 @@ static int screen_damage(VTermRect rect, void *user)
   return 1;
 }
 
+static int want_screen_prescroll = 0;
+static int screen_prescroll(VTermRect rect, void *user)
+{
+  if(!want_screen_prescroll)
+    return 1;
+
+  printf("prescroll %d..%d,%d..%d\n",
+      rect.start_row, rect.end_row, rect.start_col, rect.end_col);
+
+  return 1;
+}
+
+
 VTermScreenCallbacks screen_cbs = {
   .damage       = screen_damage,
+  .prescroll    = screen_prescroll,
   .moverect     = moverect,
   .movecursor   = movecursor,
   .settermprop  = settermprop,
@@ -432,6 +446,9 @@ int main(int argc, char **argv)
           break;
         case 'd':
           want_screen_damage = sense;
+          break;
+        case 's':
+          want_screen_prescroll = sense;
           break;
         case 'm':
           want_moverect = sense;
