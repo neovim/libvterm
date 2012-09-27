@@ -56,7 +56,7 @@ src/%.lo: src/%.c $(HFILES_INT)
 
 src/encoding/%.inc: src/encoding/%.tbl
 	@echo TBL $<
-	@perl -C tbl2inc_c.pl $< >$@
+	@perl -CSD tbl2inc_c.pl $< >$@
 
 src/encoding.lo: $(INCFILES)
 
