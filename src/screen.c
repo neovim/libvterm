@@ -620,11 +620,11 @@ size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const V
 }
 
 /* Copy internal to external representation of a screen cell */
-void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell)
+int vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell)
 {
   ScreenCell *intcell = getcell(screen, pos.row, pos.col);
   if(!intcell)
-    return;
+    return 0;
 
   for(int i = 0; ; i++) {
     cell->chars[i] = intcell->chars[i];
@@ -648,6 +648,8 @@ void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *c
     cell->width = 2;
   else
     cell->width = 1;
+
+  return 1;
 }
 
 int vterm_screen_is_eol(VTermScreen *screen, VTermPos pos)
