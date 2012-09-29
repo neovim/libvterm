@@ -9,7 +9,6 @@ ifneq ($(VERBOSE),1)
 endif
 
 CFLAGS  +=-Wall -Iinclude -std=c99
-LDFLAGS +=-lutil
 
 ifeq ($(DEBUG),1)
   CFLAGS +=-ggdb -DDEBUG
