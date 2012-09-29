@@ -213,7 +213,7 @@ typedef struct {
   VTermColor fg, bg;
 } VTermScreenCell;
 
-void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
+int vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
 
 int vterm_screen_is_eol(VTermScreen *screen, VTermPos pos);
 
