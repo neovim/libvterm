@@ -715,7 +715,8 @@ int main(int argc, char **argv)
           goto abort_line;
         }
         VTermScreenCell cell;
-        vterm_screen_get_cell(screen, pos, &cell);
+        if(!vterm_screen_get_cell(screen, pos, &cell))
+          goto abort_line;
         printf("{");
         for(int i = 0; cell.chars[i] && i < VTERM_MAX_CHARS_PER_CELL; i++) {
           printf("%s0x%x", i ? "," : "", cell.chars[i]);
