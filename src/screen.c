@@ -60,7 +60,10 @@ struct VTermScreen
 
 static inline ScreenCell *getcell(VTermScreen *screen, int row, int col)
 {
-  /* TODO: Bounds checking */
+  if(row < 0 || row >= screen->rows)
+    return NULL;
+  if(col < 0 || col >= screen->cols)
+    return NULL;
   return screen->buffer + (screen->cols * row) + col;
 }
 
@@ -160,8 +163,11 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
 {
   VTermScreen *screen = user;
   ScreenCell *cell = getcell(screen, pos.row, pos.col);
-  int i;
 
+  if(!cell)
+    return 0;
+
+  int i;
   for(i = 0; i < VTERM_MAX_CHARS_PER_CELL && chars[i]; i++) {
     cell->chars[i] = chars[i];
     cell->pen = screen->pen;
@@ -617,6 +623,8 @@ size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const V
 void vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell)
 {
   ScreenCell *intcell = getcell(screen, pos.row, pos.col);
+  if(!intcell)
+    return;
 
   for(int i = 0; ; i++) {
     cell->chars[i] = intcell->chars[i];
