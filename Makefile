@@ -90,7 +90,7 @@ install-inc:
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
 	sed "s,@PREFIX@,$(PREFIX)," <vterm.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/vterm.pc
 
-# rm the old binary first in case it's still in use
 install-lib: $(LIBRARY)
 	install -d $(DESTDIR)$(LIBDIR)
-	$(LIBTOOL) --mode=install cp --remove-destination $(LIBRARY) $(DESTDIR)$(LIBDIR)/libvterm.lao
+	$(LIBTOOL) --mode=install install $(LIBRARY) $(DESTDIR)$(LIBDIR)/$(LIBRARY)
+	$(LIBTOOL) --mode=finish $(DESTDIR)$(LIBDIR)
