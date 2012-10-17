@@ -313,74 +313,75 @@ static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
   vterm_scroll_rect(rect, downward, rightward,
       moverect_internal, erase_internal, screen);
 
-  if(screen->damage_merge == VTERM_DAMAGE_SCROLL) {
-    if(screen->damaged.start_row != -1 &&
-       !rect_intersects(&rect, &screen->damaged)) {
-      vterm_screen_flush_damage(screen);
-    }
+  if(screen->damage_merge != VTERM_DAMAGE_SCROLL) {
+    vterm_screen_flush_damage(screen);
 
-    if(screen->pending_scrollrect.start_row == -1) {
-      screen->pending_scrollrect = rect;
-      screen->pending_scroll_downward  = downward;
-      screen->pending_scroll_rightward = rightward;
-    }
-    else if(rect_equal(&screen->pending_scrollrect, &rect) &&
-       ((screen->pending_scroll_downward  == 0 && downward  == 0) ||
-        (screen->pending_scroll_rightward == 0 && rightward == 0))) {
-      screen->pending_scroll_downward  += downward;
-      screen->pending_scroll_rightward += rightward;
-    }
-    else {
-      vterm_screen_flush_damage(screen);
-
-      screen->pending_scrollrect = rect;
-      screen->pending_scroll_downward  = downward;
-      screen->pending_scroll_rightward = rightward;
-    }
-
-    if(screen->damaged.start_row != -1) {
-      if(rect_contains(&rect, &screen->damaged)) {
-        vterm_rect_move(&screen->damaged, -downward, -rightward);
-        rect_clip(&screen->damaged, &rect);
-      }
-      /* There are a number of possible cases here, but lets restrict this to
-       * only the common case where we might actually gain some performance by
-       * optimising it. Namely, a vertical scroll that neatly cuts the damage
-       * region in half.
-       */
-      else if(rect.start_col <= screen->damaged.start_col &&
-              rect.end_col   >= screen->damaged.end_col &&
-              rightward == 0) {
-        if(screen->damaged.start_row >= rect.start_row &&
-           screen->damaged.start_row  < rect.end_row) {
-          screen->damaged.start_row -= downward;
-          if(screen->damaged.start_row < rect.start_row)
-            screen->damaged.start_row = rect.start_row;
-          if(screen->damaged.start_row > rect.end_row)
-            screen->damaged.start_row = rect.end_row;
-        }
-        if(screen->damaged.end_row >= rect.start_row &&
-           screen->damaged.end_row  < rect.end_row) {
-          screen->damaged.end_row -= downward;
-          if(screen->damaged.end_row < rect.start_row)
-            screen->damaged.end_row = rect.start_row;
-          if(screen->damaged.end_row > rect.end_row)
-            screen->damaged.end_row = rect.end_row;
-        }
-      }
-      else {
-        fprintf(stderr, "TODO: Just flush and redo damaged=" STRFrect " rect=" STRFrect "\n",
-            ARGSrect(screen->damaged), ARGSrect(rect));
-      }
-    }
+    vterm_scroll_rect(rect, downward, rightward,
+        moverect_user, erase_user, screen);
 
     return 1;
   }
 
-  vterm_screen_flush_damage(screen);
+  if(screen->damaged.start_row != -1 &&
+     !rect_intersects(&rect, &screen->damaged)) {
+    vterm_screen_flush_damage(screen);
+  }
 
-  vterm_scroll_rect(rect, downward, rightward,
-      moverect_user, erase_user, screen);
+  if(screen->pending_scrollrect.start_row == -1) {
+    screen->pending_scrollrect = rect;
+    screen->pending_scroll_downward  = downward;
+    screen->pending_scroll_rightward = rightward;
+  }
+  else if(rect_equal(&screen->pending_scrollrect, &rect) &&
+     ((screen->pending_scroll_downward  == 0 && downward  == 0) ||
+      (screen->pending_scroll_rightward == 0 && rightward == 0))) {
+    screen->pending_scroll_downward  += downward;
+    screen->pending_scroll_rightward += rightward;
+  }
+  else {
+    vterm_screen_flush_damage(screen);
+
+    screen->pending_scrollrect = rect;
+    screen->pending_scroll_downward  = downward;
+    screen->pending_scroll_rightward = rightward;
+  }
+
+  if(screen->damaged.start_row == -1)
+    return 1;
+
+  if(rect_contains(&rect, &screen->damaged)) {
+    vterm_rect_move(&screen->damaged, -downward, -rightward);
+    rect_clip(&screen->damaged, &rect);
+  }
+  /* There are a number of possible cases here, but lets restrict this to only
+   * the common case where we might actually gain some performance by
+   * optimising it. Namely, a vertical scroll that neatly cuts the damage
+   * region in half.
+   */
+  else if(rect.start_col <= screen->damaged.start_col &&
+          rect.end_col   >= screen->damaged.end_col &&
+          rightward == 0) {
+    if(screen->damaged.start_row >= rect.start_row &&
+       screen->damaged.start_row  < rect.end_row) {
+      screen->damaged.start_row -= downward;
+      if(screen->damaged.start_row < rect.start_row)
+        screen->damaged.start_row = rect.start_row;
+      if(screen->damaged.start_row > rect.end_row)
+        screen->damaged.start_row = rect.end_row;
+    }
+    if(screen->damaged.end_row >= rect.start_row &&
+       screen->damaged.end_row  < rect.end_row) {
+      screen->damaged.end_row -= downward;
+      if(screen->damaged.end_row < rect.start_row)
+        screen->damaged.end_row = rect.start_row;
+      if(screen->damaged.end_row > rect.end_row)
+        screen->damaged.end_row = rect.end_row;
+    }
+  }
+  else {
+    fprintf(stderr, "TODO: Just flush and redo damaged=" STRFrect " rect=" STRFrect "\n",
+        ARGSrect(screen->damaged), ARGSrect(rect));
+  }
 
   return 1;
 }
