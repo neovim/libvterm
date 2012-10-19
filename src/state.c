@@ -450,42 +450,14 @@ static void mousefunc(int col, int row, int button, int pressed, int modifiers, 
 
 static int settermprop_bool(VTermState *state, VTermProp prop, int v)
 {
-  VTermValue val;
-  val.boolean = v;
-
-#ifdef DEBUG
-  if(VTERM_VALUETYPE_BOOL != vterm_get_prop_type(prop)) {
-    fprintf(stderr, "Cannot set prop %d as it has type %d, not type BOOL\n",
-        prop, vterm_get_prop_type(prop));
-    return;
-  }
-#endif
-
-  if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
-      return 1;
-
-  return 0;
+  VTermValue val = { .boolean = v };
+  return vterm_state_set_termprop(state, prop, &val);
 }
 
 static int settermprop_int(VTermState *state, VTermProp prop, int v)
 {
-  VTermValue val;
-  val.number = v;
-
-#ifdef DEBUG
-  if(VTERM_VALUETYPE_INT != vterm_get_prop_type(prop)) {
-    fprintf(stderr, "Cannot set prop %d as it has type %d, not type int\n",
-        prop, vterm_get_prop_type(prop));
-    return;
-  }
-#endif
-
-  if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
-      return 1;
-
-  return 0;
+  VTermValue val = { .number = v };
+  return vterm_state_set_termprop(state, prop, &val);
 }
 
 static int settermprop_string(VTermState *state, VTermProp prop, const char *str, size_t len)
@@ -494,22 +466,8 @@ static int settermprop_string(VTermState *state, VTermProp prop, const char *str
   strncpy(strvalue, str, len);
   strvalue[len] = 0;
 
-  VTermValue val;
-  val.string = strvalue;
-
-#ifdef DEBUG
-  if(VTERM_VALUETYPE_STRING != vterm_get_prop_type(prop)) {
-    fprintf(stderr, "Cannot set prop %d as it has type %d, not type STRING\n",
-        prop, vterm_get_prop_type(prop));
-    return;
-  }
-#endif
-
-  if(state->callbacks && state->callbacks->settermprop)
-    if((*state->callbacks->settermprop)(prop, &val, state->cbdata))
-      return 1;
-
-  return 0;
+  VTermValue val = { .string = strvalue };
+  return vterm_state_set_termprop(state, prop, &val);
 }
 
 static void savecursor(VTermState *state, int save)
@@ -526,36 +484,14 @@ static void savecursor(VTermState *state, int save)
     VTermPos oldpos = state->pos;
 
     state->pos = state->saved.pos;
-    state->mode.cursor_visible = state->saved.mode.cursor_visible;
-    state->mode.cursor_blink   = state->saved.mode.cursor_blink;
-    state->mode.cursor_shape   = state->saved.mode.cursor_shape;
 
-    settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
-    settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->mode.cursor_blink);
-    settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->mode.cursor_shape);
+    settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->saved.mode.cursor_visible);
+    settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->saved.mode.cursor_blink);
+    settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->saved.mode.cursor_shape);
 
     vterm_state_savepen(state, 0);
 
     updatecursor(state, &oldpos, 1);
-  }
-}
-
-static void altscreen(VTermState *state, int alt)
-{
-  /* Only store that we're on the alternate screen if the usercode said it
-   * switched */
-  if(!settermprop_bool(state, VTERM_PROP_ALTSCREEN, alt))
-    return;
-
-  state->mode.alt_screen = alt;
-  if(alt) {
-    VTermRect rect = {
-      .start_row = 0,
-      .start_col = 0,
-      .end_row = state->rows,
-      .end_col = state->cols,
-    };
-    erase(state, rect);
   }
 }
 
@@ -686,12 +622,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 12:
-    state->mode.cursor_blink = val;
     settermprop_bool(state, VTERM_PROP_CURSORBLINK, val);
     break;
 
   case 25:
-    state->mode.cursor_visible = val;
     settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, val);
     break;
 
@@ -730,7 +664,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 1047:
-    altscreen(state, val);
+    settermprop_bool(state, VTERM_PROP_ALTSCREEN, val);
     break;
 
   case 1048:
@@ -738,7 +672,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 1049:
-    altscreen(state, val);
+    settermprop_bool(state, VTERM_PROP_ALTSCREEN, val);
     savecursor(state, val);
     break;
 
@@ -1127,25 +1061,23 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     switch(val) {
     case 0: case 1:
-      state->mode.cursor_blink = 1;
-      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
       break;
     case 2:
-      state->mode.cursor_blink = 0;
-      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_BLOCK;
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BLOCK);
       break;
     case 3:
-      state->mode.cursor_blink = 1;
-      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_UNDERLINE;
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
       break;
     case 4:
-      state->mode.cursor_blink = 0;
-      state->mode.cursor_shape = VTERM_PROP_CURSORSHAPE_UNDERLINE;
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
       break;
     }
 
-    settermprop_bool(state, VTERM_PROP_CURSORBLINK, state->mode.cursor_blink);
-    settermprop_int (state, VTERM_PROP_CURSORSHAPE, state->mode.cursor_shape);
     break;
 
   case 0x72: // DECSTBM - DEC custom
@@ -1341,9 +1273,6 @@ void vterm_state_reset(VTermState *state, int hard)
   state->mode.autowrap       = 1;
   state->mode.insert         = 0;
   state->mode.newline        = 0;
-  state->mode.cursor_visible = 1;
-  state->mode.cursor_blink   = 1;
-  state->mode.cursor_shape   = VTERM_PROP_CURSORSHAPE_BLOCK;
   state->mode.alt_screen     = 0;
   state->mode.origin         = 0;
 
@@ -1372,9 +1301,9 @@ void vterm_state_reset(VTermState *state, int hard)
   state->gr_set = 0;
 
   // Initialise the props
-  settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, state->mode.cursor_visible);
-  settermprop_bool(state, VTERM_PROP_CURSORBLINK,   state->mode.cursor_blink);
-  settermprop_int (state, VTERM_PROP_CURSORSHAPE,   state->mode.cursor_shape);
+  settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, 1);
+  settermprop_bool(state, VTERM_PROP_CURSORBLINK,   1);
+  settermprop_int (state, VTERM_PROP_CURSORSHAPE,   VTERM_PROP_CURSORSHAPE_BLOCK);
 
   if(hard) {
     state->pos.row = 0;
@@ -1404,4 +1333,44 @@ void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *cal
     state->callbacks = NULL;
     state->cbdata = NULL;
   }
+}
+
+int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
+{
+  /* Only store the new value of the property if usercode said it was happy.
+   * This is especially important for altscreen switching */
+  if(state->callbacks && state->callbacks->settermprop)
+    if(!(*state->callbacks->settermprop)(prop, val, state->cbdata))
+      return 0;
+
+  switch(prop) {
+  case VTERM_PROP_REVERSE:
+  case VTERM_PROP_TITLE:
+  case VTERM_PROP_ICONNAME:
+    // we don't store these, just transparently pass through
+    return 1;
+  case VTERM_PROP_CURSORVISIBLE:
+    state->mode.cursor_visible = val->boolean;
+    return 1;
+  case VTERM_PROP_CURSORBLINK:
+    state->mode.cursor_blink = val->boolean;
+    return 1;
+  case VTERM_PROP_CURSORSHAPE:
+    state->mode.cursor_shape = val->number;
+    return 1;
+  case VTERM_PROP_ALTSCREEN:
+    state->mode.alt_screen = val->boolean;
+    if(state->mode.alt_screen) {
+      VTermRect rect = {
+        .start_row = 0,
+        .start_col = 0,
+        .end_row = state->rows,
+        .end_col = state->cols,
+      };
+      erase(state, rect);
+    }
+    return 1;
+  }
+
+  return 0;
 }

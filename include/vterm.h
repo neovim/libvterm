@@ -174,6 +174,7 @@ void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
 void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg);
 void vterm_state_set_bold_highbright(VTermState *state, int bold_is_highbright);
 int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val);
+int  vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val);
 
 VTermValueType vterm_get_attr_type(VTermAttr attr);
 VTermValueType vterm_get_prop_type(VTermProp prop);
