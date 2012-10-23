@@ -66,7 +66,7 @@ typedef struct {
   int csinum;
 } keycodes_s;
 
-keycodes_s keycodes[] = {
+static keycodes_s keycodes[] = {
   { KEYCODE_NONE }, // NONE
 
   { KEYCODE_ENTER,   '\r'   }, // ENTER
