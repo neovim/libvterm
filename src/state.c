@@ -722,6 +722,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   int row, col;
   VTermRect rect;
 
+#define LBOUND(v,min) if((v) < (min)) (v) = (min)
+#define UBOUND(v,max) if((v) > (max)) (v) = (max)
+
 #define LEADER(l,b) ((l << 8) | b)
 #define INTERMED(i,b) ((i << 16) | b)
 
@@ -921,6 +924,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
     rect.end_col   = state->pos.col + count;
+    UBOUND(rect.end_col, state->cols);
 
     erase(state, rect);
     break;
@@ -1098,9 +1102,6 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   default:
     return 0;
   }
-
-#define LBOUND(v,min) if((v) < (min)) (v) = (min)
-#define UBOUND(v,max) if((v) > (max)) (v) = (max)
 
   LBOUND(state->pos.col, 0);
   UBOUND(state->pos.col, state->cols-1);
