@@ -245,15 +245,15 @@ static int setmousefunc(VTermMouseFunc func, void *data, void *user)
 /* These callbacks are for State */
 
 static int want_state_putglyph = 0;
-static int state_putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
+static int state_putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
 {
   if(!want_state_putglyph)
     return 1;
 
   printf("putglyph ");
-  for(int i = 0; chars[i]; i++)
-    printf(i ? ",%x" : "%x", chars[i]);
-  printf(" %d %d,%d\n", width, pos.row, pos.col);
+  for(int i = 0; info->chars[i]; i++)
+    printf(i ? ",%x" : "%x", info->chars[i]);
+  printf(" %d %d,%d\n", info->width, pos.row, pos.col);
 
   return 1;
 }
