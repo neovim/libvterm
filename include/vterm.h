@@ -126,7 +126,12 @@ enum {
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, int modifiers, void *data);
 
 typedef struct {
-  int (*putglyph)(const uint32_t chars[], int width, VTermPos pos, void *user);
+  const uint32_t *chars;
+  int             width;
+} VTermGlyphInfo;
+
+typedef struct {
+  int (*putglyph)(VTermGlyphInfo *info, VTermPos pos, void *user);
   int (*movecursor)(VTermPos pos, VTermPos oldpos, int visible, void *user);
   int (*scrollrect)(VTermRect rect, int downward, int rightward, void *user);
   int (*moverect)(VTermRect dest, VTermRect src, void *user);

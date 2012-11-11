@@ -18,8 +18,13 @@
 
 static void putglyph(VTermState *state, const uint32_t chars[], int width, VTermPos pos)
 {
+  VTermGlyphInfo info = {
+    .chars = chars,
+    .width = width,
+  };
+
   if(state->callbacks && state->callbacks->putglyph)
-    if((*state->callbacks->putglyph)(chars, width, pos, state->cbdata))
+    if((*state->callbacks->putglyph)(&info, pos, state->cbdata))
       return;
 
   fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
