@@ -44,6 +44,9 @@ PUSH "\e[X"
 PUSH "\e[3X"
   erase 0..1,1..4
   ?cursor = 0,1
+# ECH more columns than there are should be bounded
+PUSH "\e[100X"
+  erase 0..1,1..80
 
 !IL
 RESET
