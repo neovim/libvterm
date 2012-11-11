@@ -159,7 +159,7 @@ static void damagescreen(VTermScreen *screen)
   damagerect(screen, rect);
 }
 
-static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
+static int putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
 {
   VTermScreen *screen = user;
   ScreenCell *cell = getcell(screen, pos.row, pos.col);
@@ -168,21 +168,21 @@ static int putglyph(const uint32_t chars[], int width, VTermPos pos, void *user)
     return 0;
 
   int i;
-  for(i = 0; i < VTERM_MAX_CHARS_PER_CELL && chars[i]; i++) {
-    cell->chars[i] = chars[i];
+  for(i = 0; i < VTERM_MAX_CHARS_PER_CELL && info->chars[i]; i++) {
+    cell->chars[i] = info->chars[i];
     cell->pen = screen->pen;
   }
   if(i < VTERM_MAX_CHARS_PER_CELL)
     cell->chars[i] = 0;
 
-  for(int col = 1; col < width; col++)
+  for(int col = 1; col < info->width; col++)
     getcell(screen, pos.row, pos.col + col)->chars[0] = (uint32_t)-1;
 
   VTermRect rect = {
     .start_row = pos.row,
     .end_row   = pos.row+1,
     .start_col = pos.col,
-    .end_col   = pos.col+width,
+    .end_col   = pos.col+info->width,
   };
 
   damagerect(screen, rect);
