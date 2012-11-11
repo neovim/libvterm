@@ -3,14 +3,19 @@
 #include <string.h>
 #define streq(a,b) (strcmp(a,b)==0)
 
-static int getvalue(int *argip, int argc, char *argv[], const char *options[])
+static char *getvalue(int *argip, int argc, char *argv[])
 {
   if(*argip >= argc) {
     fprintf(stderr, "Expected an option value\n");
     exit(1);
   }
 
-  const char *arg = argv[(*argip)++];
+  return argv[(*argip)++];
+}
+
+static int getchoice(int *argip, int argc, char *argv[], const char *options[])
+{
+  const char *arg = getvalue(argip, argc, argv);
 
   int value = -1;
   while(options[++value])
@@ -23,7 +28,7 @@ static int getvalue(int *argip, int argc, char *argv[], const char *options[])
 
 static int getbool(int *argip, int argc, char *argv[])
 {
-  return getvalue(argip, argc, argv, (const char *[]){"off", "on", NULL});
+  return getchoice(argip, argc, argv, (const char *[]){"off", "on", NULL});
 }
 
 static char *helptext[] = {
@@ -34,6 +39,9 @@ static char *helptext[] = {
   "cursor [off|on]",
   "mouse [off|click|clickdrag|motion]",
   "altscreen [off|on]",
+  "icontitle [STR]",
+  "icon [STR]",
+  "title [STR]",
   NULL
 };
 
@@ -63,7 +71,7 @@ int main(int argc, char *argv[])
       printf("\ec");
     }
     else if(streq(arg, "keypad")) {
-      switch(getvalue(&argi, argc, argv, (const char *[]){"app", "num", NULL})) {
+      switch(getchoice(&argi, argc, argv, (const char *[]){"app", "num", NULL})) {
       case 0:
         printf("\e="); break;
       case 1:
@@ -80,7 +88,7 @@ int main(int argc, char *argv[])
       printf("\e[?25%c", getbool(&argi, argc, argv) ? 'h' : 'l');
     }
     else if(streq(arg, "mouse")) {
-      switch(getvalue(&argi, argc, argv, (const char *[]){"off", "click", "clickdrag", "motion", NULL})) {
+      switch(getchoice(&argi, argc, argv, (const char *[]){"off", "click", "clickdrag", "motion", NULL})) {
       case 0:
         printf("\e[?1000l"); break;
       case 1:
@@ -93,6 +101,15 @@ int main(int argc, char *argv[])
     }
     else if(streq(arg, "altscreen")) {
       printf("\e[?1049%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+    }
+    else if(streq(arg, "icontitle")) {
+      printf("\e]0;%s\a", getvalue(&argi, argc, argv));
+    }
+    else if(streq(arg, "icon")) {
+      printf("\e]1;%s\a", getvalue(&argi, argc, argv));
+    }
+    else if(streq(arg, "title")) {
+      printf("\e]2;%s\a", getvalue(&argi, argc, argv));
     }
     else {
       fprintf(stderr, "Unrecognised command %s\n", arg);
