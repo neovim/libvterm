@@ -84,6 +84,8 @@ struct VTermState
   int fg_ansi;
   int bold_is_highbright;
 
+  int protected_cell;
+
   /* Saved state under DEC mode 1048/1049 */
   struct {
     VTermPos pos;
