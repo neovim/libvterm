@@ -105,7 +105,7 @@ void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks
 
 void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
 {
-  vt->is_utf8 = is_utf8;
+  vt->mode.utf8 = is_utf8;
 }
 
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)

@@ -107,7 +107,9 @@ struct VTerm
   int rows;
   int cols;
 
-  int is_utf8;
+  struct {
+    int utf8:1;
+  } mode;
 
   enum VTermParserState {
     NORMAL,
