@@ -135,6 +135,22 @@ void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
   va_end(args);
 }
 
+void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, const char *fmt, ...)
+{
+  if(ctrl >= 0x80 && !vt->mode.ctrl8bit)
+    vterm_push_output_sprintf(vt, "\e%c", ctrl - 0x40);
+  else
+    vterm_push_output_sprintf(vt, "%c", ctrl);
+
+  va_list args;
+  va_start(args, fmt);
+  vterm_push_output_vsprintf(vt, fmt, args);
+  va_end(args);
+
+  if(ctrl == C1_DCS)
+    vterm_push_output_sprintf_ctrl(vt, C1_ST, "");
+}
+
 size_t vterm_output_bufferlen(VTerm *vt)
 {
   return vterm_output_get_buffer_current(vt);

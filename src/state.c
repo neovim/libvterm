@@ -379,7 +379,7 @@ static void output_mouse(VTermState *state, int code, int pressed, int modifiers
     if(!pressed)
       code = 3;
 
-    vterm_push_output_sprintf(state->vt, "\e[M%c%c%c",
+    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "M%c%c%c",
         (code | modifiers) + 0x20, col + 0x21, row + 0x21);
     break;
 
@@ -394,12 +394,12 @@ static void output_mouse(VTermState *state, int code, int pressed, int modifiers
       len += fill_utf8(col + 0x21, utf8 + len);
       len += fill_utf8(row + 0x21, utf8 + len);
 
-      vterm_push_output_sprintf(state->vt, "\e[M%s", utf8);
+      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "M%s", utf8);
     }
     break;
 
   case MOUSE_SGR:
-    vterm_push_output_sprintf(state->vt, "\e[<%d;%d;%d%c",
+    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "<%d;%d;%d%c",
         code | modifiers, col + 1, row + 1, pressed ? 'M' : 'm');
     break;
 
@@ -407,7 +407,7 @@ static void output_mouse(VTermState *state, int code, int pressed, int modifiers
     if(!pressed)
       code = 3;
 
-    vterm_push_output_sprintf(state->vt, "\e[%d;%d;%dM",
+    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "%d;%d;%dM",
         code | modifiers, col + 1, row + 1);
     break;
   }
@@ -509,6 +509,24 @@ static int on_escape(const char *bytes, size_t len, void *user)
    * byte terminates it
    */
   switch(bytes[0]) {
+  case ' ':
+    if(len != 2)
+      return 0;
+
+    switch(bytes[1]) {
+      case 'F': // S7C1T
+        state->vt->mode.ctrl8bit = 0;
+        break;
+
+      case 'G': // S8C1T
+        state->vt->mode.ctrl8bit = 1;
+        break;
+
+      default:
+        return 0;
+    }
+    return 2;
+
   case '#':
     if(len != 2)
       return 0;
@@ -962,11 +980,11 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     val = CSI_ARG_OR(args[0], 0);
     if(val == 0)
       // DEC VT100 response
-      vterm_push_output_sprintf(state->vt, "\e[?1;2c");
+      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "?1;2c");
     break;
 
   case LEADER('>', 0x63): // DEC secondary Device Attributes
-    vterm_push_output_sprintf(state->vt, "\e[>%d;%d;%dc", 0, 100, 0);
+    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, ">%d;%d;%dc", 0, 100, 0);
     break;
 
   case 0x64: // VPA - ECMA-48 8.3.158
@@ -1060,10 +1078,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       // ignore - these are replies
       break;
     case 5:
-      vterm_push_output_sprintf(state->vt, "\e[0n");
+      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "0n");
       break;
     case 6:
-      vterm_push_output_sprintf(state->vt, "\e[%d;%dR", state->pos.row + 1, state->pos.col + 1);
+      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "%d;%dR", state->pos.row + 1, state->pos.col + 1);
       break;
     }
     break;
@@ -1175,7 +1193,7 @@ static void request_status_string(VTermState *state, const char *command, size_t
   if(cmdlen == 1)
     switch(command[0]) {
       case 'r': // Query DECSTBM
-        vterm_push_output_sprintf(state->vt, "\eP1$r%d;%dr\e\\", state->scrollregion_start+1, SCROLLREGION_END(state));
+        vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%dr", state->scrollregion_start+1, SCROLLREGION_END(state));
         return;
     }
 
@@ -1188,11 +1206,11 @@ static void request_status_string(VTermState *state, const char *command, size_t
       }
       if(state->mode.cursor_blink)
         reply--;
-      vterm_push_output_sprintf(state->vt, "\eP1$r%d q\e\\", reply);
+      vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d q", reply);
       return;
     }
 
-  vterm_push_output_sprintf(state->vt, "\eP0$r%.s\e\\", (int)cmdlen, command);
+  vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "0$r%.s", (int)cmdlen, command);
 }
 
 static int on_dcs(const char *command, size_t cmdlen, void *user)
@@ -1302,6 +1320,8 @@ void vterm_state_reset(VTermState *state, int hard)
   state->mode.newline        = 0;
   state->mode.alt_screen     = 0;
   state->mode.origin         = 0;
+
+  state->vt->mode.ctrl8bit   = 0;
 
   for(int col = 0; col < state->cols; col++)
     if(col % 8 == 0)
