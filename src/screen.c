@@ -22,6 +22,9 @@ typedef struct
   unsigned int reverse   : 1;
   unsigned int strike    : 1;
   unsigned int font      : 4; /* 0 to 9 */
+
+  /* Extra state storage that isn't strictly pen-related */
+  unsigned int protected_cell : 1;
 } ScreenPen;
 
 /* Internal representation of a screen cell */
@@ -185,6 +188,8 @@ static int putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
     .end_col   = pos.col+info->width,
   };
 
+  cell->pen.protected_cell = info->protected_cell;
+
   damagerect(screen, rect);
 
   return 1;
@@ -284,6 +289,10 @@ static int erase_internal(VTermRect rect, int selective, void *user)
   for(int row = rect.start_row; row < rect.end_row; row++)
     for(int col = rect.start_col; col < rect.end_col; col++) {
       ScreenCell *cell = getcell(screen, row, col);
+
+      if(selective && cell->pen.protected_cell)
+        continue;
+
       cell->chars[0] = 0;
       cell->pen = screen->pen;
     }
