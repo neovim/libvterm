@@ -277,7 +277,7 @@ static int moverect_user(VTermRect dest, VTermRect src, void *user)
   return 1;
 }
 
-static int erase_internal(VTermRect rect, void *user)
+static int erase_internal(VTermRect rect, int selective, void *user)
 {
   VTermScreen *screen = user;
 
@@ -291,7 +291,7 @@ static int erase_internal(VTermRect rect, void *user)
   return 1;
 }
 
-static int erase_user(VTermRect rect, void *user)
+static int erase_user(VTermRect rect, int selective, void *user)
 {
   VTermScreen *screen = user;
 
@@ -300,10 +300,10 @@ static int erase_user(VTermRect rect, void *user)
   return 1;
 }
 
-static int erase(VTermRect rect, void *user)
+static int erase(VTermRect rect, int selective, void *user)
 {
-  erase_internal(rect, user);
-  return erase_user(rect, user);
+  erase_internal(rect, selective, user);
+  return erase_user(rect, 0, user);
 }
 
 static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
