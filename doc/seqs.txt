@@ -67,7 +67,9 @@ between states.
 12   CSI H            = CUP
      CSI I            = CHT
 12   CSI J            = ED
+ 2   CSI ? J          = DECSED, selective erase in display
 12   CSI K            = EL
+ 2   CSI ? K          = DECSEL, selective erase in line
  2   CSI L            = IL
  2   CSI M            = DL
  2   CSI P            = DCH
@@ -93,6 +95,7 @@ between states.
 12   CSI n            = DSR, Device Status Report
  2   CSI ! p          = DECSTR, soft terminal reset
      CSI SP q         = DECSCUSR
+ 2   CSI " q          = DECSCA, select character attributes
 12   CSI r            = DECSTBM
      CSI s            = ANSI SAVE
      CSI u            = ANSI RESTORE
@@ -170,12 +173,9 @@ The following sequences are not recognised by libvterm.
 12   ESC Z            = DECID, identify terminal
  2   DCS (            = DECDLD, down-line-loadable character set
  2   DCS |            = DECUDK, user-defined key
- 2   CSI ? J          = DECSED, selective erase in display
- 2   CSI ? K          = DECSEL, selective erase in line
  2   CSI i            = DEC printer control
  2   CSI " p          = DECSCL, set compatibility level
 1    CSI q            = DECLL, load LEDs
- 2   CSI " q          = DECSCA, select character attributes
 1    CSI x            = DECREQTPARM, request terminal parameters
 12   CSI y            = DECTST, invoke confidence test
  2   SM 2             = KAM, keyboard action
