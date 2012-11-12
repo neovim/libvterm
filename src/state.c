@@ -158,7 +158,7 @@ static int on_text(const char bytes[], size_t len, void *user)
 
   VTermEncodingInstance *encoding =
     !(bytes[eaten] & 0x80) ? &state->encoding[state->gl_set] :
-    state->vt->is_utf8     ? &state->encoding_utf8 :
+    state->vt->mode.utf8   ? &state->encoding_utf8 :
                              &state->encoding[state->gr_set];
 
   (*encoding->enc->decode)(encoding->enc, encoding->data,
@@ -1314,7 +1314,7 @@ void vterm_state_reset(VTermState *state, int hard)
 
   vterm_state_resetpen(state);
 
-  VTermEncoding *default_enc = state->vt->is_utf8 ?
+  VTermEncoding *default_enc = state->vt->mode.utf8 ?
       vterm_lookup_encoding(ENC_UTF8,      'u') :
       vterm_lookup_encoding(ENC_SINGLE_94, 'B');
 
