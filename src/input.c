@@ -42,7 +42,7 @@ void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
 
   /* ALT we can just prefix with ESC; anything else requires CSI u */
   if(needs_CSIu && (mod & ~VTERM_MOD_ALT)) {
-    vterm_push_output_sprintf(vt, "\e[%d;%du", c, mod+1);
+    vterm_push_output_sprintf_ctrl(vt, C1_CSI, "%d;%du", c, mod+1);
     return;
   }
 
@@ -124,9 +124,9 @@ void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
   case KEYCODE_TAB:
     /* Shift-Tab is CSI Z but plain Tab is 0x09 */
     if(mod == VTERM_MOD_SHIFT)
-      vterm_push_output_sprintf(vt, "\e[Z");
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "Z");
     else if(mod & VTERM_MOD_SHIFT)
-      vterm_push_output_sprintf(vt, "\e[1;%dZ", mod+1);
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "1;%dZ", mod+1);
     else
       goto literal;
     break;
@@ -142,29 +142,29 @@ void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
 literal:
   case KEYCODE_LITERAL:
     if(mod & (VTERM_MOD_SHIFT|VTERM_MOD_CTRL))
-      vterm_push_output_sprintf(vt, "\e[%d;%du", k.literal, mod+1);
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "%d;%du", k.literal, mod+1);
     else
       vterm_push_output_sprintf(vt, mod & VTERM_MOD_ALT ? "\e%c" : "%c", k.literal);
     break;
 
   case KEYCODE_CSI_CURSOR:
     if(vt->state->mode.cursor && mod == 0) {
-      vterm_push_output_sprintf(vt, "\eO%c", k.literal);
+      vterm_push_output_sprintf_ctrl(vt, C1_SS3, "%c", k.literal);
       break;
     }
     /* else FALLTHROUGH */
   case KEYCODE_CSI:
     if(mod == 0)
-      vterm_push_output_sprintf(vt, "\e[%c", k.literal);
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "%c", k.literal);
     else
-      vterm_push_output_sprintf(vt, "\e[1;%d%c", mod + 1, k.literal);
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "1;%d%c", mod + 1, k.literal);
     break;
 
   case KEYCODE_CSINUM:
     if(mod == 0)
-      vterm_push_output_sprintf(vt, "\e[%d%c", k.csinum, k.literal);
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "%d%c", k.csinum, k.literal);
     else
-      vterm_push_output_sprintf(vt, "\e[%d;%d%c", k.csinum, mod + 1, k.literal);
+      vterm_push_output_sprintf_ctrl(vt, C1_CSI, "%d;%d%c", k.csinum, mod + 1, k.literal);
     break;
   }
 }
