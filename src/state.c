@@ -21,7 +21,7 @@ static void putglyph(VTermState *state, const uint32_t chars[], int width, VTerm
   VTermGlyphInfo info = {
     .chars = chars,
     .width = width,
-    .protected_cell = 0,
+    .protected_cell = state->protected_cell,
   };
 
   if(state->callbacks && state->callbacks->putglyph)
@@ -44,10 +44,10 @@ static void updatecursor(VTermState *state, VTermPos *oldpos, int cancel_phantom
       return;
 }
 
-static void erase(VTermState *state, VTermRect rect)
+static void erase(VTermState *state, VTermRect rect, int selective)
 {
   if(state->callbacks && state->callbacks->erase)
-    if((*state->callbacks->erase)(rect, 0, state->cbdata))
+    if((*state->callbacks->erase)(rect, selective, state->cbdata))
       return;
 }
 
@@ -714,6 +714,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     switch(intermed[0]) {
     case ' ':
+    case '"':
       intermed_byte = intermed[0];
       break;
     default:
@@ -727,6 +728,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   int count, val;
   int row, col;
   VTermRect rect;
+  int selective;
 
 #define LBOUND(v,min) if((v) < (min)) (v) = (min)
 #define UBOUND(v,max) if((v) > (max)) (v) = (max)
@@ -808,41 +810,45 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x4a: // ED - ECMA-48 8.3.39
+  case LEADER('?', 0x4a): // DECSED - Selective Erase in Display
+    selective = (leader_byte == '?');
     switch(CSI_ARG(args[0])) {
     case CSI_ARG_MISSING:
     case 0:
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
       rect.start_col = state->pos.col; rect.end_col = state->cols;
       if(rect.end_col > rect.start_col)
-        erase(state, rect);
+        erase(state, rect, selective);
 
       rect.start_row = state->pos.row + 1; rect.end_row = state->rows;
       rect.start_col = 0;
       if(rect.end_row > rect.start_row)
-        erase(state, rect);
+        erase(state, rect, selective);
       break;
 
     case 1:
       rect.start_row = 0; rect.end_row = state->pos.row;
       rect.start_col = 0; rect.end_col = state->cols;
       if(rect.end_col > rect.start_col)
-        erase(state, rect);
+        erase(state, rect, selective);
 
       rect.start_row = state->pos.row; rect.end_row = state->pos.row + 1;
                           rect.end_col = state->pos.col + 1;
       if(rect.end_row > rect.start_row)
-        erase(state, rect);
+        erase(state, rect, selective);
       break;
 
     case 2:
       rect.start_row = 0; rect.end_row = state->rows;
       rect.start_col = 0; rect.end_col = state->cols;
-      erase(state, rect);
+      erase(state, rect, selective);
       break;
     }
     break;
 
   case 0x4b: // EL - ECMA-48 8.3.41
+  case LEADER('?', 0x4b): // DECSEL - Selective Erase in Line
+    selective = (leader_byte == '?');
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
 
@@ -859,7 +865,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     }
 
     if(rect.end_col > rect.start_col)
-      erase(state, rect);
+      erase(state, rect, selective);
 
     break;
 
@@ -932,7 +938,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.end_col   = state->pos.col + count;
     UBOUND(rect.end_col, state->cols);
 
-    erase(state, rect);
+    erase(state, rect, 0);
     break;
 
   case 0x5a: // CBT - ECMA-48 8.3.7
@@ -1085,6 +1091,20 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     case 4:
       settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
       settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
+      break;
+    }
+
+    break;
+
+  case INTERMED('"', 0x71): // DECSCA - DEC select character protection attribute
+    val = CSI_ARG_OR(args[0], 0);
+
+    switch(val) {
+    case 0: case 2:
+      state->protected_cell = 0;
+      break;
+    case 1:
+      state->protected_cell = 1;
       break;
     }
 
@@ -1307,6 +1327,8 @@ void vterm_state_reset(VTermState *state, int hard)
   state->gl_set = 0;
   state->gr_set = 0;
 
+  state->protected_cell = 0;
+
   // Initialise the props
   settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, 1);
   settermprop_bool(state, VTERM_PROP_CURSORBLINK,   1);
@@ -1318,7 +1340,7 @@ void vterm_state_reset(VTermState *state, int hard)
     state->at_phantom = 0;
 
     VTermRect rect = { 0, state->rows, 0, state->cols };
-    erase(state, rect);
+    erase(state, rect, 0);
   }
 }
 
@@ -1374,7 +1396,7 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
         .end_row = state->rows,
         .end_col = state->cols,
       };
-      erase(state, rect);
+      erase(state, rect, 0);
     }
     return 1;
   }
