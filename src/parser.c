@@ -299,14 +299,14 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
 
     case OSC:
     case DCS:
-      if(c == 0x07 || (c == 0x9c && !vt->is_utf8)) {
+      if(c == 0x07 || (c == 0x9c && !vt->mode.utf8)) {
         do_string(vt, string_start, bytes + pos - string_start);
         ENTER_NORMAL_STATE();
       }
       break;
 
     case NORMAL:
-      if(c >= 0x80 && c < 0xa0 && !vt->is_utf8) {
+      if(c >= 0x80 && c < 0xa0 && !vt->mode.utf8) {
         switch(c) {
         case 0x90: // DCS
           ENTER_STRING_STATE(DCS);
