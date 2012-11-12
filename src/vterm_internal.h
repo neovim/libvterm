@@ -109,6 +109,7 @@ struct VTerm
 
   struct {
     int utf8:1;
+    int ctrl8bit:1;
   } mode;
 
   enum VTermParserState {
@@ -154,12 +155,22 @@ void  vterm_allocator_free(VTerm *vt, void *ptr);
 void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len);
 void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args);
 void vterm_push_output_sprintf(VTerm *vt, const char *format, ...);
+void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, const char *fmt, ...);
 
 void vterm_state_free(VTermState *state);
 
 void vterm_state_resetpen(VTermState *state);
 void vterm_state_setpen(VTermState *state, const long args[], int argcount);
 void vterm_state_savepen(VTermState *state, int save);
+
+enum {
+  C1_SS3 = 0x8f,
+  C1_DCS = 0x90,
+  C1_CSI = 0x9b,
+  C1_ST  = 0x9c,
+};
+
+void vterm_state_push_output_sprintf_CSI(VTermState *vts, const char *format, ...);
 
 void vterm_screen_free(VTermScreen *screen);
 

@@ -42,6 +42,8 @@ between states.
 12   ESC # 8          = DECALN
 12   ESC =            = DECKPAM, keypad application mode
 12   ESC >            = DECKPNM, keypad numeric mode
+ 2   ESC Sp F         = S7C1T
+ 2   ESC Sp G         = S8C1T
     (ESC P            = DCS)
     (ESC [            = CSI)
     (ESC ]            = OSC)
@@ -168,8 +170,6 @@ The following sequences are not recognised by libvterm.
 12   ESC # 4          = DECDHL, double-height line (bottom half)
 12   ESC # 5          = DECSWL, single-width line
 12   ESC # 6          = DECDWL, double-width line
- 2   ESC Sp F         = S7C1T
- 2   ESC Sp G         = S8C1T
 12   ESC Z            = DECID, identify terminal
  2   DCS (            = DECDLD, down-line-loadable character set
  2   DCS |            = DECUDK, user-defined key

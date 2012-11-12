@@ -25,3 +25,8 @@ PUSH "\eP\$qr\e\\"
 PUSH "\e[3 q"
 PUSH "\eP\$q q\e\\"
   output "\eP1\$r3 q\e\\"
+
+!S8C1T on DSR
+PUSH "\e G"
+PUSH "\e[5n"
+  output "\x{9b}0n"
