@@ -253,19 +253,20 @@ static int state_putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
   printf("putglyph ");
   for(int i = 0; info->chars[i]; i++)
     printf(i ? ",%x" : "%x", info->chars[i]);
-  printf(" %d %d,%d\n", info->width, pos.row, pos.col);
+  printf(" %d %d,%d%s\n", info->width, pos.row, pos.col, info->protected_cell ? " prot" : "");
 
   return 1;
 }
 
 static int want_state_erase = 0;
-static int state_erase(VTermRect rect, void *user)
+static int state_erase(VTermRect rect, int selective, void *user)
 {
   if(!want_state_erase)
     return 1;
 
-  printf("erase %d..%d,%d..%d\n",
-      rect.start_row, rect.end_row, rect.start_col, rect.end_col);
+  printf("erase %d..%d,%d..%d%s\n",
+      rect.start_row, rect.end_row, rect.start_col, rect.end_col,
+      selective ? " selective" : "");
 
   return 1;
 }
