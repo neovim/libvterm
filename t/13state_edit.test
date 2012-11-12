@@ -112,6 +112,22 @@ PUSH "\e[2K"
   erase 0..1,0..80
   ?cursor = 0,2
 
+!SEL
+RESET
+  erase 0..25,0..80
+  ?cursor = 0,0
+PUSH "\e[11G"
+  ?cursor = 0,10
+PUSH "\e[?0K"
+  erase 0..1,10..80 selective
+  ?cursor = 0,10
+PUSH "\e[?1K"
+  erase 0..1,0..11 selective
+  ?cursor = 0,10
+PUSH "\e[?2K"
+  erase 0..1,0..80 selective
+  ?cursor = 0,10
+
 !ED 0
 RESET
   erase 0..25,0..80
@@ -143,6 +159,23 @@ PUSH "\e[2;2H"
 PUSH "\e[2J"
   erase 0..25,0..80
   ?cursor = 1,1
+
+!SED
+RESET
+  erase 0..25,0..80
+PUSH "\e[5;5H"
+  ?cursor = 4,4
+PUSH "\e[?0J"
+  erase 4..5,4..80 selective
+  erase 5..25,0..80 selective
+  ?cursor = 4,4
+PUSH "\e[?1J"
+  erase 0..4,0..80 selective
+  erase 4..5,0..5 selective
+  ?cursor = 4,4
+PUSH "\e[?2J"
+  erase 0..25,0..80 selective
+  ?cursor = 4,4
 
 WANTSTATE -s+m
 
