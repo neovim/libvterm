@@ -21,6 +21,7 @@ static void putglyph(VTermState *state, const uint32_t chars[], int width, VTerm
   VTermGlyphInfo info = {
     .chars = chars,
     .width = width,
+    .protected_cell = 0,
   };
 
   if(state->callbacks && state->callbacks->putglyph)
@@ -46,7 +47,7 @@ static void updatecursor(VTermState *state, VTermPos *oldpos, int cancel_phantom
 static void erase(VTermState *state, VTermRect rect)
 {
   if(state->callbacks && state->callbacks->erase)
-    if((*state->callbacks->erase)(rect, state->cbdata))
+    if((*state->callbacks->erase)(rect, 0, state->cbdata))
       return;
 }
 
