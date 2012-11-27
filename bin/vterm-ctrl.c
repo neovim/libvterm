@@ -35,8 +35,9 @@ static char *helptext[] = {
   "reset",
   "keypad [app|num]",
   "screen [off|on]",
-  "curblink [off|on]",
   "cursor [off|on]",
+  "curblink [off|on]",
+  "curshape [block|under|bar]",
   "mouse [off|click|clickdrag|motion]",
   "altscreen [off|on]",
   "icontitle [STR]",
@@ -81,11 +82,17 @@ int main(int argc, char *argv[])
     else if(streq(arg, "screen")) {
       printf("\e[?5%c", getbool(&argi, argc, argv) ? 'h' : 'l');
     }
+    else if(streq(arg, "cursor")) {
+      printf("\e[?25%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+    }
     else if(streq(arg, "curblink")) {
       printf("\e[?12%c", getbool(&argi, argc, argv) ? 'h' : 'l');
     }
-    else if(streq(arg, "cursor")) {
-      printf("\e[?25%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+    else if(streq(arg, "curshape")) {
+      // TODO: This ought to query the current value of DECSCUSR because it
+      //   may need blinking on or off
+      int shape = getchoice(&argi, argc, argv, (const char *[]){"block", "under", "bar", NULL});
+      printf("\e[%d q", 1 + (shape * 2));
     }
     else if(streq(arg, "mouse")) {
       switch(getchoice(&argi, argc, argv, (const char *[]){"off", "click", "clickdrag", "motion", NULL})) {
