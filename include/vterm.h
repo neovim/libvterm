@@ -121,6 +121,7 @@ typedef enum {
 enum {
   VTERM_PROP_CURSORSHAPE_BLOCK = 1,
   VTERM_PROP_CURSORSHAPE_UNDERLINE,
+  VTERM_PROP_CURSORSHAPE_BAR_LEFT,
 };
 
 typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, int modifiers, void *data);
