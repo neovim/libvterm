@@ -1110,6 +1110,14 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
       settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_UNDERLINE);
       break;
+    case 5:
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 1);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BAR_LEFT);
+      break;
+    case 6:
+      settermprop_bool(state, VTERM_PROP_CURSORBLINK, 0);
+      settermprop_int (state, VTERM_PROP_CURSORSHAPE, VTERM_PROP_CURSORSHAPE_BAR_LEFT);
+      break;
     }
 
     break;
@@ -1203,6 +1211,7 @@ static void request_status_string(VTermState *state, const char *command, size_t
       switch(state->mode.cursor_shape) {
         case VTERM_PROP_CURSORSHAPE_BLOCK:     reply = 2; break;
         case VTERM_PROP_CURSORSHAPE_UNDERLINE: reply = 4; break;
+        case VTERM_PROP_CURSORSHAPE_BAR_LEFT:  reply = 6; break;
       }
       if(state->mode.cursor_blink)
         reply--;
