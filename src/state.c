@@ -1143,14 +1143,6 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       state->scrollregion_bottom = -1;
     break;
 
-  case 0x73: // ANSI SAVE
-    savecursor(state, 1);
-    break;
-
-  case 0x75: // ANSI RESTORE
-    savecursor(state, 0);
-    break;
-
   default:
     return 0;
   }

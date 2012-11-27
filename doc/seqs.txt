@@ -99,8 +99,6 @@ between states.
      CSI SP q         = DECSCUSR
  2   CSI " q          = DECSCA, select character attributes
 12   CSI r            = DECSTBM
-     CSI s            = ANSI SAVE
-     CSI u            = ANSI RESTORE
    
   OSCs
    
