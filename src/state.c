@@ -91,10 +91,10 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
 
 static void linefeed(VTermState *state)
 {
-  if(state->pos.row == SCROLLREGION_END(state) - 1) {
+  if(state->pos.row == SCROLLREGION_BOTTOM(state) - 1) {
     VTermRect rect = {
-      .start_row = state->scrollregion_start,
-      .end_row   = SCROLLREGION_END(state),
+      .start_row = state->scrollregion_top,
+      .end_row   = SCROLLREGION_BOTTOM(state),
       .start_col = 0,
       .end_col   = state->cols,
     };
@@ -342,10 +342,10 @@ static int on_control(unsigned char control, void *user)
     break;
 
   case 0x8d: // RI - ECMA-48 8.3.104
-    if(state->pos.row == state->scrollregion_start) {
+    if(state->pos.row == state->scrollregion_top) {
       VTermRect rect = {
-        .start_row = state->scrollregion_start,
-        .end_row   = SCROLLREGION_END(state),
+        .start_row = state->scrollregion_top,
+        .end_row   = SCROLLREGION_BOTTOM(state),
         .start_col = 0,
         .end_col   = state->cols,
       };
@@ -635,7 +635,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     {
       VTermPos oldpos = state->pos;
       state->mode.origin = val;
-      state->pos.row = state->mode.origin ? state->scrollregion_start : 0;
+      state->pos.row = state->mode.origin ? state->scrollregion_top : 0;
       state->pos.col = 0;
       updatecursor(state, &oldpos, 1);
     }
@@ -818,7 +818,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     state->pos.row = row-1;
     state->pos.col = col-1;
     if(state->mode.origin)
-      state->pos.row += state->scrollregion_start;
+      state->pos.row += state->scrollregion_top;
     state->at_phantom = 0;
     break;
 
@@ -891,7 +891,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
-    rect.end_row   = SCROLLREGION_END(state);
+    rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -903,7 +903,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     count = CSI_ARG_COUNT(args[0]);
 
     rect.start_row = state->pos.row;
-    rect.end_row   = SCROLLREGION_END(state);
+    rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -926,8 +926,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x53: // SU - ECMA-48 8.3.147
     count = CSI_ARG_COUNT(args[0]);
 
-    rect.start_row = state->scrollregion_start;
-    rect.end_row   = SCROLLREGION_END(state);
+    rect.start_row = state->scrollregion_top;
+    rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -938,8 +938,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x54: // SD - ECMA-48 8.3.113
     count = CSI_ARG_COUNT(args[0]);
 
-    rect.start_row = state->scrollregion_start;
-    rect.end_row   = SCROLLREGION_END(state);
+    rect.start_row = state->scrollregion_top;
+    rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = 0;
     rect.end_col   = state->cols;
 
@@ -991,7 +991,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     row = CSI_ARG_OR(args[0], 1);
     state->pos.row = row-1;
     if(state->mode.origin)
-      state->pos.row += state->scrollregion_start;
+      state->pos.row += state->scrollregion_top;
     state->at_phantom = 0;
     break;
 
@@ -1008,7 +1008,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     state->pos.row = row-1;
     state->pos.col = col-1;
     if(state->mode.origin)
-      state->pos.row += state->scrollregion_start;
+      state->pos.row += state->scrollregion_top;
     state->at_phantom = 0;
     break;
 
@@ -1137,10 +1137,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x72: // DECSTBM - DEC custom
-    state->scrollregion_start = CSI_ARG_OR(args[0], 1) - 1;
-    state->scrollregion_end = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
-    if(state->scrollregion_start == 0 && state->scrollregion_end == state->rows)
-      state->scrollregion_end = -1;
+    state->scrollregion_top = CSI_ARG_OR(args[0], 1) - 1;
+    state->scrollregion_bottom = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
+    if(state->scrollregion_top == 0 && state->scrollregion_bottom == state->rows)
+      state->scrollregion_bottom = -1;
     break;
 
   case 0x73: // ANSI SAVE
@@ -1159,8 +1159,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   UBOUND(state->pos.col, state->cols-1);
 
   if(state->mode.origin) {
-    LBOUND(state->pos.row, state->scrollregion_start);
-    UBOUND(state->pos.row, state->scrollregion_end-1);
+    LBOUND(state->pos.row, state->scrollregion_top);
+    UBOUND(state->pos.row, state->scrollregion_bottom-1);
   }
   else {
     LBOUND(state->pos.row, 0);
@@ -1201,7 +1201,7 @@ static void request_status_string(VTermState *state, const char *command, size_t
   if(cmdlen == 1)
     switch(command[0]) {
       case 'r': // Query DECSTBM
-        vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%dr", state->scrollregion_start+1, SCROLLREGION_END(state));
+        vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
         return;
     }
 
@@ -1319,8 +1319,8 @@ VTermState *vterm_obtain_state(VTerm *vt)
 
 void vterm_state_reset(VTermState *state, int hard)
 {
-  state->scrollregion_start = 0;
-  state->scrollregion_end = -1;
+  state->scrollregion_top = 0;
+  state->scrollregion_bottom = -1;
 
   state->mode.keypad         = 0;
   state->mode.cursor         = 0;

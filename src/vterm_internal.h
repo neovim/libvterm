@@ -42,9 +42,9 @@ struct VTermState
 
   int at_phantom; /* True if we're on the "81st" phantom column to defer a wraparound */
 
-  int scrollregion_start;
-  int scrollregion_end; /* -1 means unbounded */
-#define SCROLLREGION_END(state) ((state)->scrollregion_end > -1 ? (state)->scrollregion_end : (state)->rows)
+  int scrollregion_top;
+  int scrollregion_bottom; /* -1 means unbounded */
+#define SCROLLREGION_BOTTOM(state) ((state)->scrollregion_bottom > -1 ? (state)->scrollregion_bottom : (state)->rows)
 
   /* Bitvector of tab stops */
   unsigned char *tabstops;
