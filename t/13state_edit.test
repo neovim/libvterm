@@ -64,6 +64,11 @@ PUSH "\rB"
 PUSH "\e[3L"
   scrollrect 1..25,0..80 => -3,+0
 
+!IL with DECSTBM
+PUSH "\e[5;15r"
+PUSH "\e[5H\e[L"
+  scrollrect 4..15,0..80 => -1,+0
+
 !DL
 RESET
   erase 0..25,0..80
@@ -78,6 +83,11 @@ PUSH "\e[M"
 PUSH "\e[3M"
   scrollrect 1..25,0..80 => +3,+0
   ?cursor = 1,0
+
+!DL with DECSTBM
+PUSH "\e[5;15r"
+PUSH "\e[5H\e[M"
+  scrollrect 4..15,0..80 => +1,+0
 
 !EL 0
 RESET
