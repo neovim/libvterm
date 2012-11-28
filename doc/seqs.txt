@@ -181,7 +181,7 @@ Th e following sequences are not recognised by libvterm.
   3   ESC ~            = LS1R
   3   ESC }            = LS2R
   3   ESC |            = LS3R
- 2    DCS (            = DECDLD, down-line-loadable character set
+ 23   DCS {            = DECDLD, down-line-loadable character set
  23   DCS |            = DECUDK, user-defined key
  23   CSI i            = DEC printer control
  23   CSI " p          = DECSCL, set compatibility level
