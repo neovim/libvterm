@@ -56,8 +56,17 @@ PUSH "\e[H"
 PUSH "\e[3;3H"
   ?cursor = 6,2
 
+!Origin mode with DECSLRM
+PUSH "\e[?69h"
+PUSH "\e[20;60s"
+PUSH "\e[H"
+  ?cursor = 4,19
+
+PUSH "\e[?69l"
+
 !Origin mode bounds cursor to scrolling region
+PUSH "\e[H"
 PUSH "\e[10A"
-  ?cursor = 4,2
+  ?cursor = 4,0
 PUSH "\e[20B"
-  ?cursor = 14,2
+  ?cursor = 14,0

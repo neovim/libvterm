@@ -47,6 +47,18 @@ PUSH "\n"
   # no scrollrect
   ?cursor = 24,0
 
+!Linefeed in DECSTBM+DECSLRM
+PUSH "\e[?69h"
+PUSH "\e[3;10r\e[10;40s"
+PUSH "\e[10;10H\n"
+  scrollrect 2..10,9..40 => +1,+0
+
+!IND/RI in DECSTBM+DECSLRM
+PUSH "\eD"
+  scrollrect 2..10,9..40 => +1,+0
+PUSH "\e[3;10H\eM"
+  scrollrect 2..10,9..40 => -1,+0
+
 RESET
 
 !Scroll Down
@@ -71,6 +83,20 @@ PUSH "\e[S"
   scrollrect 4..20,0..80 => +1,+0
 PUSH "\e[T"
   scrollrect 4..20,0..80 => -1,+0
+
+RESET
+
+!SD/SU in DECSTBM+DECSLRM
+PUSH "\e[?69h"
+PUSH "\e[3;10r\e[10;40s"
+  ?cursor = 0,0
+PUSH "\e[3;10H"
+  ?cursor = 2,9
+PUSH "\e[S"
+  scrollrect 2..10,9..40 => +1,+0
+PUSH "\e[?69l"
+PUSH "\e[S"
+  scrollrect 2..10,0..80 => +1,+0
 
 RESET
 WANTSTATE -s+me

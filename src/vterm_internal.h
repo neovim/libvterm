@@ -45,6 +45,10 @@ struct VTermState
   int scrollregion_top;
   int scrollregion_bottom; /* -1 means unbounded */
 #define SCROLLREGION_BOTTOM(state) ((state)->scrollregion_bottom > -1 ? (state)->scrollregion_bottom : (state)->rows)
+  int scrollregion_left;
+#define SCROLLREGION_LEFT(state)  ((state)->mode.leftrightmargin ? (state)->scrollregion_left : 0)
+  int scrollregion_right; /* -1 means unbounded */
+#define SCROLLREGION_RIGHT(state) ((state)->mode.leftrightmargin && (state)->scrollregion_right > -1 ? (state)->scrollregion_right : (state)->cols)
 
   /* Bitvector of tab stops */
   unsigned char *tabstops;
@@ -72,6 +76,7 @@ struct VTermState
     unsigned int cursor_shape:2;
     int alt_screen:1;
     int origin:1;
+    int leftrightmargin:1;
   } mode;
 
   VTermEncodingInstance encoding[4], encoding_utf8;
