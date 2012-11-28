@@ -30,6 +30,14 @@ PUSH "\e[3 q"
 PUSH "\eP\$q q\e\\"
   output "\eP1\$r3 q\e\\"
 
+!DECRQM on DECOM
+PUSH "\e[?6h"
+PUSH "\e[?6\$p"
+  output "\e[?6;1\$y"
+PUSH "\e[?6l"
+PUSH "\e[?6\$p"
+  output "\e[?6;2\$y"
+
 !S8C1T on DSR
 PUSH "\e G"
 PUSH "\e[5n"
