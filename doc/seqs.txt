@@ -54,10 +54,10 @@ between states.
 
    DCSes
 
-  3   DCS $q           = DECRQSS
-  3         SP q       = Request DECSCUSR
-  3         r          = Request DECSTBM
-  3         s          = Request DECSLRM
+  3   DCS      $q      = DECRQSS
+          SP q         =   Request DECSCUSR
+  3       r            =   Request DECSTBM
+          s            =   Request DECSLRM
 
    CSIs
  23   CSI @            = ICH
@@ -83,8 +83,10 @@ between states.
       CSI Z            = CBT
       CSI `            = HPA
       CSI a            = HPR
-123   CSI c            = DA
- 23   CSI > c          = DECSDA
+123   CSI   c          = DA, device attributes
+123       0            =   DA
+ 23   CSI >   c        = DECSDA
+ 23         0          =   SDA
       CSI d            = VPA
       CSI e            = VPR
 123   CSI f            = HVP
@@ -96,7 +98,9 @@ between states.
 123   CSI l            = RM, Reset mode
 123   CSI ? l          = DECRM, DEC reset mode
 123   CSI m            = SGR, Set Graphic Rendition
-123   CSI n            = DSR, Device Status Report
+123   CSI   n          = DSR, Device Status Report
+ 23       5            =   operating status
+ 23       6            =   cursor position
  23   CSI ! p          = DECSTR, soft terminal reset
   3   CSI ? $p         = DECRQM, request mode
       CSI SP q         = DECSCUSR
@@ -181,14 +185,23 @@ Th e following sequences are not recognised by libvterm.
   3   ESC ~            = LS1R
   3   ESC }            = LS2R
   3   ESC |            = LS3R
+      DCS      $q      = [DECRQSS]
+  3       m            =   Request SGR
+  3       " p          =   Request DECSCL
+  3       " q          =   Request DECSCA
+  3       $ }          =   Request DECSASD
+  3       $ ~          =   Request DECSSDT
  23   DCS {            = DECDLD, down-line-loadable character set
  23   DCS |            = DECUDK, user-defined key
  23   CSI i            = DEC printer control
  23   CSI " p          = DECSCL, set compatibility level
 1     CSI q            = DECLL, load LEDs
-  3   CSI $u           = DECRQTSR, request terminal state report
+  3   CSI   $u         = DECRQTSR, request terminal state report
+  3       1            =   terminal state report
   3   CSI &u           = DECRQUPSS, request user-preferred supplemental set
-  3   CSI $w           = DECRQPSR, request presentation state report
+  3   CSI   $w         = DECRQPSR, request presentation state report
+  3       1            =   cursor information report
+  3       2            =   tab stop report
 1     CSI x            = DECREQTPARM, request terminal parameters
 123   CSI y            = DECTST, invoke confidence test
   3   CSI $}           = DECSASD, select active status display
