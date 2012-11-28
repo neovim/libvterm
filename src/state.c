@@ -95,8 +95,8 @@ static void linefeed(VTermState *state)
     VTermRect rect = {
       .start_row = state->scrollregion_top,
       .end_row   = SCROLLREGION_BOTTOM(state),
-      .start_col = 0,
-      .end_col   = state->cols,
+      .start_col = SCROLLREGION_LEFT(state),
+      .end_col   = SCROLLREGION_RIGHT(state),
     };
 
     scroll(state, rect, 1, 0);
@@ -346,8 +346,8 @@ static int on_control(unsigned char control, void *user)
       VTermRect rect = {
         .start_row = state->scrollregion_top,
         .end_row   = SCROLLREGION_BOTTOM(state),
-        .start_col = 0,
-        .end_col   = state->cols,
+        .start_col = SCROLLREGION_LEFT(state),
+        .end_col   = SCROLLREGION_RIGHT(state),
       };
 
       scroll(state, rect, -1, 0);
@@ -636,7 +636,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
       VTermPos oldpos = state->pos;
       state->mode.origin = val;
       state->pos.row = state->mode.origin ? state->scrollregion_top : 0;
-      state->pos.col = 0;
+      state->pos.col = state->mode.origin ? SCROLLREGION_LEFT(state) : 0;
       updatecursor(state, &oldpos, 1);
     }
     break;
@@ -651,6 +651,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
 
   case 25:
     settermprop_bool(state, VTERM_PROP_CURSORVISIBLE, val);
+    break;
+
+  case 69: // DECVSSM - vertical split screen mode
+    state->mode.leftrightmargin = val;
     break;
 
   case 1000:
@@ -817,8 +821,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     // zero-based
     state->pos.row = row-1;
     state->pos.col = col-1;
-    if(state->mode.origin)
+    if(state->mode.origin) {
       state->pos.row += state->scrollregion_top;
+      state->pos.col += SCROLLREGION_LEFT(state);
+    }
     state->at_phantom = 0;
     break;
 
@@ -892,8 +898,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     rect.start_row = state->pos.row;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
-    rect.start_col = 0;
-    rect.end_col   = state->cols;
+    rect.start_col = SCROLLREGION_LEFT(state);
+    rect.end_col   = SCROLLREGION_RIGHT(state);
 
     scroll(state, rect, -count, 0);
 
@@ -904,8 +910,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     rect.start_row = state->pos.row;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
-    rect.start_col = 0;
-    rect.end_col   = state->cols;
+    rect.start_col = SCROLLREGION_LEFT(state);
+    rect.end_col   = SCROLLREGION_RIGHT(state);
 
     scroll(state, rect, count, 0);
 
@@ -928,8 +934,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     rect.start_row = state->scrollregion_top;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
-    rect.start_col = 0;
-    rect.end_col   = state->cols;
+    rect.start_col = SCROLLREGION_LEFT(state);
+    rect.end_col   = SCROLLREGION_RIGHT(state);
 
     scroll(state, rect, count, 0);
 
@@ -940,8 +946,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     rect.start_row = state->scrollregion_top;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
-    rect.start_col = 0;
-    rect.end_col   = state->cols;
+    rect.start_col = SCROLLREGION_LEFT(state);
+    rect.end_col   = SCROLLREGION_RIGHT(state);
 
     scroll(state, rect, -count, 0);
 
@@ -1007,8 +1013,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     // zero-based
     state->pos.row = row-1;
     state->pos.col = col-1;
-    if(state->mode.origin)
+    if(state->mode.origin) {
       state->pos.row += state->scrollregion_top;
+      state->pos.col += SCROLLREGION_LEFT(state);
+    }
     state->at_phantom = 0;
     break;
 
@@ -1143,20 +1151,29 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       state->scrollregion_bottom = -1;
     break;
 
+  case 0x73: // DECSLRM - DEC custom
+    // Always allow setting these margins, just they won't take effect without DECVSSM
+    state->scrollregion_left = CSI_ARG_OR(args[0], 1) - 1;
+    state->scrollregion_right = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
+    if(state->scrollregion_left == 0 && state->scrollregion_right == state->cols)
+      state->scrollregion_right = -1;
+    break;
+
   default:
     return 0;
   }
 
-  LBOUND(state->pos.col, 0);
-  UBOUND(state->pos.col, state->cols-1);
-
   if(state->mode.origin) {
     LBOUND(state->pos.row, state->scrollregion_top);
     UBOUND(state->pos.row, state->scrollregion_bottom-1);
+    LBOUND(state->pos.col, SCROLLREGION_LEFT(state));
+    UBOUND(state->pos.col, SCROLLREGION_RIGHT(state)-1);
   }
   else {
     LBOUND(state->pos.row, 0);
     UBOUND(state->pos.row, state->rows-1);
+    LBOUND(state->pos.col, 0);
+    UBOUND(state->pos.col, state->cols-1);
   }
 
   updatecursor(state, &oldpos, 1);
@@ -1194,6 +1211,9 @@ static void request_status_string(VTermState *state, const char *command, size_t
     switch(command[0]) {
       case 'r': // Query DECSTBM
         vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
+        return;
+      case 's': // Query DECSLRM
+        vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%ds", SCROLLREGION_LEFT(state)+1, SCROLLREGION_RIGHT(state));
         return;
     }
 
@@ -1313,14 +1333,17 @@ void vterm_state_reset(VTermState *state, int hard)
 {
   state->scrollregion_top = 0;
   state->scrollregion_bottom = -1;
+  state->scrollregion_left = 0;
+  state->scrollregion_right = -1;
 
-  state->mode.keypad         = 0;
-  state->mode.cursor         = 0;
-  state->mode.autowrap       = 1;
-  state->mode.insert         = 0;
-  state->mode.newline        = 0;
-  state->mode.alt_screen     = 0;
-  state->mode.origin         = 0;
+  state->mode.keypad          = 0;
+  state->mode.cursor          = 0;
+  state->mode.autowrap        = 1;
+  state->mode.insert          = 0;
+  state->mode.newline         = 0;
+  state->mode.alt_screen      = 0;
+  state->mode.origin          = 0;
+  state->mode.leftrightmargin = 0;
 
   state->vt->mode.ctrl8bit   = 0;
 

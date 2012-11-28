@@ -21,6 +21,10 @@ PUSH "\e[10;10H\e[6n"
 PUSH "\eP\$qr\e\\"
   output "\eP1\$r1;25r\e\\"
 
+!DECRQSS on DECSLRM
+PUSH "\eP\$qs\e\\"
+  output "\eP1\$r1;80s\e\\"
+
 !DECRQSS on DECSCUSR
 PUSH "\e[3 q"
 PUSH "\eP\$q q\e\\"

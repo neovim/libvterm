@@ -56,6 +56,7 @@ between states.
      DCS $q           = DECRQSS
            SP q       = Request DECSCUSR
            r          = Request DECSTBM
+           s          = Request DECSLRM
    
   CSIs
  2   CSI @            = ICH
@@ -99,6 +100,7 @@ between states.
      CSI SP q         = DECSCUSR
  2   CSI " q          = DECSCA, select character attributes
 12   CSI r            = DECSTBM
+     CSI s            = DECSLRM
    
   OSCs
    
@@ -119,6 +121,7 @@ between states.
 12   DECSM 7          = DECAWM, autowrap
      DECSM 12         = Cursor blink
  2   DECSM 25         = DECTCEM, text cursor enable
+     DECSM 69         = DECVSSM, vertical screen split
      DECSM 1000       = Mouse click/release tracking
      DECSM 1002       = Mouse click/release/drag tracking
      DECSM 1003       = Mouse all movements tracking
