@@ -710,6 +710,35 @@ static void set_dec_mode(VTermState *state, int num, int val)
   }
 }
 
+static void request_dec_mode(VTermState *state, int num)
+{
+  int reply;
+
+  switch(num) {
+    case 1:
+      reply = state->mode.cursor;
+      break;
+
+    case 6:
+      reply = state->mode.origin;
+      break;
+
+    case 7:
+      reply = state->mode.autowrap;
+      break;
+
+    case 69:
+      reply = state->mode.leftrightmargin;
+      break;
+
+    default:
+      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "?%d;%d$y", num, 0);
+      return;
+  }
+
+  vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "?%d;%d$y", num, reply ? 1 : 2);
+}
+
 static int on_csi(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user)
 {
   VTermState *state = user;
@@ -737,6 +766,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     switch(intermed[0]) {
     case ' ':
     case '"':
+    case '$':
     case '\'':
       intermed_byte = intermed[0];
       break;
@@ -1097,6 +1127,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   case LEADER('!', 0x70): // DECSTR - DEC soft terminal reset
     vterm_state_reset(state, 0);
+    break;
+
+  case LEADER('?', INTERMED('$', 0x70)):
+    request_dec_mode(state, CSI_ARG(args[0]));
     break;
 
   case INTERMED(' ', 0x71): // DECSCUSR - DEC set cursor shape

@@ -97,6 +97,7 @@ between states.
 12   CSI m            = SGR, Set Graphic Rendition
 12   CSI n            = DSR, Device Status Report
  2   CSI ! p          = DECSTR, soft terminal reset
+     CSI ? $p         = DECRQM, request mode
      CSI SP q         = DECSCUSR
  2   CSI " q          = DECSCA, select character attributes
 12   CSI r            = DECSTBM
