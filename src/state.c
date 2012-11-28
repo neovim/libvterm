@@ -737,6 +737,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     switch(intermed[0]) {
     case ' ':
     case '"':
+    case '\'':
       intermed_byte = intermed[0];
       break;
     default:
@@ -1157,6 +1158,30 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     state->scrollregion_right = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
     if(state->scrollregion_left == 0 && state->scrollregion_right == state->cols)
       state->scrollregion_right = -1;
+    break;
+
+  case INTERMED('\'', 0x7D): // DECIC
+    count = CSI_ARG_COUNT(args[0]);
+
+    rect.start_row = state->scrollregion_top;
+    rect.end_row   = SCROLLREGION_BOTTOM(state);
+    rect.start_col = state->pos.col;
+    rect.end_col   = SCROLLREGION_RIGHT(state);
+
+    scroll(state, rect, 0, -count);
+
+    break;
+
+  case INTERMED('\'', 0x7E): // DECDC
+    count = CSI_ARG_COUNT(args[0]);
+
+    rect.start_row = state->scrollregion_top;
+    rect.end_row   = SCROLLREGION_BOTTOM(state);
+    rect.start_col = state->pos.col;
+    rect.end_col   = SCROLLREGION_RIGHT(state);
+
+    scroll(state, rect, 0, count);
+
     break;
 
   default:

@@ -101,6 +101,30 @@ PUSH "\e[10;50s"
 PUSH "\e[M"
   scrollrect 4..15,9..50 => +1,+0
 
+!DECIC
+RESET
+  erase 0..25,0..80
+PUSH "\e[20G\e[5'}"
+  scrollrect 0..25,19..80 => +0,-5
+
+!DECIC with DECSTBM+DECSLRM
+PUSH "\e[?69h"
+PUSH "\e[4;20r\e[20;60s"
+PUSH "\e[3'}"
+  scrollrect 3..20,19..60 => +0,-3
+
+!DECDC
+RESET
+  erase 0..25,0..80
+PUSH "\e[20G\e[5'~"
+  scrollrect 0..25,19..80 => +0,+5
+
+!DECDC with DECSTBM+DECSLRM
+PUSH "\e[?69h"
+PUSH "\e[4;20r\e[20;60s"
+PUSH "\e[3'~"
+  scrollrect 3..20,19..60 => +0,+3
+
 !EL 0
 RESET
   erase 0..25,0..80
