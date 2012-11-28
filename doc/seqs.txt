@@ -101,6 +101,8 @@ between states.
  2   CSI " q          = DECSCA, select character attributes
 12   CSI r            = DECSTBM
      CSI s            = DECSLRM
+     CSI '}           = DECIC
+     CSI '~           = DECDC
    
   OSCs
    
