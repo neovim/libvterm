@@ -100,7 +100,8 @@ between states.
 123   CSI m            = SGR, Set Graphic Rendition
 123   CSI   n          = DSR, Device Status Report
  23       5            =   operating status
- 23       6            =   cursor position
+ 23       6            =   CPR = cursor position
+ 23   CSI ? n          = DECDSR; behaves as DSR but uses CSI ? instead of CSI to respond
  23   CSI ! p          = DECSTR, soft terminal reset
   3   CSI ? $p         = DECRQM, request mode
       CSI SP q         = DECSCUSR
