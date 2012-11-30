@@ -17,6 +17,10 @@ PUSH "\e[6n"
 PUSH "\e[10;10H\e[6n"
   output "\e[10;10R"
 
+!DECCPR
+PUSH "\e[?6n"
+  output "\e[?10;10R"
+
 !DECRQSS on DECSTBM
 PUSH "\eP\$qr\e\\"
   output "\eP1\$r1;25r\e\\"
