@@ -1110,20 +1110,26 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   case 0x6e: // DSR - ECMA-48 8.3.35
+  case LEADER('?', 0x6e): // DECDSR
     val = CSI_ARG_OR(args[0], 0);
 
-    switch(val) {
-    case 0: case 1: case 2: case 3: case 4:
-      // ignore - these are replies
-      break;
-    case 5:
-      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "0n");
-      break;
-    case 6:
-      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "%d;%dR", state->pos.row + 1, state->pos.col + 1);
-      break;
+    {
+      char *qmark = (leader_byte == '?') ? "?" : "";
+
+      switch(val) {
+      case 0: case 1: case 2: case 3: case 4:
+        // ignore - these are replies
+        break;
+      case 5:
+        vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "%s0n", qmark);
+        break;
+      case 6: // CPR - cursor position report
+        vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "%s%d;%dR", qmark, state->pos.row + 1, state->pos.col + 1);
+        break;
+      }
     }
     break;
+
 
   case LEADER('!', 0x70): // DECSTR - DEC soft terminal reset
     vterm_state_reset(state, 0);
