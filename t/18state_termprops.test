@@ -9,8 +9,22 @@ RESET
 !Cursor visibility
 PUSH "\e[?25h"
   settermprop 1 true
+PUSH "\e[?25\$p"
+  output "\e[?25;1\$y"
 PUSH "\e[?25l"
   settermprop 1 false
+PUSH "\e[?25\$p"
+  output "\e[?25;2\$y"
+
+!Cursor blink
+PUSH "\e[?12h"
+  settermprop 2 true
+PUSH "\e[?12\$p"
+  output "\e[?12;1\$y"
+PUSH "\e[?12l"
+  settermprop 2 false
+PUSH "\e[?12\$p"
+  output "\e[?12;2\$y"
 
 !Cursor shape
 PUSH "\e[3 q"
