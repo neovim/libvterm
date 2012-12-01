@@ -731,6 +731,18 @@ static void request_dec_mode(VTermState *state, int num)
       reply = state->mode.leftrightmargin;
       break;
 
+    case 1005:
+      reply = state->mouse_protocol == MOUSE_UTF8;
+      break;
+
+    case 1006:
+      reply = state->mouse_protocol == MOUSE_SGR;
+      break;
+
+    case 1015:
+      reply = state->mouse_protocol == MOUSE_RXVT;
+      break;
+
     default:
       vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "?%d;%d$y", num, 0);
       return;
