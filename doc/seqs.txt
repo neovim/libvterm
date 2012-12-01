@@ -54,10 +54,10 @@ between states.
 
    DCSes
 
-  3   DCS      $ q     = DECRQSS
-          Sp q         =   Request DECSCUSR
-  3       r            =   Request DECSTBM
-          s            =   Request DECSLRM
+  3   DCS $ q          = DECRQSS
+              Sp q     =   Request DECSCUSR
+  3           r        =   Request DECSTBM
+              s        =   Request DECSLRM
 
    CSIs
  23   CSI @            = ICH
@@ -186,12 +186,12 @@ The following sequences are not recognised by libvterm.
   3   ESC ~            = LS1R
   3   ESC }            = LS2R
   3   ESC |            = LS3R
-      DCS     $ q      = [DECRQSS]
-  3       m            =   Request SGR
-  3       " p          =   Request DECSCL
-  3       " q          =   Request DECSCA
-  3       $ }          =   Request DECSASD
-  3       $ ~          =   Request DECSSDT
+      DCS $ q          = [DECRQSS]
+  3           m        =   Request SGR
+  3           " p      =   Request DECSCL
+  3           " q      =   Request DECSCA
+  3           $ }      =   Request DECSASD
+  3           $ ~      =   Request DECSSDT
  23   DCS {            = DECDLD, down-line-loadable character set
  23   DCS |            = DECUDK, user-defined key
  23   CSI i            = DEC printer control
