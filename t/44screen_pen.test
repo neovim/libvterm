@@ -45,7 +45,11 @@ PUSH "\e[?5h"
   ?screen_cell 0,0  = {} width=1 attrs={} fg=rgb(224,224,0) bg=rgb(0,0,224)
   ?screen_cell 0,79 = {} width=1 attrs={} fg=rgb(224,224,0) bg=rgb(0,0,224)
   ?screen_cell 1,0  = {} width=1 attrs={R} fg=rgb(240,240,240) bg=rgb(0,0,0)
+PUSH "\e[?5\$p"
+  output "\e[?5;1\$y"
 PUSH "\e[?5l"
   ?screen_cell 0,0  = {} width=1 attrs={R} fg=rgb(224,224,0) bg=rgb(0,0,224)
   ?screen_cell 0,79 = {} width=1 attrs={R} fg=rgb(224,224,0) bg=rgb(0,0,224)
   ?screen_cell 1,0  = {} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
+PUSH "\e[?5\$p"
+  output "\e[?5;2\$y"

@@ -627,7 +627,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     state->mode.cursor = val;
     break;
 
-  case 5:
+  case 5: // DECSCNM - screen mode
     settermprop_bool(state, VTERM_PROP_REVERSE, val);
     break;
 
@@ -719,12 +719,24 @@ static void request_dec_mode(VTermState *state, int num)
       reply = state->mode.cursor;
       break;
 
+    case 5:
+      reply = state->mode.screen;
+      break;
+
     case 6:
       reply = state->mode.origin;
       break;
 
     case 7:
       reply = state->mode.autowrap;
+      break;
+
+    case 12:
+      reply = state->mode.cursor_blink;
+      break;
+
+    case 25:
+      reply = state->mode.cursor_visible;
       break;
 
     case 69:
@@ -741,6 +753,10 @@ static void request_dec_mode(VTermState *state, int num)
 
     case 1015:
       reply = state->mouse_protocol == MOUSE_RXVT;
+      break;
+
+    case 1047:
+      reply = state->mode.alt_screen;
       break;
 
     default:
@@ -1498,7 +1514,6 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
       return 0;
 
   switch(prop) {
-  case VTERM_PROP_REVERSE:
   case VTERM_PROP_TITLE:
   case VTERM_PROP_ICONNAME:
     // we don't store these, just transparently pass through
@@ -1511,6 +1526,9 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
     return 1;
   case VTERM_PROP_CURSORSHAPE:
     state->mode.cursor_shape = val->number;
+    return 1;
+  case VTERM_PROP_REVERSE:
+    state->mode.screen = val->boolean;
     return 1;
   case VTERM_PROP_ALTSCREEN:
     state->mode.alt_screen = val->boolean;

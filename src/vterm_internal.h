@@ -76,6 +76,7 @@ struct VTermState
     unsigned int cursor_shape:2;
     int alt_screen:1;
     int origin:1;
+    int screen:1;
     int leftrightmargin:1;
   } mode;
 
