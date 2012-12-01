@@ -11,8 +11,9 @@
 # define DEBUG_GLYPH_COMBINE
 #endif
 
-#define MOUSE_WANT_DRAG 0x01
-#define MOUSE_WANT_MOVE 0x02
+#define MOUSE_WANT_CLICK 0x01
+#define MOUSE_WANT_DRAG  0x02
+#define MOUSE_WANT_MOVE  0x04
 
 /* Some convenient wrappers to make callback functions easier */
 
@@ -665,13 +666,16 @@ static void set_dec_mode(VTermState *state, int num, int val)
       state->mouse_row     = 0;
       state->mouse_buttons = 0;
 
-      state->mouse_flags = 0;
+      state->mouse_flags = MOUSE_WANT_CLICK;
       state->mouse_protocol = MOUSE_X10;
 
       if(num == 1002)
         state->mouse_flags |= MOUSE_WANT_DRAG;
       if(num == 1003)
         state->mouse_flags |= MOUSE_WANT_MOVE;
+    }
+    else {
+      state->mouse_flags = 0;
     }
 
     if(state->callbacks && state->callbacks->setmousefunc)
@@ -741,6 +745,18 @@ static void request_dec_mode(VTermState *state, int num)
 
     case 69:
       reply = state->mode.leftrightmargin;
+      break;
+
+    case 1000:
+      reply = state->mouse_flags == MOUSE_WANT_CLICK;
+      break;
+
+    case 1002:
+      reply = state->mouse_flags == (MOUSE_WANT_CLICK|MOUSE_WANT_DRAG);
+      break;
+
+    case 1003:
+      reply = state->mouse_flags == (MOUSE_WANT_CLICK|MOUSE_WANT_MOVE);
       break;
 
     case 1005:
