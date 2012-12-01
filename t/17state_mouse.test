@@ -1,6 +1,14 @@
 INIT
 WANTSTATE M
 
+!DECRQM on with mouse off
+PUSH "\e[?1000\$p"
+  output "\e[?1000;2\$y"
+PUSH "\e[?1002\$p"
+  output "\e[?1002;2\$y"
+PUSH "\e[?1003\$p"
+  output "\e[?1003;2\$y"
+
 !Mouse in simple button report mode
 RESET
 PUSH "\e[?1000h"
@@ -41,6 +49,14 @@ MOUSE 0 1 4 10,21
 MOUSE 0 1 5 10,21
   output "\e[M\x61\x36\x2b"
 
+!DECRQM on mouse button mode
+PUSH "\e[?1000\$p"
+  output "\e[?1000;1\$y"
+PUSH "\e[?1002\$p"
+  output "\e[?1002;2\$y"
+PUSH "\e[?1003\$p"
+  output "\e[?1003;2\$y"
+
 !Drag events
 RESET
 PUSH "\e[?1002h"
@@ -59,12 +75,28 @@ MOUSE 0 0 1 6,6
 MOUSE 0 0 0 6,7
   # no output
 
+!DECRQM on mouse drag mode
+PUSH "\e[?1000\$p"
+  output "\e[?1000;2\$y"
+PUSH "\e[?1002\$p"
+  output "\e[?1002;1\$y"
+PUSH "\e[?1003\$p"
+  output "\e[?1003;2\$y"
+
 !Non-drag motion events
 PUSH "\e[?1003h"
   setmousefunc func
 
 MOUSE 0 0 0 6,8
   output "\e[M\x43\x29\x27"
+
+!DECRQM on mouse motion mode
+PUSH "\e[?1000\$p"
+  output "\e[?1000;2\$y"
+PUSH "\e[?1002\$p"
+  output "\e[?1002;2\$y"
+PUSH "\e[?1003\$p"
+  output "\e[?1003;1\$y"
 
 !Bounds checking
 MOUSE 0 1 1 300,300
