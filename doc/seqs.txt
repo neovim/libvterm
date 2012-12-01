@@ -54,8 +54,8 @@ between states.
 
    DCSes
 
-  3   DCS      $q      = DECRQSS
-          SP q         =   Request DECSCUSR
+  3   DCS      $ q     = DECRQSS
+          Sp q         =   Request DECSCUSR
   3       r            =   Request DECSTBM
           s            =   Request DECSLRM
 
@@ -103,13 +103,13 @@ between states.
  23       6            =   CPR = cursor position
  23   CSI ? n          = DECDSR; behaves as DSR but uses CSI ? instead of CSI to respond
  23   CSI ! p          = DECSTR, soft terminal reset
-  3   CSI ? $p         = DECRQM, request mode
-      CSI SP q         = DECSCUSR
+  3   CSI ? $ p        = DECRQM, request mode
+      CSI Sp q         = DECSCUSR
  23   CSI " q          = DECSCA, select character attributes
 123   CSI r            = DECSTBM
       CSI s            = DECSLRM
-      CSI '}           = DECIC
-      CSI '~           = DECDC
+      CSI ' }          = DECIC
+      CSI ' ~          = DECDC
 
    OSCs
 
@@ -167,15 +167,15 @@ between states.
       SGR 90-97        = Foreground ANSI high-intensity
       SGR 100-107      = Background ANSI high-intensity
 
-Th e state storage used by CSI s, ESC 7 and DECSM 1048/1049 is shared.
+The state storage used by ESC 7 and DECSM 1048/1049 is shared.
 
    Unimplemented sequences:
 
-Th e following sequences are not recognised by libvterm.
+The following sequences are not recognised by libvterm.
 
 123   0x05             = ENQ
-  3   TODO             = DC1 (XON)
-  3   TODO             = DC3 (XOFF)
+  3   0x11             = DC1 (XON)
+  3   0x13             = DC3 (XOFF)
  23   0x8e             = SS2
  23   0x8f             = SS3
 123   ESC # 3          = DECDHL, double-height line (top half)
@@ -186,7 +186,7 @@ Th e following sequences are not recognised by libvterm.
   3   ESC ~            = LS1R
   3   ESC }            = LS2R
   3   ESC |            = LS3R
-      DCS      $q      = [DECRQSS]
+      DCS     $ q      = [DECRQSS]
   3       m            =   Request SGR
   3       " p          =   Request DECSCL
   3       " q          =   Request DECSCA
@@ -197,16 +197,16 @@ Th e following sequences are not recognised by libvterm.
  23   CSI i            = DEC printer control
  23   CSI " p          = DECSCL, set compatibility level
 1     CSI q            = DECLL, load LEDs
-  3   CSI   $u         = DECRQTSR, request terminal state report
+  3   CSI   $ u        = DECRQTSR, request terminal state report
   3       1            =   terminal state report
-  3   CSI &u           = DECRQUPSS, request user-preferred supplemental set
-  3   CSI   $w         = DECRQPSR, request presentation state report
+  3   CSI & u          = DECRQUPSS, request user-preferred supplemental set
+  3   CSI   $ w        = DECRQPSR, request presentation state report
   3       1            =   cursor information report
   3       2            =   tab stop report
 1     CSI x            = DECREQTPARM, request terminal parameters
 123   CSI y            = DECTST, invoke confidence test
-  3   CSI $}           = DECSASD, select active status display
-  3   CSI $~           = DECSSDT, select status line type
+  3   CSI $ }          = DECSASD, select active status display
+  3   CSI $ ~          = DECSSDT, select status line type
  23   SM 2             = KAM, keyboard action
 123   SM 12            = SRM, send/receive
 123   DECSM 2          = DECANM, ANSI/VT52
