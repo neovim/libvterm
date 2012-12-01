@@ -72,6 +72,14 @@ MOUSE 0 1 1 300,300
 MOUSE 0 0 1 300,300
   output "\e[M\x23\xff\xff"
 
+!DECRQM on standard encoding mode
+PUSH "\e[?1005\$p"
+  output "\e[?1005;2\$y"
+PUSH "\e[?1006\$p"
+  output "\e[?1006;2\$y"
+PUSH "\e[?1015\$p"
+  output "\e[?1015;2\$y"
+
 !UTF-8 extended encoding mode
 # 300 + 32 + 1 = 333 = U+014d = \xc5\x8d
 PUSH "\e[?1005h"
@@ -80,6 +88,14 @@ MOUSE 0 1 1 300,300
 MOUSE 0 0 1 300,300
   output "\e[M\x23\xc5\x8d\xc5\x8d"
 
+!DECRQM on UTF-8 extended encoding mode
+PUSH "\e[?1005\$p"
+  output "\e[?1005;1\$y"
+PUSH "\e[?1006\$p"
+  output "\e[?1006;2\$y"
+PUSH "\e[?1015\$p"
+  output "\e[?1015;2\$y"
+
 !SGR extended encoding mode
 PUSH "\e[?1006h"
 MOUSE 0 1 1 300,300
@@ -87,9 +103,25 @@ MOUSE 0 1 1 300,300
 MOUSE 0 0 1 300,300
   output "\e[<0;301;301m"
 
+!DECRQM on SGR extended encoding mode
+PUSH "\e[?1005\$p"
+  output "\e[?1005;2\$y"
+PUSH "\e[?1006\$p"
+  output "\e[?1006;1\$y"
+PUSH "\e[?1015\$p"
+  output "\e[?1015;2\$y"
+
 !rxvt extended encoding mode
 PUSH "\e[?1015h"
 MOUSE 0 1 1 300,300
   output "\e[0;301;301M"
 MOUSE 0 0 1 300,300
   output "\e[3;301;301M"
+
+!DECRQM on rxvt extended encoding mode
+PUSH "\e[?1005\$p"
+  output "\e[?1005;2\$y"
+PUSH "\e[?1006\$p"
+  output "\e[?1006;2\$y"
+PUSH "\e[?1015\$p"
+  output "\e[?1015;1\$y"
