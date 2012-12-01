@@ -223,6 +223,11 @@ PUSH "\e[?2J"
   erase 0..25,0..80 selective
   ?cursor = 4,4
 
+!DECRQSS on DECSCA
+PUSH "\e[2\"q"
+PUSH "\eP\$q\"q\e\\"
+  output "\eP1\$r2\"q\e\\"
+
 WANTSTATE -s+m
 
 !ICH move+erase emuation
