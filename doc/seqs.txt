@@ -56,6 +56,7 @@ between states.
 
   3   DCS $ q          = DECRQSS
               Sp q     =   Request DECSCUSR
+  3           " q      =   Request DECSCA
   3           r        =   Request DECSTBM
               s        =   Request DECSLRM
 
@@ -189,7 +190,6 @@ The following sequences are not recognised by libvterm.
       DCS $ q          = [DECRQSS]
   3           m        =   Request SGR
   3           " p      =   Request DECSCL
-  3           " q      =   Request DECSCA
   3           $ }      =   Request DECSASD
   3           $ ~      =   Request DECSSDT
  23   DCS {            = DECDLD, down-line-loadable character set

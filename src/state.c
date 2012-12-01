@@ -1295,6 +1295,10 @@ static void request_status_string(VTermState *state, const char *command, size_t
       vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d q", reply);
       return;
     }
+    else if(strneq(command, "\"q", 2)) {
+      vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d\"q", state->protected_cell ? 1 : 2);
+      return;
+    }
 
   vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "0$r%.s", (int)cmdlen, command);
 }
