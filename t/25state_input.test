@@ -111,3 +111,12 @@ INKEY 0 Enter
 PUSH "\e[20h"
 INKEY 0 Enter
   output "\x0d\x0a"
+
+!Keypad in DECKPNM
+INKEY 0 KP0
+  output "0"
+
+!Keypad in DECKPAM
+PUSH "\e="
+INKEY 0 KP0
+  output "\eOp"
