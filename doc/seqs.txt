@@ -41,6 +41,7 @@ between states.
 123   ESC 7            = DECSC - save cursor
 123   ESC 8            = DECRC - restore cursor
 123   ESC # 8          = DECALN
+123   ESC <            = Ignored (used by VT100 to exit VT52 mode)
 123   ESC =            = DECKPAM, keypad application mode
 123   ESC >            = DECKPNM, keypad numeric mode
  23   ESC Sp F         = S7C1T
