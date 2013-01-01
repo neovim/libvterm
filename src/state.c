@@ -574,6 +574,9 @@ static int on_escape(const char *bytes, size_t len, void *user)
     savecursor(state, 0);
     return 1;
 
+  case '<': // Ignored by VT100. Used in VT52 mode to switch up to VT100
+    return 1;
+
   case '=': // DECKPAM
     state->mode.keypad = 1;
     return 1;
