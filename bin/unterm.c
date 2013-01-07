@@ -23,10 +23,22 @@ static enum {
   FORMAT_SGR,
 } format = FORMAT_PLAIN;
 
+static int col2index(VTermColor target)
+{
+  for(int index = 0; index < 256; index++) {
+    VTermColor col;
+    vterm_state_get_palette_color(NULL, index, &col);
+    if(col.red == target.red && col.green == target.green && col.blue == target.blue)
+      return index;
+  }
+  return -1;
+}
+
 void dump_row(int row)
 {
   VTermPos pos = { .row = row, .col = 0 };
   VTermScreenCell prevcell = {};
+  vterm_state_get_default_colors(vterm_obtain_state(vt), &prevcell.fg, &prevcell.bg);
 
   while(pos.col < cols) {
     VTermScreenCell cell;
@@ -38,7 +50,8 @@ void dump_row(int row)
       case FORMAT_SGR:
         {
           // If all 7 attributes change, that means 7 SGRs max
-          int sgr[7]; int sgri = 0;
+          // Each colour could consume up to 3
+          int sgr[7 + 2*3]; int sgri = 0;
 
           if(!prevcell.attrs.bold && cell.attrs.bold)
             sgr[sgri++] = 1;
@@ -75,12 +88,49 @@ void dump_row(int row)
           if(prevcell.attrs.font && !cell.attrs.font)
             sgr[sgri++] = 10;
 
+          if(prevcell.fg.red   != cell.fg.red   ||
+             prevcell.fg.green != cell.fg.green ||
+             prevcell.fg.blue  != cell.fg.blue) {
+            int index = col2index(cell.fg);
+            if(index == -1)
+              sgr[sgri++] = 39;
+            else if(index < 8)
+              sgr[sgri++] = 30 + index;
+            else if(index < 16)
+              sgr[sgri++] = 90 + (index - 8);
+            else {
+              sgr[sgri++] = 38;
+              sgr[sgri++] = 5 | (1<<31);
+              sgr[sgri++] = index | (1<<31);
+            }
+          }
+
+          if(prevcell.bg.red   != cell.bg.red   ||
+             prevcell.bg.green != cell.bg.green ||
+             prevcell.bg.blue  != cell.bg.blue) {
+            int index = col2index(cell.bg);
+            if(index == -1)
+              sgr[sgri++] = 49;
+            else if(index < 8)
+              sgr[sgri++] = 40 + index;
+            else if(index < 16)
+              sgr[sgri++] = 100 + (index - 8);
+            else {
+              sgr[sgri++] = 48;
+              sgr[sgri++] = 5 | (1<<31);
+              sgr[sgri++] = index | (1<<31);
+            }
+          }
+
           if(!sgri)
             break;
 
           printf("\e[");
           for(int i = 0; i < sgri; i++)
-            printf(i ? ";%d" : "%d", sgr[i]);
+            printf(!i               ? "%d" :
+                   sgr[i] & (1<<31) ? ":%d" :
+                                      ";%d",
+                   sgr[i] & ~(1<<31));
           printf("m");
         }
         break;
