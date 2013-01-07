@@ -165,7 +165,18 @@ void vterm_state_savepen(VTermState *state, int save)
   }
 }
 
-void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg)
+void vterm_state_get_default_colors(const VTermState *state, VTermColor *default_fg, VTermColor *default_bg)
+{
+  *default_fg = state->default_fg;
+  *default_bg = state->default_bg;
+}
+
+void vterm_state_get_palette_color(const VTermState *state, int index, VTermColor *col)
+{
+  lookup_colour_palette(index, col);
+}
+
+void vterm_state_set_default_colors(VTermState *state, const VTermColor *default_fg, const VTermColor *default_bg)
 {
   state->default_fg = *default_fg;
   state->default_bg = *default_bg;
