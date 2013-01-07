@@ -7,6 +7,8 @@
 
 #include "vterm.h"
 
+#include "../src/utf8.h" // fill_utf8
+
 static VTerm *vt;
 static VTermScreen *vts;
 
@@ -15,22 +17,21 @@ static int rows;
 
 void dump_row(int row)
 {
-  VTermRect rect = {
-    .start_row = row,
-    .start_col = 0,
-    .end_row   = row+1,
-    .end_col   = cols,
-  };
+  VTermPos pos = { .row = row, .col = 0 };
+  while(pos.col < cols) {
+    VTermScreenCell cell;
+    vterm_screen_get_cell(vts, pos, &cell);
 
-  size_t len = vterm_screen_get_text(vts, NULL, 0, rect);
-  char *text = malloc(len + 1);
-  text[len] = 0;
+    for(int i = 0; cell.chars[i]; i++) {
+      char bytes[6];
+      bytes[fill_utf8(cell.chars[i], bytes)] = 0;
+      printf("%s", bytes);
+    }
 
-  vterm_screen_get_text(vts, text, len, rect);
+    pos.col += cell.width;
+  }
 
-  printf("%s\n", text);
-
-  free(text);
+  printf("\n");
 }
 
 static int screen_prescroll(VTermRect rect, void *user)
