@@ -165,10 +165,16 @@ int main(int argc, char *argv[])
   }
 
   const char *file = argv[optind++];
-  int fd = open(file, O_RDONLY);
-  if(fd == -1) {
-    fprintf(stderr, "Cannot open %s - %s\n", file, strerror(errno));
-    exit(1);
+
+  int fd;
+  if(!file || streq(file, "-"))
+    fd = 0; // stdin
+  else {
+    fd = open(file, O_RDONLY);
+    if(fd == -1) {
+      fprintf(stderr, "Cannot open %s - %s\n", file, strerror(errno));
+      exit(1);
+    }
   }
 
   if(use_colour) {
