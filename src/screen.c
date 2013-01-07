@@ -61,7 +61,7 @@ struct VTermScreen
   ScreenPen pen;
 };
 
-static inline ScreenCell *getcell(VTermScreen *screen, int row, int col)
+static inline ScreenCell *getcell(const VTermScreen *screen, int row, int col)
 {
   if(row < 0 || row >= screen->rows)
     return NULL;
@@ -595,7 +595,7 @@ void vterm_screen_reset(VTermScreen *screen, int hard)
   vterm_screen_flush_damage(screen);
 }
 
-static size_t _get_chars(VTermScreen *screen, const int utf8, void *buffer, size_t len, const VTermRect rect)
+static size_t _get_chars(const VTermScreen *screen, const int utf8, void *buffer, size_t len, const VTermRect rect)
 {
   size_t outpos = 0;
   int padding = 0;
@@ -645,18 +645,18 @@ static size_t _get_chars(VTermScreen *screen, const int utf8, void *buffer, size
   return outpos;
 }
 
-size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
+size_t vterm_screen_get_chars(const VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect)
 {
   return _get_chars(screen, 0, chars, len, rect);
 }
 
-size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const VTermRect rect)
+size_t vterm_screen_get_text(const VTermScreen *screen, char *str, size_t len, const VTermRect rect)
 {
   return _get_chars(screen, 1, str, len, rect);
 }
 
 /* Copy internal to external representation of a screen cell */
-int vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell)
+int vterm_screen_get_cell(const VTermScreen *screen, VTermPos pos, VTermScreenCell *cell)
 {
   ScreenCell *intcell = getcell(screen, pos.row, pos.col);
   if(!intcell)
@@ -688,7 +688,7 @@ int vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *ce
   return 1;
 }
 
-int vterm_screen_is_eol(VTermScreen *screen, VTermPos pos)
+int vterm_screen_is_eol(const VTermScreen *screen, VTermPos pos)
 {
   /* This cell is EOL if this and every cell to the right is black */
   for(; pos.col < screen->cols; pos.col++) {

@@ -168,7 +168,7 @@ VTerm *vterm_new(int rows, int cols);
 VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *funcs, void *allocdata);
 void   vterm_free(VTerm* vt);
 
-void vterm_get_size(VTerm *vt, int *rowsp, int *colsp);
+void vterm_get_size(const VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 
 void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
@@ -177,10 +177,10 @@ VTermState *vterm_obtain_state(VTerm *vt);
 
 void vterm_state_reset(VTermState *state, int hard);
 void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
-void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos);
+void vterm_state_get_cursorpos(const VTermState *state, VTermPos *cursorpos);
 void vterm_state_set_default_colors(VTermState *state, VTermColor *default_fg, VTermColor *default_bg);
 void vterm_state_set_bold_highbright(VTermState *state, int bold_is_highbright);
-int  vterm_state_get_penattr(VTermState *state, VTermAttr attr, VTermValue *val);
+int  vterm_state_get_penattr(const VTermState *state, VTermAttr attr, VTermValue *val);
 int  vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val);
 
 VTermValueType vterm_get_attr_type(VTermAttr attr);
@@ -202,8 +202,8 @@ void vterm_screen_flush_damage(VTermScreen *screen);
 void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size);
 
 void   vterm_screen_reset(VTermScreen *screen, int hard);
-size_t vterm_screen_get_chars(VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
-size_t vterm_screen_get_text(VTermScreen *screen, char *str, size_t len, const VTermRect rect);
+size_t vterm_screen_get_chars(const VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
+size_t vterm_screen_get_text(const VTermScreen *screen, char *str, size_t len, const VTermRect rect);
 
 typedef struct {
 #define VTERM_MAX_CHARS_PER_CELL 6
@@ -221,9 +221,9 @@ typedef struct {
   VTermColor fg, bg;
 } VTermScreenCell;
 
-int vterm_screen_get_cell(VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
+int vterm_screen_get_cell(const VTermScreen *screen, VTermPos pos, VTermScreenCell *cell);
 
-int vterm_screen_is_eol(VTermScreen *screen, VTermPos pos);
+int vterm_screen_is_eol(const VTermScreen *screen, VTermPos pos);
 
 void vterm_input_push_char(VTerm *vt, VTermModifier state, uint32_t c);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
@@ -233,9 +233,9 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len);
 
 size_t vterm_output_bufferlen(VTerm *vt); /* deprecated */
 
-size_t vterm_output_get_buffer_size(VTerm *vt);
-size_t vterm_output_get_buffer_current(VTerm *vt);
-size_t vterm_output_get_buffer_remaining(VTerm *vt);
+size_t vterm_output_get_buffer_size(const VTerm *vt);
+size_t vterm_output_get_buffer_current(const VTerm *vt);
+size_t vterm_output_get_buffer_remaining(const VTerm *vt);
 
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
 
