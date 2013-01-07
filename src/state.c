@@ -1505,7 +1505,7 @@ void vterm_state_reset(VTermState *state, int hard)
   }
 }
 
-void vterm_state_get_cursorpos(VTermState *state, VTermPos *cursorpos)
+void vterm_state_get_cursorpos(const VTermState *state, VTermPos *cursorpos)
 {
   *cursorpos = state->pos;
 }

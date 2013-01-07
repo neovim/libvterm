@@ -80,7 +80,7 @@ void vterm_allocator_free(VTerm *vt, void *ptr)
   (*vt->allocator->free)(ptr, vt->allocdata);
 }
 
-void vterm_get_size(VTerm *vt, int *rowsp, int *colsp)
+void vterm_get_size(const VTerm *vt, int *rowsp, int *colsp)
 {
   if(rowsp)
     *rowsp = vt->rows;
@@ -156,17 +156,17 @@ size_t vterm_output_bufferlen(VTerm *vt)
   return vterm_output_get_buffer_current(vt);
 }
 
-size_t vterm_output_get_buffer_size(VTerm *vt)
+size_t vterm_output_get_buffer_size(const VTerm *vt)
 {
   return vt->outbuffer_len;
 }
 
-size_t vterm_output_get_buffer_current(VTerm *vt)
+size_t vterm_output_get_buffer_current(const VTerm *vt)
 {
   return vt->outbuffer_cur;
 }
 
-size_t vterm_output_get_buffer_remaining(VTerm *vt)
+size_t vterm_output_get_buffer_remaining(const VTerm *vt)
 {
   return vt->outbuffer_len - vt->outbuffer_cur;
 }
