@@ -3,11 +3,14 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <unistd.h>
 
 #include "vterm.h"
 
 #include "../src/utf8.h" // fill_utf8
+
+#define streq(a,b) (!strcmp(a,b))
 
 static VTerm *vt;
 static VTermScreen *vts;
@@ -15,12 +18,73 @@ static VTermScreen *vts;
 static int cols;
 static int rows;
 
+static enum {
+  FORMAT_PLAIN,
+  FORMAT_SGR,
+} format = FORMAT_PLAIN;
+
 void dump_row(int row)
 {
   VTermPos pos = { .row = row, .col = 0 };
+  VTermScreenCell prevcell = {};
+
   while(pos.col < cols) {
     VTermScreenCell cell;
     vterm_screen_get_cell(vts, pos, &cell);
+
+    switch(format) {
+      case FORMAT_PLAIN:
+        break;
+      case FORMAT_SGR:
+        {
+          // If all 7 attributes change, that means 7 SGRs max
+          int sgr[7]; int sgri = 0;
+
+          if(!prevcell.attrs.bold && cell.attrs.bold)
+            sgr[sgri++] = 1;
+          if(prevcell.attrs.bold && !cell.attrs.bold)
+            sgr[sgri++] = 22;
+
+          if(!prevcell.attrs.underline && cell.attrs.underline)
+            sgr[sgri++] = 4;
+          if(prevcell.attrs.underline && !cell.attrs.underline)
+            sgr[sgri++] = 24;
+
+          if(!prevcell.attrs.italic && cell.attrs.italic)
+            sgr[sgri++] = 3;
+          if(prevcell.attrs.italic && !cell.attrs.italic)
+            sgr[sgri++] = 23;
+
+          if(!prevcell.attrs.blink && cell.attrs.blink)
+            sgr[sgri++] = 5;
+          if(prevcell.attrs.blink && !cell.attrs.blink)
+            sgr[sgri++] = 25;
+
+          if(!prevcell.attrs.reverse && cell.attrs.reverse)
+            sgr[sgri++] = 7;
+          if(prevcell.attrs.reverse && !cell.attrs.reverse)
+            sgr[sgri++] = 27;
+
+          if(!prevcell.attrs.strike && cell.attrs.strike)
+            sgr[sgri++] = 9;
+          if(prevcell.attrs.strike && !cell.attrs.strike)
+            sgr[sgri++] = 29;
+
+          if(!prevcell.attrs.font && cell.attrs.font)
+            sgr[sgri++] = 10 + cell.attrs.font;
+          if(prevcell.attrs.font && !cell.attrs.font)
+            sgr[sgri++] = 10;
+
+          if(!sgri)
+            break;
+
+          printf("\e[");
+          for(int i = 0; i < sgri; i++)
+            printf(i ? ";%d" : "%d", sgr[i]);
+          printf("m");
+        }
+        break;
+    }
 
     for(int i = 0; cell.chars[i]; i++) {
       char bytes[6];
@@ -29,6 +93,18 @@ void dump_row(int row)
     }
 
     pos.col += cell.width;
+    prevcell = cell;
+  }
+
+  switch(format) {
+    case FORMAT_PLAIN:
+      break;
+    case FORMAT_SGR:
+      if(prevcell.attrs.bold || prevcell.attrs.underline || prevcell.attrs.italic ||
+         prevcell.attrs.blink || prevcell.attrs.reverse || prevcell.attrs.strike ||
+         prevcell.attrs.font)
+        printf("\e[m");
+      break;
   }
 
   printf("\n");
@@ -59,7 +135,23 @@ static VTermScreenCallbacks cb_screen = {
 
 int main(int argc, char *argv[])
 {
-  const char *file = argv[1];
+  int opt;
+  while((opt = getopt(argc, argv, "f:")) != -1) {
+    switch(opt) {
+      case 'f':
+        if(streq(optarg, "plain"))
+          format = FORMAT_PLAIN;
+        else if(streq(optarg, "sgr"))
+          format = FORMAT_SGR;
+        else {
+          fprintf(stderr, "Unrecognised format '%s'\n", optarg);
+          exit(1);
+        }
+        break;
+    }
+  }
+
+  const char *file = argv[optind++];
   int fd = open(file, O_RDONLY);
   if(fd == -1) {
     fprintf(stderr, "Cannot open %s - %s\n", file, strerror(errno));
