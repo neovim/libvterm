@@ -52,6 +52,9 @@ between states.
 123   ESC c            = RIS, reset initial state
   3   ESC n            = LS2
   3   ESC o            = LS3
+  3   ESC ~            = LS1R
+  3   ESC }            = LS2R
+  3   ESC |            = LS3R
 
    DCSes
 
@@ -185,9 +188,6 @@ The following sequences are not recognised by libvterm.
 123   ESC # 5          = DECSWL, single-width line
 123   ESC # 6          = DECDWL, double-width line
 12    ESC Z            = DECID, identify terminal
-  3   ESC ~            = LS1R
-  3   ESC }            = LS2R
-  3   ESC |            = LS3R
       DCS $ q          = [DECRQSS]
   3           m        =   Request SGR
   3           " p      =   Request DECSCL
