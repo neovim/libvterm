@@ -155,8 +155,10 @@ static void decode_usascii(VTermEncoding *enc, void *data,
                            uint32_t cp[], int *cpi, int cplen,
                            const char bytes[], size_t *pos, size_t bytelen)
 {
+  int is_gr = bytes[*pos] & 0x80;
+
   for(; *pos < bytelen; (*pos)++) {
-    unsigned char c = bytes[*pos];
+    unsigned char c = bytes[*pos] ^ is_gr;
 
     if(c < 0x20 || c >= 0x80)
       return;
@@ -179,11 +181,12 @@ static void decode_table(VTermEncoding *enc, void *data,
                          const char bytes[], size_t *pos, size_t bytelen)
 {
   struct StaticTableEncoding *table = (struct StaticTableEncoding *)enc;
+  int is_gr = bytes[*pos] & 0x80;
 
   for(; *pos < bytelen; (*pos)++) {
-    unsigned char c = (bytes[*pos]) & 0x7f;
+    unsigned char c = bytes[*pos] ^ is_gr;
 
-    if(c < 0x20)
+    if(c < 0x20 || c >= 0x80)
       return;
 
     if(table->chars[c])

@@ -602,6 +602,18 @@ static int on_escape(const char *bytes, size_t len, void *user)
     state->gl_set = 3;
     return 1;
 
+  case '~': // LS1R - ECMA-48 8.3.77
+    state->gr_set = 1;
+    return 1;
+
+  case '}': // LS2R - ECMA-48 8.3.79
+    state->gr_set = 2;
+    return 1;
+
+  case '|': // LS3R - ECMA-48 8.3.81
+    state->gr_set = 3;
+    return 1;
+
   default:
     return 0;
   }
@@ -1486,7 +1498,7 @@ void vterm_state_reset(VTermState *state, int hard)
   }
 
   state->gl_set = 0;
-  state->gr_set = 0;
+  state->gr_set = 1;
 
   state->protected_cell = 0;
 

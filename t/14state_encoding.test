@@ -1,5 +1,4 @@
 INIT
-UTF8 1
 WANTSTATE g
 
 !Default
@@ -53,6 +52,35 @@ PUSH "a"
 PUSH "\x0f"
 PUSH "a"
   putglyph 0x61 1 0,8
+
+!LS1R
+RESET
+PUSH "\e~"
+PUSH "\xe1"
+  putglyph 0x61 1 0,0
+PUSH "\e)0"
+PUSH "\xe1"
+  putglyph 0x2592 1 0,1
+
+!LS2R
+RESET
+PUSH "\e}"
+PUSH "\xe1"
+  putglyph 0x61 1 0,0
+PUSH "\e*0"
+PUSH "\xe1"
+  putglyph 0x2592 1 0,1
+
+!LS3R
+RESET
+PUSH "\e|"
+PUSH "\xe1"
+  putglyph 0x61 1 0,0
+PUSH "\e+0"
+PUSH "\xe1"
+  putglyph 0x2592 1 0,1
+
+UTF8 1
 
 !Mixed US-ASCII and UTF-8
 # U+0108 == 0xc4 0x88
