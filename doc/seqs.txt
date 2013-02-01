@@ -29,6 +29,8 @@ between states.
 123   0x85             = NEL
 123   0x88             = HTS
 123   0x8D             = RI
+ 23   0x8e             = SS2
+ 23   0x8f             = SS3
      (0x90             = DCS)
      (0x9B             = CSI)
      (0x9D             = OSC)
@@ -181,8 +183,6 @@ The following sequences are not recognised by libvterm.
 123   0x05             = ENQ
   3   0x11             = DC1 (XON)
   3   0x13             = DC3 (XOFF)
- 23   0x8e             = SS2
- 23   0x8f             = SS3
 123   ESC # 3          = DECDHL, double-height line (top half)
 123   ESC # 4          = DECDHL, double-height line (bottom half)
 123   ESC # 5          = DECSWL, single-width line
