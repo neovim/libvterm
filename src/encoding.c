@@ -35,7 +35,7 @@ static void decode_utf8(VTermEncoding *enc, void *data_,
   printf("BEGIN UTF-8\n");
 #endif
 
-  for( ; *pos < bytelen; (*pos)++) {
+  for(; *pos < bytelen && *cpi < cplen; (*pos)++) {
     unsigned char c = bytes[*pos];
 
 #ifdef DEBUG_PRINT_UTF8
@@ -157,7 +157,7 @@ static void decode_usascii(VTermEncoding *enc, void *data,
 {
   int is_gr = bytes[*pos] & 0x80;
 
-  for(; *pos < bytelen; (*pos)++) {
+  for(; *pos < bytelen && *cpi < cplen; (*pos)++) {
     unsigned char c = bytes[*pos] ^ is_gr;
 
     if(c < 0x20 || c >= 0x80)
@@ -183,7 +183,7 @@ static void decode_table(VTermEncoding *enc, void *data,
   struct StaticTableEncoding *table = (struct StaticTableEncoding *)enc;
   int is_gr = bytes[*pos] & 0x80;
 
-  for(; *pos < bytelen; (*pos)++) {
+  for(; *pos < bytelen && *cpi < cplen; (*pos)++) {
     unsigned char c = bytes[*pos] ^ is_gr;
 
     if(c < 0x20 || c >= 0x80)

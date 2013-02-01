@@ -158,12 +158,17 @@ static int on_text(const char bytes[], size_t len, void *user)
   size_t eaten = 0;
 
   VTermEncodingInstance *encoding =
+    state->gsingle_set     ? &state->encoding[state->gsingle_set] :
     !(bytes[eaten] & 0x80) ? &state->encoding[state->gl_set] :
     state->vt->mode.utf8   ? &state->encoding_utf8 :
                              &state->encoding[state->gr_set];
 
   (*encoding->enc->decode)(encoding->enc, encoding->data,
-      codepoints, &npoints, len, bytes, &eaten, len);
+      codepoints, &npoints, state->gsingle_set ? 1 : len,
+      bytes, &eaten, len);
+
+  if(state->gsingle_set && npoints)
+    state->gsingle_set = 0;
 
   int i = 0;
 
@@ -355,6 +360,14 @@ static int on_control(unsigned char control, void *user)
     }
     else if(state->pos.row > 0)
         state->pos.row--;
+    break;
+
+  case 0x8e: // SS2 - ECMA-48 8.3.141
+    state->gsingle_set = 2;
+    break;
+
+  case 0x8f: // SS3 - ECMA-48 8.3.142
+    state->gsingle_set = 3;
     break;
 
   default:
@@ -1499,6 +1512,7 @@ void vterm_state_reset(VTermState *state, int hard)
 
   state->gl_set = 0;
   state->gr_set = 1;
+  state->gsingle_set = 0;
 
   state->protected_cell = 0;
 
