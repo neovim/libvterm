@@ -81,7 +81,7 @@ struct VTermState
   } mode;
 
   VTermEncodingInstance encoding[4], encoding_utf8;
-  int gl_set, gr_set;
+  int gl_set, gr_set, gsingle_set;
 
   struct VTermPen pen;
 
