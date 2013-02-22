@@ -209,7 +209,7 @@ encodings[] = {
   { ENC_SINGLE_94, '0', (VTermEncoding*)&encoding_DECdrawing },
   { ENC_SINGLE_94, 'A', (VTermEncoding*)&encoding_uk },
   { ENC_SINGLE_94, 'B', &encoding_usascii },
-  { 0, 0 },
+  { 0 },
 };
 
 VTermEncoding *vterm_lookup_encoding(VTermEncodingType type, char designation)
