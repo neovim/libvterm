@@ -27,6 +27,11 @@ struct VTermPen
   unsigned int font:4; /* To store 0-9 */
 };
 
+static inline int vterm_color_equal(VTermColor a, VTermColor b)
+{
+  return a.red == b.red && a.green == b.green && a.blue == b.blue;
+}
+
 struct VTermState
 {
   VTerm *vt;
