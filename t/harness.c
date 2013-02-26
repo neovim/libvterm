@@ -745,6 +745,25 @@ int main(int argc, char **argv)
         }
         printf("%d\n", vterm_screen_is_eol(screen, pos));
       }
+      else if(strstartswith(line, "?screen_attrs_extent ")) {
+        char *linep = line + 21;
+        while(linep[0] == ' ')
+          linep++;
+        VTermPos pos;
+        if(sscanf(linep, "%d,%d\n", &pos.row, &pos.col) < 2) {
+          printf("! screen_attrs_extent unrecognised input\n");
+          goto abort_line;
+        }
+        VTermRect rect = {
+          .start_col = 0,
+          .end_col   = -1,
+        };
+        if(!vterm_screen_get_attrs_extent(screen, &rect, pos, ~0)) {
+          printf("! screen_attrs_extent failed\n");
+          goto abort_line;
+        }
+        printf("%d,%d-%d,%d\n", rect.start_row, rect.start_col, rect.end_row, rect.end_col);
+      }
       else
         printf("?\n");
 

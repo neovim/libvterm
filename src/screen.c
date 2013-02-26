@@ -750,3 +750,54 @@ void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size)
   vterm_screen_flush_damage(screen);
   screen->damage_merge = size;
 }
+
+static int attrs_differ(VTermAttrMask attrs, ScreenCell *a, ScreenCell *b)
+{
+  if((attrs & VTERM_ATTR_BOLD_MASK)       && (a->pen.bold != b->pen.bold))
+    return 1;
+  if((attrs & VTERM_ATTR_UNDERLINE_MASK)  && (a->pen.underline != b->pen.underline))
+    return 1;
+  if((attrs & VTERM_ATTR_ITALIC_MASK)     && (a->pen.italic != b->pen.italic))
+    return 1;
+  if((attrs & VTERM_ATTR_BLINK_MASK)      && (a->pen.blink != b->pen.blink))
+    return 1;
+  if((attrs & VTERM_ATTR_REVERSE_MASK)    && (a->pen.reverse != b->pen.reverse))
+    return 1;
+  if((attrs & VTERM_ATTR_STRIKE_MASK)     && (a->pen.strike != b->pen.strike))
+    return 1;
+  if((attrs & VTERM_ATTR_FONT_MASK)       && (a->pen.font != b->pen.font))
+    return 1;
+  if((attrs & VTERM_ATTR_FOREGROUND_MASK) && !vterm_color_equal(a->pen.fg, b->pen.fg))
+    return 1;
+  if((attrs & VTERM_ATTR_BACKGROUND_MASK) && !vterm_color_equal(a->pen.bg, b->pen.bg))
+    return 1;
+
+  return 0;
+}
+
+int vterm_screen_get_attrs_extent(const VTermScreen *screen, VTermRect *extent, VTermPos pos, VTermAttrMask attrs)
+{
+  ScreenCell *target = getcell(screen, pos.row, pos.col);
+
+  // TODO: bounds check
+  extent->start_row = extent->end_row = pos.row;
+
+  if(extent->start_col < 0)
+    extent->start_col = 0;
+  if(extent->end_col < 0)
+    extent->end_col = screen->cols;
+
+  int col;
+
+  for(col = pos.col - 1; col >= extent->start_col; col--)
+    if(attrs_differ(attrs, target, getcell(screen, pos.row, col)))
+      break;
+  extent->start_col = col + 1;
+
+  for(col = pos.col + 1; col < extent->end_col; col++)
+    if(attrs_differ(attrs, target, getcell(screen, pos.row, col)))
+      break;
+  extent->end_col = col - 1;
+
+  return 1;
+}

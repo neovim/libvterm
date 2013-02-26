@@ -207,6 +207,20 @@ void   vterm_screen_reset(VTermScreen *screen, int hard);
 size_t vterm_screen_get_chars(const VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
 size_t vterm_screen_get_text(const VTermScreen *screen, char *str, size_t len, const VTermRect rect);
 
+typedef enum {
+  VTERM_ATTR_BOLD_MASK       = 1 << 0,
+  VTERM_ATTR_UNDERLINE_MASK  = 1 << 1,
+  VTERM_ATTR_ITALIC_MASK     = 1 << 2,
+  VTERM_ATTR_BLINK_MASK      = 1 << 3,
+  VTERM_ATTR_REVERSE_MASK    = 1 << 4,
+  VTERM_ATTR_STRIKE_MASK     = 1 << 5,
+  VTERM_ATTR_FONT_MASK       = 1 << 6,
+  VTERM_ATTR_FOREGROUND_MASK = 1 << 7,
+  VTERM_ATTR_BACKGROUND_MASK = 1 << 8,
+} VTermAttrMask;
+
+int vterm_screen_get_attrs_extent(const VTermScreen *screen, VTermRect *extent, VTermPos pos, VTermAttrMask attrs);
+
 typedef struct {
 #define VTERM_MAX_CHARS_PER_CELL 6
   uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
