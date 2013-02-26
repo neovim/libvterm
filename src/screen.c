@@ -780,7 +780,8 @@ int vterm_screen_get_attrs_extent(const VTermScreen *screen, VTermRect *extent, 
   ScreenCell *target = getcell(screen, pos.row, pos.col);
 
   // TODO: bounds check
-  extent->start_row = extent->end_row = pos.row;
+  extent->start_row = pos.row;
+  extent->end_row   = pos.row + 1;
 
   if(extent->start_col < 0)
     extent->start_col = 0;
