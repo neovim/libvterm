@@ -33,3 +33,9 @@ PUSH "e\xCC\x81"
 RESET
 PUSH "e\xCC\x81\xCC\x82\xCC\x83\xCC\x84\xCC\x85\xCC\x86\xCC\x87\xCC\x88\xCC\x89\xCC\x8A"
   ?screen_cell 0,0 = {0x65,0x301,0x302,0x303,0x304,0x305} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
+
+!Outputing CJK doublewidth in 80th column should wraparound to next line and not crash"
+RESET
+PUSH "\e[80G\xEF\xBC\x90"
+  ?screen_cell 0,79 = {} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
+  ?screen_cell 1,0 = {0xff10} width=2 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)

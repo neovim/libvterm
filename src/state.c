@@ -242,7 +242,7 @@ static int on_text(const char bytes[], size_t len, void *user)
     printf("}, onscreen width %d\n", width);
 #endif
 
-    if(state->at_phantom) {
+    if(state->at_phantom || state->pos.col + width > state->cols) {
       linefeed(state);
       state->pos.col = 0;
       state->at_phantom = 0;
