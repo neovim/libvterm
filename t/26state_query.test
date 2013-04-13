@@ -26,6 +26,26 @@ PUSH "\e[3 q"
 PUSH "\eP\$q q\e\\"
   output "\eP1\$r3 q\e\\"
 
+!DECRQSS on SGR
+PUSH "\e[1;5;7m"
+PUSH "\eP\$qm\e\\"
+  output "\eP1\$r1;5;7m\e\\"
+
+!DECRQSS on SGR ANSI colours
+PUSH "\e[31;42m"
+PUSH "\eP\$qm\e\\"
+  output "\eP1\$r1;5;7;31;42m\e\\"
+
+!DECRQSS on SGR ANSI hi-bright colours
+PUSH "\e[93;104m"
+PUSH "\eP\$qm\e\\"
+  output "\eP1\$r1;5;7;93;104m\e\\"
+
+!DECRQSS on SGR 256-palette colours
+PUSH "\e[38:5:56;48:5:78m"
+PUSH "\eP\$qm\e\\"
+  output "\eP1\$r1;5;7;38:5:56;48:5:78m\e\\"
+
 !S8C1T on DSR
 PUSH "\e G"
 PUSH "\e[5n"

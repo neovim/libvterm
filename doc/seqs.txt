@@ -61,6 +61,7 @@ between states.
    DCSes
 
   3   DCS $ q          = DECRQSS
+  3           m        =   Request SGR
               Sp q     =   Request DECSCUSR
   3           " q      =   Request DECSCA
   3           r        =   Request DECSTBM
@@ -189,7 +190,6 @@ The following sequences are not recognised by libvterm.
 123   ESC # 6          = DECDWL, double-width line
 12    ESC Z            = DECID, identify terminal
       DCS $ q          = [DECRQSS]
-  3           m        =   Request SGR
   3           " p      =   Request DECSCL
   3           $ }      =   Request DECSASD
   3           $ ~      =   Request DECSSDT

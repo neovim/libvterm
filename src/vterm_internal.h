@@ -92,7 +92,8 @@ struct VTermState
 
   VTermColor default_fg;
   VTermColor default_bg;
-  int fg_ansi;
+  int fg_index;
+  int bg_index;
   int bold_is_highbright;
 
   int protected_cell;
@@ -173,6 +174,7 @@ void vterm_state_free(VTermState *state);
 
 void vterm_state_resetpen(VTermState *state);
 void vterm_state_setpen(VTermState *state, const long args[], int argcount);
+int  vterm_state_getpen(VTermState *state, long args[], int argcount);
 void vterm_state_savepen(VTermState *state, int save);
 
 enum {
