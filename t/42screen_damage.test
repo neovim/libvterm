@@ -32,15 +32,14 @@ PUSH "\e[?1049h"
 PUSH "\e[?1049l"
   damage 0..25,0..80
 
-WANTSCREEN ms
+WANTSCREEN m
 
 !Scroll invokes moverect but not damage
 PUSH "\e[5@"
-  prescroll 0..1,75..80
   moverect 0..1,0..75 -> 0..1,5..80
   damage 0..1,0..5
 
-WANTSCREEN -ms
+WANTSCREEN -m
 
 !Merge to cells
 RESET
@@ -88,7 +87,7 @@ DAMAGEFLUSH
   damage 2..6,0..80
 
 !Merge entire screen with moverect
-WANTSCREEN ms
+WANTSCREEN m
 
 RESET
   damage 0..25,0..80
@@ -96,7 +95,6 @@ DAMAGEMERGE SCREEN
 
 PUSH "ABCDE\r\nEFGH"
 PUSH "\e[3;6r\e[6H\eD"
-  prescroll 2..3,0..80
   damage 0..2,0..5
   moverect 3..6,0..80 -> 2..5,0..80
   ?screen_chars 0,0,1,5 = 0x41,0x42,0x43,0x44,0x45
@@ -110,11 +108,8 @@ RESET
 DAMAGEMERGE SCROLL
 
 PUSH "\e[25H\n\n\n"
-  prescroll 0..1,0..80
   sb_pushline 80
-  prescroll 0..1,0..80
   sb_pushline 80
-  prescroll 0..1,0..80
   sb_pushline 80
 DAMAGEFLUSH
   moverect 3..25,0..80 -> 0..22,0..80
@@ -122,9 +117,7 @@ DAMAGEFLUSH
 
 !Merge scroll with damage
 PUSH "ABCDE\r\nEFGH\r\n"
-  prescroll 0..1,0..80
   sb_pushline 80
-  prescroll 0..1,0..80
   sb_pushline 80
 DAMAGEFLUSH
   moverect 2..25,0..80 -> 0..23,0..80
@@ -134,10 +127,6 @@ DAMAGEFLUSH
 
 !Merge scroll with damage past region
 PUSH "\e[3;6r\e[6H1\r\n2\r\n3\r\n4\r\n5"
-  prescroll 2..3,0..80
-  prescroll 2..3,0..80
-  prescroll 2..3,0..80
-  prescroll 2..3,0..80
 DAMAGEFLUSH
   damage 2..6,0..80
   ?screen_chars 2,0,3,1 = 0x32
@@ -147,7 +136,6 @@ DAMAGEFLUSH
 
 !Damage entirely outside scroll region
 PUSH "\e[HABC\e[3;6r\e[6H\r\n6"
-  prescroll 2..3,0..80
   damage 0..1,0..3
 DAMAGEFLUSH
   moverect 3..6,0..80 -> 2..5,0..80
@@ -155,7 +143,6 @@ DAMAGEFLUSH
 
 !Damage overlapping scroll region
 PUSH "\e[HABCD\r\nEFGH\r\nIJKL\e[2;5r\e[5H\r\nMNOP"
-  prescroll 1..2,0..80
 DAMAGEFLUSH
   moverect 2..5,0..80 -> 1..4,0..80
   damage 0..5,0..80
