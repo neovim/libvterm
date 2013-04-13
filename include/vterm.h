@@ -182,7 +182,7 @@ typedef struct {
   int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
   int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
   int (*bell)(void *user);
-  int (*resize)(int rows, int cols, void *user);
+  int (*resize)(int rows, int cols, VTermPos *delta, void *user);
 } VTermStateCallbacks;
 
 VTermState *vterm_obtain_state(VTerm *vt);

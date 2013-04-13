@@ -1,22 +1,54 @@
 INIT
-WANTSCREEN
+WANTSTATE
+WANTSCREEN b
 
 !Resize wider preserves cells
 RESET
+RESIZE 25,80
 PUSH "AB\r\nCD"
   ?screen_chars 0,0,1,80 = 0x41,0x42
   ?screen_chars 1,0,2,80 = 0x43,0x44
-RESIZE 30,100
+RESIZE 25,100
   ?screen_chars 0,0,1,100 = 0x41,0x42
   ?screen_chars 1,0,2,100 = 0x43,0x44
 
 !Resize wider allows print in new area
 RESET
+RESIZE 25,80
 PUSH "AB\e[79GCD"
   ?screen_chars 0,0,1,2 = 0x41,0x42
   ?screen_chars 0,78,1,80 = 0x43,0x44
-RESIZE 30,100
+RESIZE 25,100
   ?screen_chars 0,0,1,2 = 0x41,0x42
   ?screen_chars 0,78,1,80 = 0x43,0x44
 PUSH "E"
   ?screen_chars 0,78,1,81 = 0x43,0x44,0x45
+
+!Resize shorter with blanks just truncates
+RESET
+RESIZE 25,80
+PUSH "Top\e[10HLine 10"
+  ?screen_chars 0,0,1,80 = 0x54,0x6f,0x70
+  ?screen_chars 9,0,10,80 = 0x4c,0x69,0x6e,0x65,0x20,0x31,0x30
+  ?cursor = 9,7
+RESIZE 20,80
+  ?screen_chars 0,0,1,80 = 0x54,0x6f,0x70
+  ?screen_chars 9,0,10,80 = 0x4c,0x69,0x6e,0x65,0x20,0x31,0x30
+  ?cursor = 9,7
+
+!Resize shorter with content must scroll
+RESET
+RESIZE 25,80
+PUSH "Top\e[25HLine 25\e[15H"
+  ?screen_chars 0,0,1,80 = 0x54,0x6f,0x70
+  ?screen_chars 24,0,25,80 = 0x4c,0x69,0x6e,0x65,0x20,0x32,0x35
+  ?cursor = 14,0
+RESIZE 20,80
+  sb_pushline 80
+  sb_pushline 80
+  sb_pushline 80
+  sb_pushline 80
+  sb_pushline 80
+  ?screen_chars 0,0,1,80 = 
+  ?screen_chars 19,0,20,80 = 0x4c,0x69,0x6e,0x65,0x20,0x32,0x35
+  ?cursor = 9,0
