@@ -1421,6 +1421,11 @@ static int on_resize(int rows, int cols, void *user)
   state->rows = rows;
   state->cols = cols;
 
+  VTermPos delta = { 0, 0 };
+
+  if(state->callbacks && state->callbacks->resize)
+    (*state->callbacks->resize)(rows, cols, &delta, state->cbdata);
+
   if(state->pos.row >= rows)
     state->pos.row = rows - 1;
   if(state->pos.col >= cols)
@@ -1431,8 +1436,8 @@ static int on_resize(int rows, int cols, void *user)
     state->pos.col++;
   }
 
-  if(state->callbacks && state->callbacks->resize)
-    (*state->callbacks->resize)(rows, cols, state->cbdata);
+  state->pos.row += delta.row;
+  state->pos.col += delta.col;
 
   updatecursor(state, &oldpos, 1);
 

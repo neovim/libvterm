@@ -508,11 +508,34 @@ static int bell(void *user)
   return 0;
 }
 
-static int resize(int new_rows, int new_cols, void *user)
+static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
 {
   VTermScreen *screen = user;
 
   int is_altscreen = (screen->buffers[1] && screen->buffer == screen->buffers[1]);
+
+  if(!is_altscreen && new_rows < screen->rows) {
+    // Fewer rows - determine if we're going to scroll at all, and if so, push
+    // those lines to scrollback
+    VTermPos pos = { 0, 0 };
+    for(pos.row = screen->rows - 1; pos.row >= new_rows; pos.row--)
+      if(!vterm_screen_is_eol(screen, pos))
+        break;
+
+    int first_blank_row = pos.row + 1;
+    if(first_blank_row > new_rows) {
+      VTermRect rect = {
+        .start_row = 0,
+        .end_row   = screen->rows,
+        .start_col = 0,
+        .end_col   = screen->cols,
+      };
+      scrollrect(rect, first_blank_row - new_rows, 0, user);
+      vterm_screen_flush_damage(screen);
+
+      delta->row -= first_blank_row - new_rows;
+    }
+  }
 
   screen->buffers[0] = realloc_buffer(screen, screen->buffers[0], new_rows, new_cols);
   if(screen->buffers[1])
