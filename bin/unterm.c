@@ -34,6 +34,123 @@ static int col2index(VTermColor target)
   return -1;
 }
 
+static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevcell)
+{
+  switch(format) {
+    case FORMAT_PLAIN:
+      break;
+    case FORMAT_SGR:
+      {
+        // If all 7 attributes change, that means 7 SGRs max
+        // Each colour could consume up to 3
+        int sgr[7 + 2*3]; int sgri = 0;
+
+        if(!prevcell->attrs.bold && cell->attrs.bold)
+          sgr[sgri++] = 1;
+        if(prevcell->attrs.bold && !cell->attrs.bold)
+          sgr[sgri++] = 22;
+
+        if(!prevcell->attrs.underline && cell->attrs.underline)
+          sgr[sgri++] = 4;
+        if(prevcell->attrs.underline && !cell->attrs.underline)
+          sgr[sgri++] = 24;
+
+        if(!prevcell->attrs.italic && cell->attrs.italic)
+          sgr[sgri++] = 3;
+        if(prevcell->attrs.italic && !cell->attrs.italic)
+          sgr[sgri++] = 23;
+
+        if(!prevcell->attrs.blink && cell->attrs.blink)
+          sgr[sgri++] = 5;
+        if(prevcell->attrs.blink && !cell->attrs.blink)
+          sgr[sgri++] = 25;
+
+        if(!prevcell->attrs.reverse && cell->attrs.reverse)
+          sgr[sgri++] = 7;
+        if(prevcell->attrs.reverse && !cell->attrs.reverse)
+          sgr[sgri++] = 27;
+
+        if(!prevcell->attrs.strike && cell->attrs.strike)
+          sgr[sgri++] = 9;
+        if(prevcell->attrs.strike && !cell->attrs.strike)
+          sgr[sgri++] = 29;
+
+        if(!prevcell->attrs.font && cell->attrs.font)
+          sgr[sgri++] = 10 + cell->attrs.font;
+        if(prevcell->attrs.font && !cell->attrs.font)
+          sgr[sgri++] = 10;
+
+        if(prevcell->fg.red   != cell->fg.red   ||
+            prevcell->fg.green != cell->fg.green ||
+            prevcell->fg.blue  != cell->fg.blue) {
+          int index = col2index(cell->fg);
+          if(index == -1)
+            sgr[sgri++] = 39;
+          else if(index < 8)
+            sgr[sgri++] = 30 + index;
+          else if(index < 16)
+            sgr[sgri++] = 90 + (index - 8);
+          else {
+            sgr[sgri++] = 38;
+            sgr[sgri++] = 5 | (1<<31);
+            sgr[sgri++] = index | (1<<31);
+          }
+        }
+
+        if(prevcell->bg.red   != cell->bg.red   ||
+            prevcell->bg.green != cell->bg.green ||
+            prevcell->bg.blue  != cell->bg.blue) {
+          int index = col2index(cell->bg);
+          if(index == -1)
+            sgr[sgri++] = 49;
+          else if(index < 8)
+            sgr[sgri++] = 40 + index;
+          else if(index < 16)
+            sgr[sgri++] = 100 + (index - 8);
+          else {
+            sgr[sgri++] = 48;
+            sgr[sgri++] = 5 | (1<<31);
+            sgr[sgri++] = index | (1<<31);
+          }
+        }
+
+        if(!sgri)
+          break;
+
+        printf("\e[");
+        for(int i = 0; i < sgri; i++)
+          printf(!i               ? "%d" :
+              sgr[i] & (1<<31) ? ":%d" :
+              ";%d",
+              sgr[i] & ~(1<<31));
+        printf("m");
+      }
+      break;
+  }
+
+  for(int i = 0; cell->chars[i]; i++) {
+    char bytes[6];
+    bytes[fill_utf8(cell->chars[i], bytes)] = 0;
+    printf("%s", bytes);
+  }
+}
+
+static void dump_eol(const VTermScreenCell *prevcell)
+{
+  switch(format) {
+    case FORMAT_PLAIN:
+      break;
+    case FORMAT_SGR:
+      if(prevcell->attrs.bold || prevcell->attrs.underline || prevcell->attrs.italic ||
+         prevcell->attrs.blink || prevcell->attrs.reverse || prevcell->attrs.strike ||
+         prevcell->attrs.font)
+        printf("\e[m");
+      break;
+  }
+
+  printf("\n");
+}
+
 void dump_row(int row)
 {
   VTermPos pos = { .row = row, .col = 0 };
@@ -44,129 +161,26 @@ void dump_row(int row)
     VTermScreenCell cell;
     vterm_screen_get_cell(vts, pos, &cell);
 
-    switch(format) {
-      case FORMAT_PLAIN:
-        break;
-      case FORMAT_SGR:
-        {
-          // If all 7 attributes change, that means 7 SGRs max
-          // Each colour could consume up to 3
-          int sgr[7 + 2*3]; int sgri = 0;
-
-          if(!prevcell.attrs.bold && cell.attrs.bold)
-            sgr[sgri++] = 1;
-          if(prevcell.attrs.bold && !cell.attrs.bold)
-            sgr[sgri++] = 22;
-
-          if(!prevcell.attrs.underline && cell.attrs.underline)
-            sgr[sgri++] = 4;
-          if(prevcell.attrs.underline && !cell.attrs.underline)
-            sgr[sgri++] = 24;
-
-          if(!prevcell.attrs.italic && cell.attrs.italic)
-            sgr[sgri++] = 3;
-          if(prevcell.attrs.italic && !cell.attrs.italic)
-            sgr[sgri++] = 23;
-
-          if(!prevcell.attrs.blink && cell.attrs.blink)
-            sgr[sgri++] = 5;
-          if(prevcell.attrs.blink && !cell.attrs.blink)
-            sgr[sgri++] = 25;
-
-          if(!prevcell.attrs.reverse && cell.attrs.reverse)
-            sgr[sgri++] = 7;
-          if(prevcell.attrs.reverse && !cell.attrs.reverse)
-            sgr[sgri++] = 27;
-
-          if(!prevcell.attrs.strike && cell.attrs.strike)
-            sgr[sgri++] = 9;
-          if(prevcell.attrs.strike && !cell.attrs.strike)
-            sgr[sgri++] = 29;
-
-          if(!prevcell.attrs.font && cell.attrs.font)
-            sgr[sgri++] = 10 + cell.attrs.font;
-          if(prevcell.attrs.font && !cell.attrs.font)
-            sgr[sgri++] = 10;
-
-          if(prevcell.fg.red   != cell.fg.red   ||
-             prevcell.fg.green != cell.fg.green ||
-             prevcell.fg.blue  != cell.fg.blue) {
-            int index = col2index(cell.fg);
-            if(index == -1)
-              sgr[sgri++] = 39;
-            else if(index < 8)
-              sgr[sgri++] = 30 + index;
-            else if(index < 16)
-              sgr[sgri++] = 90 + (index - 8);
-            else {
-              sgr[sgri++] = 38;
-              sgr[sgri++] = 5 | (1<<31);
-              sgr[sgri++] = index | (1<<31);
-            }
-          }
-
-          if(prevcell.bg.red   != cell.bg.red   ||
-             prevcell.bg.green != cell.bg.green ||
-             prevcell.bg.blue  != cell.bg.blue) {
-            int index = col2index(cell.bg);
-            if(index == -1)
-              sgr[sgri++] = 49;
-            else if(index < 8)
-              sgr[sgri++] = 40 + index;
-            else if(index < 16)
-              sgr[sgri++] = 100 + (index - 8);
-            else {
-              sgr[sgri++] = 48;
-              sgr[sgri++] = 5 | (1<<31);
-              sgr[sgri++] = index | (1<<31);
-            }
-          }
-
-          if(!sgri)
-            break;
-
-          printf("\e[");
-          for(int i = 0; i < sgri; i++)
-            printf(!i               ? "%d" :
-                   sgr[i] & (1<<31) ? ":%d" :
-                                      ";%d",
-                   sgr[i] & ~(1<<31));
-          printf("m");
-        }
-        break;
-    }
-
-    for(int i = 0; cell.chars[i]; i++) {
-      char bytes[6];
-      bytes[fill_utf8(cell.chars[i], bytes)] = 0;
-      printf("%s", bytes);
-    }
+    dump_cell(&cell, &prevcell);
 
     pos.col += cell.width;
     prevcell = cell;
   }
 
-  switch(format) {
-    case FORMAT_PLAIN:
-      break;
-    case FORMAT_SGR:
-      if(prevcell.attrs.bold || prevcell.attrs.underline || prevcell.attrs.italic ||
-         prevcell.attrs.blink || prevcell.attrs.reverse || prevcell.attrs.strike ||
-         prevcell.attrs.font)
-        printf("\e[m");
-      break;
-  }
-
-  printf("\n");
+  dump_eol(&prevcell);
 }
 
-static int screen_prescroll(VTermRect rect, void *user)
+static int screen_sb_pushline(int cols, const VTermScreenCell *cells, void *user)
 {
-  if(rect.start_row != 0 || rect.start_col != 0 || rect.end_col != cols)
-    return 0;
+  VTermScreenCell prevcell = {};
+  vterm_state_get_default_colors(vterm_obtain_state(vt), &prevcell.fg, &prevcell.bg);
 
-  for(int row = 0; row < rect.end_row; row++)
-    dump_row(row);
+  for(int col = 0; col < cols; col++) {
+    dump_cell(cells + col, &prevcell);
+    prevcell = cells[col];
+  }
+
+  dump_eol(&prevcell);
 
   return 1;
 }
@@ -179,8 +193,8 @@ static int screen_resize(int new_rows, int new_cols, void *user)
 }
 
 static VTermScreenCallbacks cb_screen = {
-  .prescroll = &screen_prescroll,
-  .resize    = &screen_resize,
+  .sb_pushline = &screen_sb_pushline,
+  .resize      = &screen_resize,
 };
 
 int main(int argc, char *argv[])
