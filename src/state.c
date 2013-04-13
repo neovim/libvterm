@@ -1426,11 +1426,6 @@ static int on_resize(int rows, int cols, void *user)
   if(state->callbacks && state->callbacks->resize)
     (*state->callbacks->resize)(rows, cols, &delta, state->cbdata);
 
-  if(state->pos.row >= rows)
-    state->pos.row = rows - 1;
-  if(state->pos.col >= cols)
-    state->pos.col = cols - 1;
-
   if(state->at_phantom && state->pos.col < cols-1) {
     state->at_phantom = 0;
     state->pos.col++;
@@ -1438,6 +1433,11 @@ static int on_resize(int rows, int cols, void *user)
 
   state->pos.row += delta.row;
   state->pos.col += delta.col;
+
+  if(state->pos.row >= rows)
+    state->pos.row = rows - 1;
+  if(state->pos.col >= cols)
+    state->pos.col = cols - 1;
 
   updatecursor(state, &oldpos, 1);
 
