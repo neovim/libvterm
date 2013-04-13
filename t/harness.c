@@ -353,6 +353,15 @@ static int screen_prescroll(VTermRect rect, void *user)
   return 1;
 }
 
+static int want_screen_scrollback = 0;
+static int screen_sb_pushline(int cols, const VTermScreenCell *cells, void *user)
+{
+  if(!want_screen_scrollback)
+    return 1;
+
+  printf("sb_pushline %d\n", cols);
+  return 1;
+}
 
 VTermScreenCallbacks screen_cbs = {
   .damage       = screen_damage,
@@ -361,6 +370,7 @@ VTermScreenCallbacks screen_cbs = {
   .movecursor   = movecursor,
   .settermprop  = settermprop,
   .setmousefunc = setmousefunc,
+  .sb_pushline  = screen_sb_pushline,
 };
 
 int main(int argc, char **argv)
@@ -463,6 +473,9 @@ int main(int argc, char **argv)
           break;
         case 'M':
           want_mouse = sense;
+          break;
+        case 'b':
+          want_screen_scrollback = sense;
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSCREEN flag '%c'\n", line[i]);

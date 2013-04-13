@@ -58,6 +58,9 @@ struct VTermScreen
   /* buffer will == buffers[0] or buffers[1], depending on altscreen */
   ScreenCell *buffer;
 
+  /* buffer for a single screen row used in scrollback storage callbacks */
+  VTermScreenCell *sb_buffer;
+
   ScreenPen pen;
 };
 
@@ -238,6 +241,19 @@ static int moverect_internal(VTermRect dest, VTermRect src, void *user)
         .end_col   = dest.end_col,
       };
       (*screen->callbacks->prescroll)(rect, screen->cbdata);
+    }
+  }
+
+  if(screen->callbacks && screen->callbacks->sb_pushline &&
+     dest.start_row == 0 && dest.start_col == 0 &&  // starts top-left corner
+     dest.end_col == screen->cols &&                // full width
+     screen->buffer == screen->buffers[0]) {        // not altscreen
+    VTermPos pos;
+    for (pos.row = 0; pos.row < src.start_row; pos.row++) {
+      for (pos.col = 0; pos.col < screen->cols; pos.col++)
+        vterm_screen_get_cell(screen, pos, screen->sb_buffer + pos.col);
+
+      (screen->callbacks->sb_pushline)(screen->cols, screen->sb_buffer, screen->cbdata);
     }
   }
 
@@ -510,6 +526,11 @@ static int resize(int new_rows, int new_cols, void *user)
   screen->rows = new_rows;
   screen->cols = new_cols;
 
+  if(screen->sb_buffer)
+    vterm_allocator_free(screen->vt, screen->sb_buffer);
+
+  screen->sb_buffer = vterm_allocator_malloc(screen->vt, sizeof(VTermScreenCell) * new_cols);
+
   if(new_cols > old_cols) {
     VTermRect rect = {
       .start_row = 0,
@@ -573,6 +594,8 @@ static VTermScreen *screen_new(VTerm *vt)
 
   screen->buffer = screen->buffers[0];
 
+  screen->sb_buffer = vterm_allocator_malloc(screen->vt, sizeof(VTermScreenCell) * cols);
+
   vterm_state_set_callbacks(screen->state, &state_cbs, screen);
 
   return screen;
@@ -583,6 +606,8 @@ void vterm_screen_free(VTermScreen *screen)
   vterm_allocator_free(screen->vt, screen->buffers[0]);
   if(screen->buffers[1])
     vterm_allocator_free(screen->vt, screen->buffers[1]);
+
+  vterm_allocator_free(screen->vt, screen->sb_buffer);
 
   vterm_allocator_free(screen->vt, screen);
 }
