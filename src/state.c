@@ -1347,10 +1347,10 @@ static void request_status_string(VTermState *state, const char *command, size_t
   if(cmdlen == 1)
     switch(command[0]) {
       case 'r': // Query DECSTBM
-        vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
+        vterm_push_output_sprintf_dcs(state->vt, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
         return;
       case 's': // Query DECSLRM
-        vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d;%ds", SCROLLREGION_LEFT(state)+1, SCROLLREGION_RIGHT(state));
+        vterm_push_output_sprintf_dcs(state->vt, "1$r%d;%ds", SCROLLREGION_LEFT(state)+1, SCROLLREGION_RIGHT(state));
         return;
     }
 
@@ -1364,16 +1364,16 @@ static void request_status_string(VTermState *state, const char *command, size_t
       }
       if(state->mode.cursor_blink)
         reply--;
-      vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d q", reply);
+      vterm_push_output_sprintf_dcs(state->vt, "1$r%d q", reply);
       return;
     }
     else if(strneq(command, "\"q", 2)) {
-      vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r%d\"q", state->protected_cell ? 1 : 2);
+      vterm_push_output_sprintf_dcs(state->vt, "1$r%d\"q", state->protected_cell ? 1 : 2);
       return;
     }
   }
 
-  vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "0$r%.s", (int)cmdlen, command);
+  vterm_push_output_sprintf_dcs(state->vt, "0$r%.s", (int)cmdlen, command);
 }
 
 static int on_dcs(const char *command, size_t cmdlen, void *user)
