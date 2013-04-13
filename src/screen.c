@@ -516,11 +516,14 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
 
   int is_altscreen = (screen->buffers[1] && screen->buffer == screen->buffers[1]);
 
-  if(!is_altscreen && new_rows < screen->rows) {
+  int old_rows = screen->rows;
+  int old_cols = screen->cols;
+
+  if(!is_altscreen && new_rows < old_rows) {
     // Fewer rows - determine if we're going to scroll at all, and if so, push
     // those lines to scrollback
     VTermPos pos = { 0, 0 };
-    for(pos.row = screen->rows - 1; pos.row >= new_rows; pos.row--)
+    for(pos.row = old_rows - 1; pos.row >= new_rows; pos.row--)
       if(!vterm_screen_is_eol(screen, pos))
         break;
 
@@ -528,9 +531,9 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
     if(first_blank_row > new_rows) {
       VTermRect rect = {
         .start_row = 0,
-        .end_row   = screen->rows,
+        .end_row   = old_rows,
         .start_col = 0,
-        .end_col   = screen->cols,
+        .end_col   = old_cols,
       };
       scrollrect(rect, first_blank_row - new_rows, 0, user);
       vterm_screen_flush_damage(screen);
@@ -544,9 +547,6 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
     screen->buffers[1] = realloc_buffer(screen, screen->buffers[1], new_rows, new_cols);
 
   screen->buffer = is_altscreen ? screen->buffers[1] : screen->buffers[0];
-
-  int old_rows = screen->rows;
-  int old_cols = screen->cols;
 
   screen->rows = new_rows;
   screen->cols = new_cols;
