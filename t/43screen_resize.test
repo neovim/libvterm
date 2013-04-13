@@ -1,6 +1,6 @@
 INIT
 WANTSTATE
-WANTSCREEN b
+WANTSCREEN
 
 !Resize wider preserves cells
 RESET
@@ -43,6 +43,7 @@ PUSH "Top\e[25HLine 25\e[15H"
   ?screen_chars 0,0,1,80 = 0x54,0x6f,0x70
   ?screen_chars 24,0,25,80 = 0x4c,0x69,0x6e,0x65,0x20,0x32,0x35
   ?cursor = 14,0
+WANTSCREEN b
 RESIZE 20,80
   sb_pushline 80
   sb_pushline 80
@@ -52,3 +53,23 @@ RESIZE 20,80
   ?screen_chars 0,0,1,80 = 
   ?screen_chars 19,0,20,80 = 0x4c,0x69,0x6e,0x65,0x20,0x32,0x35
   ?cursor = 9,0
+
+!Resize taller attempts to pop scrollback
+RESET
+WANTSCREEN -b
+RESIZE 25,80
+PUSH "Line 1\e[25HBottom\e[15H"
+  ?screen_chars 0,0,1,80 = 0x4c,0x69,0x6e,0x65,0x20,0x31
+  ?screen_chars 24,0,25,80 = 0x42,0x6f,0x74,0x74,0x6f,0x6d
+  ?cursor = 14,0
+WANTSCREEN b
+RESIZE 30,80
+  sb_popline 80
+  sb_popline 80
+  sb_popline 80
+  sb_popline 80
+  sb_popline 80
+  ?screen_chars 0,0,1,80 = 0x41,0x42,0x43,0x44,0x45
+  ?screen_chars 5,0,6,80 = 0x4c,0x69,0x6e,0x65,0x20,0x31
+  ?screen_chars 29,0,30,80 = 0x42,0x6f,0x74,0x74,0x6f,0x6d
+  ?cursor = 19,0

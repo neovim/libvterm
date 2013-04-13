@@ -363,6 +363,25 @@ static int screen_sb_pushline(int cols, const VTermScreenCell *cells, void *user
   return 1;
 }
 
+static int screen_sb_popline(int cols, VTermScreenCell *cells, void *user)
+{
+  if(!want_screen_scrollback)
+    return 0;
+
+  // All lines of scrollback contain "ABCDE"
+  for(int col = 0; col < cols; col++) {
+    if(col < 5)
+      cells[col].chars[0] = 'A' + col;
+    else
+      cells[col].chars[0] = 0;
+
+    cells[col].width = 1;
+  }
+
+  printf("sb_popline %d\n", cols);
+  return 1;
+}
+
 VTermScreenCallbacks screen_cbs = {
   .damage       = screen_damage,
   .prescroll    = screen_prescroll,
@@ -371,6 +390,7 @@ VTermScreenCallbacks screen_cbs = {
   .settermprop  = settermprop,
   .setmousefunc = setmousefunc,
   .sb_pushline  = screen_sb_pushline,
+  .sb_popline   = screen_sb_popline,
 };
 
 int main(int argc, char **argv)

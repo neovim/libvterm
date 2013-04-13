@@ -34,6 +34,8 @@ typedef struct
   ScreenPen pen;
 } ScreenCell;
 
+static int vterm_screen_set_cell(VTermScreen *screen, VTermPos pos, const VTermScreenCell *cell);
+
 struct VTermScreen
 {
   VTerm *vt;
@@ -565,6 +567,34 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
   }
 
   if(new_rows > old_rows) {
+    if(!is_altscreen && screen->callbacks && screen->callbacks->sb_popline) {
+      int rows = new_rows - old_rows;
+      while(rows) {
+        if(!(screen->callbacks->sb_popline(screen->cols, screen->sb_buffer, screen->cbdata)))
+          break;
+
+        VTermRect rect = {
+          .start_row = 0,
+          .end_row   = screen->rows,
+          .start_col = 0,
+          .end_col   = screen->cols,
+        };
+        scrollrect(rect, -1, 0, user);
+
+        VTermPos pos = { 0, 0 };
+        for(pos.col = 0; pos.col < screen->cols; pos.col += screen->sb_buffer[pos.col].width)
+          vterm_screen_set_cell(screen, pos, screen->sb_buffer + pos.col);
+
+        rect.end_row = 1;
+        damagerect(screen, rect);
+
+        vterm_screen_flush_damage(screen);
+
+        rows--;
+        delta->row++;
+      }
+    }
+
     VTermRect rect = {
       .start_row = old_rows,
       .end_row   = new_rows,
@@ -732,6 +762,37 @@ int vterm_screen_get_cell(const VTermScreen *screen, VTermPos pos, VTermScreenCe
     cell->width = 2;
   else
     cell->width = 1;
+
+  return 1;
+}
+
+/* Copy external to internal representation of a screen cell */
+/* static because it's only used internally for sb_popline during resize */
+static int vterm_screen_set_cell(VTermScreen *screen, VTermPos pos, const VTermScreenCell *cell)
+{
+  ScreenCell *intcell = getcell(screen, pos.row, pos.col);
+  if(!intcell)
+    return 0;
+
+  for(int i = 0; ; i++) {
+    intcell->chars[i] = cell->chars[i];
+    if(!cell->chars[i])
+      break;
+  }
+
+  intcell->pen.bold      = cell->attrs.bold;
+  intcell->pen.underline = cell->attrs.underline;
+  intcell->pen.italic    = cell->attrs.italic;
+  intcell->pen.blink     = cell->attrs.blink;
+  intcell->pen.reverse   = cell->attrs.reverse ^ screen->global_reverse;
+  intcell->pen.strike    = cell->attrs.strike;
+  intcell->pen.font      = cell->attrs.font;
+
+  intcell->pen.fg = cell->fg;
+  intcell->pen.bg = cell->bg;
+
+  if(cell->width == 2)
+    getcell(screen, pos.row, pos.col + 1)->chars[0] = (uint32_t)-1;
 
   return 1;
 }

@@ -227,6 +227,7 @@ typedef struct {
   int (*bell)(void *user);
   int (*resize)(int rows, int cols, void *user);
   int (*sb_pushline)(int cols, const VTermScreenCell *cells, void *user);
+  int (*sb_popline)(int cols, VTermScreenCell *cells, void *user);
 } VTermScreenCallbacks;
 
 VTermScreen *vterm_obtain_screen(VTerm *vt);
