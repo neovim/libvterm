@@ -1346,6 +1346,21 @@ static void request_status_string(VTermState *state, const char *command, size_t
 {
   if(cmdlen == 1)
     switch(command[0]) {
+      case 'm': // Query SGR
+        {
+          long args[20];
+          int argc = vterm_state_getpen(state, args, sizeof(args)/sizeof(args[0]));
+          vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r");
+          for(int argi = 0; argi < argc; argi++)
+            vterm_push_output_sprintf(state->vt,
+                argi == argc - 1             ? "%d" :
+                CSI_ARG_HAS_MORE(args[argi]) ? "%d:" :
+                                               "%d;",
+                CSI_ARG(args[argi]));
+          vterm_push_output_sprintf(state->vt, "m");
+          vterm_push_output_sprintf_ctrl(state->vt, C1_ST, "");
+        }
+        return;
       case 'r': // Query DECSTBM
         vterm_push_output_sprintf_dcs(state->vt, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
         return;
