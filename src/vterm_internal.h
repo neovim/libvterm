@@ -96,7 +96,7 @@ struct VTermState
   int bg_index;
   int bold_is_highbright;
 
-  int protected_cell;
+  unsigned int protected_cell : 1;
 
   /* Saved state under DEC mode 1048/1049 */
   struct {
