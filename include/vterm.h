@@ -98,7 +98,7 @@ typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, int modifi
 typedef struct {
   const uint32_t *chars;
   int             width;
-  int             protected_cell;  /* DECSCA-protected against DECSEL/DECSED */
+  unsigned int    protected_cell:1;  /* DECSCA-protected against DECSEL/DECSED */
 } VTermGlyphInfo;
 
 typedef struct {
