@@ -99,7 +99,12 @@ typedef struct {
   const uint32_t *chars;
   int             width;
   unsigned int    protected_cell:1;  /* DECSCA-protected against DECSEL/DECSED */
+  unsigned int    dwl:1;             /* DECDWL double-width line */
 } VTermGlyphInfo;
+
+typedef struct {
+  unsigned int    doublewidth:1;     /* DECDWL line */
+} VTermLineInfo;
 
 typedef struct {
   /* libvterm relies on this memory to be zeroed out before it is returned
@@ -183,6 +188,7 @@ typedef struct {
   int (*setmousefunc)(VTermMouseFunc func, void *data, void *user);
   int (*bell)(void *user);
   int (*resize)(int rows, int cols, VTermPos *delta, void *user);
+  int (*setlineinfo)(int row, const VTermLineInfo *newinfo, const VTermLineInfo *oldinfo, void *user);
 } VTermStateCallbacks;
 
 VTermState *vterm_obtain_state(VTerm *vt);

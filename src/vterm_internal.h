@@ -58,6 +58,10 @@ struct VTermState
   /* Bitvector of tab stops */
   unsigned char *tabstops;
 
+  VTermLineInfo *lineinfo;
+#define ROWWIDTH(state,row) ((state)->lineinfo[(row)].doublewidth ? ((state)->cols / 2) : (state)->cols)
+#define THISROWWIDTH(state) ROWWIDTH(state, (state)->pos.row)
+
   /* Mouse state */
   int mouse_col, mouse_row;
   int mouse_buttons;

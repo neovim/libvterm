@@ -23,6 +23,7 @@ static void putglyph(VTermState *state, const uint32_t chars[], int width, VTerm
     .chars = chars,
     .width = width,
     .protected_cell = state->protected_cell,
+    .dwl = state->lineinfo[pos.row].doublewidth,
   };
 
   if(state->callbacks && state->callbacks->putglyph)
@@ -71,6 +72,7 @@ static VTermState *vterm_state_new(VTerm *vt)
 void vterm_state_free(VTermState *state)
 {
   vterm_allocator_free(state->vt, state->tabstops);
+  vterm_allocator_free(state->vt, state->lineinfo);
   vterm_allocator_free(state->vt, state->combine_chars);
   vterm_allocator_free(state->vt, state);
 }
@@ -139,7 +141,7 @@ static int is_col_tabstop(VTermState *state, int col)
 static void tab(VTermState *state, int count, int direction)
 {
   while(count--)
-    while(state->pos.col >= 0 && state->pos.col < state->cols-1) {
+    while(state->pos.col >= 0 && state->pos.col < THISROWWIDTH(state)-1) {
       state->pos.col += direction;
 
       if(is_col_tabstop(state, state->pos.col))
@@ -243,7 +245,7 @@ static int on_text(const char bytes[], size_t len, void *user)
     printf("}, onscreen width %d\n", width);
 #endif
 
-    if(state->at_phantom || state->pos.col + width > state->cols) {
+    if(state->at_phantom || state->pos.col + width > THISROWWIDTH(state)) {
       linefeed(state);
       state->pos.col = 0;
       state->at_phantom = 0;
@@ -258,10 +260,11 @@ static int on_text(const char bytes[], size_t len, void *user)
         .start_row = state->pos.row,
         .end_row   = state->pos.row + 1,
         .start_col = state->pos.col,
-        .end_col   = state->cols,
+        .end_col   = THISROWWIDTH(state),
       };
       scroll(state, rect, 0, -1);
     }
+
     putglyph(state, chars, width, state->pos);
 
     if(i == npoints - 1) {
@@ -280,7 +283,7 @@ static int on_text(const char bytes[], size_t len, void *user)
       state->combine_pos = state->pos;
     }
 
-    if(state->pos.col + width >= state->cols) {
+    if(state->pos.col + width >= THISROWWIDTH(state)) {
       if(state->mode.autowrap)
         state->at_phantom = 1;
     }
@@ -547,12 +550,33 @@ static int on_escape(const char *bytes, size_t len, void *user)
       return 0;
 
     switch(bytes[1]) {
+      case '5': // DECSWL
+      case '6': // DECDWL
+      {
+        if(state->mode.leftrightmargin)
+          break;
+
+        VTermLineInfo info = state->lineinfo[state->pos.row];
+        switch(bytes[1]) {
+          case '5': info.doublewidth = 0; break;
+          case '6': info.doublewidth = 1; break;
+        }
+
+        if(!state->callbacks ||
+           !state->callbacks->setlineinfo ||
+           !(*state->callbacks->setlineinfo)(state->pos.row, &info, state->lineinfo + state->pos.row, state->cbdata))
+          break;
+
+        state->lineinfo[state->pos.row] = info;
+        break;
+      }
+
       case '8': // DECALN
       {
         VTermPos pos;
         uint32_t E[] = { 'E', 0 };
         for(pos.row = 0; pos.row < state->rows; pos.row++)
-          for(pos.col = 0; pos.col < state->cols; pos.col++)
+          for(pos.col = 0; pos.col < ROWWIDTH(state, pos.row); pos.col++)
             putglyph(state, E, 1, pos);
         break;
       }
@@ -684,7 +708,23 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 69: // DECVSSM - vertical split screen mode
+           // DECLRMM - left/right margin mode
     state->mode.leftrightmargin = val;
+    if(val) {
+      // Setting DECVSSM must clear doublewidth state of every line
+      for(int row = 0; row < state->rows; row++) {
+        if(!state->lineinfo[row].doublewidth)
+          continue;
+
+        VTermLineInfo info = state->lineinfo[row];
+        info.doublewidth = 0;
+        if(state->callbacks && state->callbacks->setlineinfo)
+          (*state->callbacks->setlineinfo)(row, &info, state->lineinfo + row, state->cbdata);
+
+        state->lineinfo[row] = info;
+      }
+    }
+
     break;
 
   case 1000:
@@ -869,7 +909,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
-    rect.end_col   = state->cols;
+    rect.end_col   = THISROWWIDTH(state);
 
     scroll(state, rect, 0, -count);
 
@@ -983,11 +1023,11 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     switch(CSI_ARG(args[0])) {
     case CSI_ARG_MISSING:
     case 0:
-      rect.start_col = state->pos.col; rect.end_col = state->cols; break;
+      rect.start_col = state->pos.col; rect.end_col = THISROWWIDTH(state); break;
     case 1:
       rect.start_col = 0; rect.end_col = state->pos.col + 1; break;
     case 2:
-      rect.start_col = 0; rect.end_col = state->cols; break;
+      rect.start_col = 0; rect.end_col = THISROWWIDTH(state); break;
     default:
       return 0;
     }
@@ -1027,7 +1067,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
-    rect.end_col   = state->cols;
+    rect.end_col   = THISROWWIDTH(state);
 
     scroll(state, rect, 0, count);
 
@@ -1064,7 +1104,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
     rect.end_col   = state->pos.col + count;
-    UBOUND(rect.end_col, state->cols);
+    UBOUND(rect.end_col, THISROWWIDTH(state));
 
     erase(state, rect, 0);
     break;
@@ -1311,7 +1351,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     LBOUND(state->pos.row, 0);
     UBOUND(state->pos.row, state->rows-1);
     LBOUND(state->pos.col, 0);
-    UBOUND(state->pos.col, state->cols-1);
+    UBOUND(state->pos.col, THISROWWIDTH(state)-1);
   }
 
   updatecursor(state, &oldpos, 1);
@@ -1434,6 +1474,24 @@ static int on_resize(int rows, int cols, void *user)
     state->tabstops = newtabstops;
   }
 
+  if(rows != state->rows) {
+    VTermLineInfo *newlineinfo = vterm_allocator_malloc(state->vt, rows * sizeof(VTermLineInfo));
+
+    int row;
+    for(row = 0; row < state->rows && row < rows; row++) {
+      newlineinfo[row] = state->lineinfo[row];
+    }
+
+    for( ; row < rows; row++) {
+      newlineinfo[row] = (VTermLineInfo){
+        .doublewidth = 0,
+      };
+    }
+
+    vterm_allocator_free(state->vt, state->lineinfo);
+    state->lineinfo = newlineinfo;
+  }
+
   state->rows = rows;
   state->cols = cols;
 
@@ -1483,6 +1541,8 @@ VTermState *vterm_obtain_state(VTerm *vt)
 
   state->tabstops = vterm_allocator_malloc(state->vt, (state->cols + 7) / 8);
 
+  state->lineinfo = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
+
   state->encoding_utf8.enc = vterm_lookup_encoding(ENC_UTF8, 'u');
   if(*state->encoding_utf8.enc->init)
     (*state->encoding_utf8.enc->init)(state->encoding_utf8.enc, state->encoding_utf8.data);
@@ -1515,6 +1575,11 @@ void vterm_state_reset(VTermState *state, int hard)
       set_col_tabstop(state, col);
     else
       clear_col_tabstop(state, col);
+
+  for(int row = 0; row < state->rows; row++)
+    state->lineinfo[row] = (VTermLineInfo){
+      .doublewidth = 0,
+    };
 
   if(state->callbacks && state->callbacks->initpen)
     (*state->callbacks->initpen)(state->cbdata);
