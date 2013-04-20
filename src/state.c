@@ -1678,3 +1678,8 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
 
   return 0;
 }
+
+const VTermLineInfo *vterm_state_get_lineinfo(const VTermState *state, int row)
+{
+  return state->lineinfo + row;
+}

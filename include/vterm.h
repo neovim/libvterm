@@ -203,6 +203,7 @@ void vterm_state_set_palette_color(VTermState *state, int index, const VTermColo
 void vterm_state_set_bold_highbright(VTermState *state, int bold_is_highbright);
 int  vterm_state_get_penattr(const VTermState *state, VTermAttr attr, VTermValue *val);
 int  vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val);
+const VTermLineInfo *vterm_state_get_lineinfo(const VTermState *state, int row);
 
 // ------------
 // Screen layer
