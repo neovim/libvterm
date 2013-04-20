@@ -254,7 +254,12 @@ static int state_putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
   printf("putglyph ");
   for(int i = 0; info->chars[i]; i++)
     printf(i ? ",%x" : "%x", info->chars[i]);
-  printf(" %d %d,%d%s\n", info->width, pos.row, pos.col, info->protected_cell ? " prot" : "");
+  printf(" %d %d,%d", info->width, pos.row, pos.col);
+  if(info->protected_cell)
+    printf(" prot");
+  if(info->dwl)
+    printf(" dwl");
+  printf("\n");
 
   return 1;
 }
@@ -318,6 +323,11 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
   return 1;
 }
 
+static int state_setlineinfo(int row, const VTermLineInfo *newinfo, const VTermLineInfo *oldinfo, void *user)
+{
+  return 1;
+}
+
 VTermStateCallbacks state_cbs = {
   .putglyph     = state_putglyph,
   .movecursor   = movecursor,
@@ -327,6 +337,7 @@ VTermStateCallbacks state_cbs = {
   .setpenattr   = state_setpenattr,
   .settermprop  = settermprop,
   .setmousefunc = setmousefunc,
+  .setlineinfo  = state_setlineinfo,
 };
 
 static int want_screen_damage = 0;
