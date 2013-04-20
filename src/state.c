@@ -149,6 +149,29 @@ static void tab(VTermState *state, int count, int direction)
     }
 }
 
+#define NO_FORCE 0
+#define FORCE    1
+
+#define DWL_OFF 0
+#define DWL_ON  1
+
+static void set_lineinfo(VTermState *state, int row, int force, int dwl)
+{
+  VTermLineInfo info = state->lineinfo[row];
+
+  if(dwl == 0)
+    info.doublewidth = 0;
+  else if(dwl == 1)
+    info.doublewidth = 1;
+  // else -1 to ignore
+
+  if((state->callbacks &&
+      state->callbacks->setlineinfo &&
+      (*state->callbacks->setlineinfo)(row, &info, state->lineinfo + row, state->cbdata))
+      || force)
+    state->lineinfo[row] = info;
+}
+
 static int on_text(const char bytes[], size_t len, void *user)
 {
   VTermState *state = user;
@@ -551,25 +574,16 @@ static int on_escape(const char *bytes, size_t len, void *user)
 
     switch(bytes[1]) {
       case '5': // DECSWL
-      case '6': // DECDWL
-      {
         if(state->mode.leftrightmargin)
           break;
-
-        VTermLineInfo info = state->lineinfo[state->pos.row];
-        switch(bytes[1]) {
-          case '5': info.doublewidth = 0; break;
-          case '6': info.doublewidth = 1; break;
-        }
-
-        if(!state->callbacks ||
-           !state->callbacks->setlineinfo ||
-           !(*state->callbacks->setlineinfo)(state->pos.row, &info, state->lineinfo + state->pos.row, state->cbdata))
-          break;
-
-        state->lineinfo[state->pos.row] = info;
+        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_OFF);
         break;
-      }
+
+      case '6': // DECDWL
+        if(state->mode.leftrightmargin)
+          break;
+        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_ON);
+        break;
 
       case '8': // DECALN
       {
@@ -712,17 +726,8 @@ static void set_dec_mode(VTermState *state, int num, int val)
     state->mode.leftrightmargin = val;
     if(val) {
       // Setting DECVSSM must clear doublewidth state of every line
-      for(int row = 0; row < state->rows; row++) {
-        if(!state->lineinfo[row].doublewidth)
-          continue;
-
-        VTermLineInfo info = state->lineinfo[row];
-        info.doublewidth = 0;
-        if(state->callbacks && state->callbacks->setlineinfo)
-          (*state->callbacks->setlineinfo)(row, &info, state->lineinfo + row, state->cbdata);
-
-        state->lineinfo[row] = info;
-      }
+      for(int row = 0; row < state->rows; row++)
+        set_lineinfo(state, row, FORCE, DWL_OFF);
     }
 
     break;
@@ -990,6 +995,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
       rect.start_row = state->pos.row + 1; rect.end_row = state->rows;
       rect.start_col = 0;
+      for(int row = rect.start_row; row < rect.end_row; row++)
+        set_lineinfo(state, row, FORCE, DWL_OFF);
       if(rect.end_row > rect.start_row)
         erase(state, rect, selective);
       break;
@@ -997,6 +1004,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     case 1:
       rect.start_row = 0; rect.end_row = state->pos.row;
       rect.start_col = 0; rect.end_col = state->cols;
+      for(int row = rect.start_row; row < rect.end_row; row++)
+        set_lineinfo(state, row, FORCE, DWL_OFF);
       if(rect.end_col > rect.start_col)
         erase(state, rect, selective);
 
@@ -1009,6 +1018,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     case 2:
       rect.start_row = 0; rect.end_row = state->rows;
       rect.start_col = 0; rect.end_col = state->cols;
+      for(int row = rect.start_row; row < rect.end_row; row++)
+        set_lineinfo(state, row, FORCE, DWL_OFF);
       erase(state, rect, selective);
       break;
     }
@@ -1577,9 +1588,7 @@ void vterm_state_reset(VTermState *state, int hard)
       clear_col_tabstop(state, col);
 
   for(int row = 0; row < state->rows; row++)
-    state->lineinfo[row] = (VTermLineInfo){
-      .doublewidth = 0,
-    };
+    set_lineinfo(state, row, FORCE, DWL_OFF);
 
   if(state->callbacks && state->callbacks->initpen)
     (*state->callbacks->initpen)(state->cbdata);
