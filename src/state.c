@@ -24,6 +24,7 @@ static void putglyph(VTermState *state, const uint32_t chars[], int width, VTerm
     .width = width,
     .protected_cell = state->protected_cell,
     .dwl = state->lineinfo[pos.row].doublewidth,
+    .dhl = state->lineinfo[pos.row].doubleheight,
   };
 
   if(state->callbacks && state->callbacks->putglyph)
@@ -155,15 +156,26 @@ static void tab(VTermState *state, int count, int direction)
 #define DWL_OFF 0
 #define DWL_ON  1
 
-static void set_lineinfo(VTermState *state, int row, int force, int dwl)
+#define DHL_OFF    0
+#define DHL_TOP    1
+#define DHL_BOTTOM 2
+
+static void set_lineinfo(VTermState *state, int row, int force, int dwl, int dhl)
 {
   VTermLineInfo info = state->lineinfo[row];
 
-  if(dwl == 0)
-    info.doublewidth = 0;
-  else if(dwl == 1)
-    info.doublewidth = 1;
+  if(dwl == DWL_OFF)
+    info.doublewidth = DWL_OFF;
+  else if(dwl == DWL_ON)
+    info.doublewidth = DWL_ON;
   // else -1 to ignore
+
+  if(dhl == DHL_OFF)
+    info.doubleheight = DHL_OFF;
+  else if(dhl == DHL_TOP)
+    info.doubleheight = DHL_TOP;
+  else if(dhl == DHL_BOTTOM)
+    info.doubleheight = DHL_BOTTOM;
 
   if((state->callbacks &&
       state->callbacks->setlineinfo &&
@@ -573,16 +585,28 @@ static int on_escape(const char *bytes, size_t len, void *user)
       return 0;
 
     switch(bytes[1]) {
+      case '3': // DECDHL top
+        if(state->mode.leftrightmargin)
+          break;
+        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_ON, DHL_TOP);
+        break;
+
+      case '4': // DECDHL bottom
+        if(state->mode.leftrightmargin)
+          break;
+        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_ON, DHL_BOTTOM);
+        break;
+
       case '5': // DECSWL
         if(state->mode.leftrightmargin)
           break;
-        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_OFF);
+        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_OFF, DHL_OFF);
         break;
 
       case '6': // DECDWL
         if(state->mode.leftrightmargin)
           break;
-        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_ON);
+        set_lineinfo(state, state->pos.row, NO_FORCE, DWL_ON, DHL_OFF);
         break;
 
       case '8': // DECALN
@@ -725,9 +749,9 @@ static void set_dec_mode(VTermState *state, int num, int val)
            // DECLRMM - left/right margin mode
     state->mode.leftrightmargin = val;
     if(val) {
-      // Setting DECVSSM must clear doublewidth state of every line
+      // Setting DECVSSM must clear doublewidth/doubleheight state of every line
       for(int row = 0; row < state->rows; row++)
-        set_lineinfo(state, row, FORCE, DWL_OFF);
+        set_lineinfo(state, row, FORCE, DWL_OFF, DHL_OFF);
     }
 
     break;
@@ -996,7 +1020,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       rect.start_row = state->pos.row + 1; rect.end_row = state->rows;
       rect.start_col = 0;
       for(int row = rect.start_row; row < rect.end_row; row++)
-        set_lineinfo(state, row, FORCE, DWL_OFF);
+        set_lineinfo(state, row, FORCE, DWL_OFF, DHL_OFF);
       if(rect.end_row > rect.start_row)
         erase(state, rect, selective);
       break;
@@ -1005,7 +1029,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       rect.start_row = 0; rect.end_row = state->pos.row;
       rect.start_col = 0; rect.end_col = state->cols;
       for(int row = rect.start_row; row < rect.end_row; row++)
-        set_lineinfo(state, row, FORCE, DWL_OFF);
+        set_lineinfo(state, row, FORCE, DWL_OFF, DHL_OFF);
       if(rect.end_col > rect.start_col)
         erase(state, rect, selective);
 
@@ -1019,7 +1043,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       rect.start_row = 0; rect.end_row = state->rows;
       rect.start_col = 0; rect.end_col = state->cols;
       for(int row = rect.start_row; row < rect.end_row; row++)
-        set_lineinfo(state, row, FORCE, DWL_OFF);
+        set_lineinfo(state, row, FORCE, DWL_OFF, DHL_OFF);
       erase(state, rect, selective);
       break;
     }
@@ -1588,7 +1612,7 @@ void vterm_state_reset(VTermState *state, int hard)
       clear_col_tabstop(state, col);
 
   for(int row = 0; row < state->rows; row++)
-    set_lineinfo(state, row, FORCE, DWL_OFF);
+    set_lineinfo(state, row, FORCE, DWL_OFF, DHL_OFF);
 
   if(state->callbacks && state->callbacks->initpen)
     (*state->callbacks->initpen)(state->cbdata);

@@ -99,11 +99,13 @@ typedef struct {
   const uint32_t *chars;
   int             width;
   unsigned int    protected_cell:1;  /* DECSCA-protected against DECSEL/DECSED */
-  unsigned int    dwl:1;             /* DECDWL double-width line */
+  unsigned int    dwl:1;             /* DECDWL or DECDHL double-width line */
+  unsigned int    dhl:2;             /* DECDHL double-height line (1=top 2=bottom) */
 } VTermGlyphInfo;
 
 typedef struct {
-  unsigned int    doublewidth:1;     /* DECDWL line */
+  unsigned int    doublewidth:1;     /* DECDWL or DECDHL line */
+  unsigned int    doubleheight:2;    /* DECDHL line (1=top 2=bottom) */
 } VTermLineInfo;
 
 typedef struct {
