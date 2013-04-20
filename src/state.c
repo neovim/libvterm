@@ -72,6 +72,7 @@ static VTermState *vterm_state_new(VTerm *vt)
 
 void vterm_state_free(VTermState *state)
 {
+  vterm_allocator_free(state->vt, state->tabstops);
   vterm_allocator_free(state->vt, state->combine_chars);
   vterm_allocator_free(state->vt, state);
 }
