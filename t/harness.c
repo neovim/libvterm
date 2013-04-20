@@ -259,6 +259,8 @@ static int state_putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
     printf(" prot");
   if(info->dwl)
     printf(" dwl");
+  if(info->dhl)
+    printf(" dhl-%s", info->dhl == 1 ? "top" : info->dhl == 2 ? "bottom" : "?" );
   printf("\n");
 
   return 1;
