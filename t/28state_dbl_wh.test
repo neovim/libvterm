@@ -1,0 +1,27 @@
+INIT
+WANTSTATE g
+
+!Single Width, Single Height
+RESET
+PUSH "\e#5"
+PUSH "Hello"
+  putglyph 0x48 1 0,0
+  putglyph 0x65 1 0,1
+  putglyph 0x6c 1 0,2
+  putglyph 0x6c 1 0,3
+  putglyph 0x6f 1 0,4
+
+!Double Width, Single Height
+RESET
+PUSH "\e#6"
+PUSH "Hello"
+  putglyph 0x48 1 0,0 dwl
+  putglyph 0x65 1 0,1 dwl
+  putglyph 0x6c 1 0,2 dwl
+  putglyph 0x6c 1 0,3 dwl
+  putglyph 0x6f 1 0,4 dwl
+  ?cursor = 0,5
+PUSH "\e[40GAB"
+  putglyph 0x41 1 0,39 dwl
+  putglyph 0x42 1 1,0
+  ?cursor = 1,1
