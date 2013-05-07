@@ -172,6 +172,7 @@ void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...);
 
 void vterm_state_free(VTermState *state);
 
+void vterm_state_newpen(VTermState *state);
 void vterm_state_resetpen(VTermState *state);
 void vterm_state_setpen(VTermState *state, const long args[], int argcount);
 int  vterm_state_getpen(VTermState *state, long args[], int argcount);
