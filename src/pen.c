@@ -133,6 +133,13 @@ static void set_pen_col_ansi(VTermState *state, VTermAttr attr, long col)
   setpenattr_col(state, attr, *colp);
 }
 
+void vterm_state_newpen(VTermState *state)
+{
+  // 90% grey so that pure white is brighter
+  state->default_fg.red = state->default_fg.green = state->default_fg.blue = 240;
+  state->default_bg.red = state->default_bg.green = state->default_bg.blue = 0;
+}
+
 void vterm_state_resetpen(VTermState *state)
 {
   state->pen.bold = 0;      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
