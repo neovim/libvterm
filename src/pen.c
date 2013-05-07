@@ -33,18 +33,18 @@ static int ramp24[] = {
   0x85, 0x90, 0x9B, 0xA6, 0xB1, 0xBC, 0xC7, 0xD2, 0xDD, 0xE8, 0xF3, 0xFF,
 };
 
-static void lookup_colour_ansi(long index, VTermColor *col)
+static void lookup_colour_ansi(const VTermState *state, long index, VTermColor *col)
 {
   if(index >= 0 && index < 16) {
     *col = ansi_colors[index];
   }
 }
 
-static void lookup_colour_palette(long index, VTermColor *col)
+static void lookup_colour_palette(const VTermState *state, long index, VTermColor *col)
 {
   if(index >= 0 && index < 16) {
     // Normal 8 colours or high intensity - parse as palette 0
-    lookup_colour_ansi(index, col);
+    lookup_colour_ansi(state, index, col);
   }
   else if(index >= 16 && index < 232) {
     // 216-colour cube
@@ -64,7 +64,7 @@ static void lookup_colour_palette(long index, VTermColor *col)
   }
 }
 
-static int lookup_colour(int palette, const long args[], int argcount, VTermColor *col, int *index)
+static int lookup_colour(const VTermState *state, int palette, const long args[], int argcount, VTermColor *col, int *index)
 {
   switch(palette) {
   case 2: // RGB mode - 3 args contain colour values directly
@@ -81,7 +81,7 @@ static int lookup_colour(int palette, const long args[], int argcount, VTermColo
     if(index)
       *index = CSI_ARG_OR(args[0], -1);
 
-    lookup_colour_palette(argcount ? CSI_ARG_OR(args[0], -1) : -1, col);
+    lookup_colour_palette(state, argcount ? CSI_ARG_OR(args[0], -1) : -1, col);
 
     return argcount ? 1 : 0;
 
@@ -128,7 +128,7 @@ static void set_pen_col_ansi(VTermState *state, VTermAttr attr, long col)
 {
   VTermColor *colp = (attr == VTERM_ATTR_BACKGROUND) ? &state->pen.bg : &state->pen.fg;
 
-  lookup_colour_ansi(col, colp);
+  lookup_colour_ansi(state, col, colp);
 
   setpenattr_col(state, attr, *colp);
 }
@@ -177,7 +177,7 @@ void vterm_state_get_default_colors(const VTermState *state, VTermColor *default
 
 void vterm_state_get_palette_color(const VTermState *state, int index, VTermColor *col)
 {
-  lookup_colour_palette(index, col);
+  lookup_colour_palette(state, index, col);
 }
 
 void vterm_state_set_default_colors(VTermState *state, const VTermColor *default_fg, const VTermColor *default_bg)
@@ -296,7 +296,7 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
       state->fg_index = -1;
       if(argcount - argi < 1)
         return;
-      argi += 1 + lookup_colour(CSI_ARG(args[argi+1]), args+argi+2, argcount-argi-2, &state->pen.fg, &state->fg_index);
+      argi += 1 + lookup_colour(state, CSI_ARG(args[argi+1]), args+argi+2, argcount-argi-2, &state->pen.fg, &state->fg_index);
       setpenattr_col(state, VTERM_ATTR_FOREGROUND, state->pen.fg);
       break;
 
@@ -317,7 +317,7 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
       state->bg_index = -1;
       if(argcount - argi < 1)
         return;
-      argi += 1 + lookup_colour(CSI_ARG(args[argi+1]), args+argi+2, argcount-argi-2, &state->pen.bg, &state->bg_index);
+      argi += 1 + lookup_colour(state, CSI_ARG(args[argi+1]), args+argi+2, argcount-argi-2, &state->pen.bg, &state->bg_index);
       setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->pen.bg);
       break;
 
