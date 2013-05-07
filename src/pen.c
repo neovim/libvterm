@@ -36,7 +36,7 @@ static int ramp24[] = {
 static void lookup_colour_ansi(const VTermState *state, long index, VTermColor *col)
 {
   if(index >= 0 && index < 16) {
-    *col = ansi_colors[index];
+    *col = state->colors[index];
   }
 }
 
@@ -138,6 +138,9 @@ void vterm_state_newpen(VTermState *state)
   // 90% grey so that pure white is brighter
   state->default_fg.red = state->default_fg.green = state->default_fg.blue = 240;
   state->default_bg.red = state->default_bg.green = state->default_bg.blue = 0;
+
+  for(int col = 0; col < 16; col++)
+    state->colors[col] = ansi_colors[col];
 }
 
 void vterm_state_resetpen(VTermState *state)
@@ -191,6 +194,12 @@ void vterm_state_set_default_colors(VTermState *state, const VTermColor *default
 {
   state->default_fg = *default_fg;
   state->default_bg = *default_bg;
+}
+
+void vterm_state_set_palette_color(VTermState *state, int index, const VTermColor *col)
+{
+  if(index >= 0 && index < 16)
+    state->colors[index] = *col;
 }
 
 void vterm_state_set_bold_highbright(VTermState *state, int bold_is_highbright)
