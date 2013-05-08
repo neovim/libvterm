@@ -7,7 +7,7 @@
 
 #include "utf8.h"
 
-#ifdef DEBUG
+#if defined(DEBUG) && DEBUG > 1
 # define DEBUG_GLYPH_COMBINE
 #endif
 
