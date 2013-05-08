@@ -2,7 +2,7 @@
 
 #define UNICODE_INVALID 0xFFFD
 
-#ifdef DEBUG
+#if defined(DEBUG) && DEBUG > 1
 # define DEBUG_PRINT_UTF8
 #endif
 
