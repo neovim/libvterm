@@ -113,7 +113,9 @@ static void grow_combine_buffer(VTermState *state)
   memcpy(new_chars, state->combine_chars, state->combine_chars_size * sizeof(new_chars[0]));
 
   vterm_allocator_free(state->vt, state->combine_chars);
+
   state->combine_chars = new_chars;
+  state->combine_chars_size = new_size;
 }
 
 static void set_col_tabstop(VTermState *state, int col)
