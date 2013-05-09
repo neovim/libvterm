@@ -18,12 +18,14 @@ static const char *special_end   = "}";
 
 static int parser_text(const char bytes[], size_t len, void *user)
 {
+  unsigned char *b = (unsigned char *)bytes;
+
   int i;
   for(i = 0; i < len; i++)
-    if(bytes[i] < 0x20 || (bytes[i] >= 0x80 && bytes[i] < 0xa0))
+    if(b[i] < 0x20 || (b[i] >= 0x80 && b[i] < 0xa0))
       break;
 
-  printf("%.*s", i, bytes);
+  printf("%.*s", i, b);
   return i;
 }
 
@@ -184,6 +186,7 @@ int main(int argc, char *argv[])
 
   /* Size matters not for the parser */
   VTerm *vt = vterm_new(25, 80);
+  vterm_parser_set_utf8(vt, 1);
   vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
 
   int len;
