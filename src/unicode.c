@@ -321,12 +321,12 @@ static int mk_wcswidth_cjk(const wchar_t *pwcs, size_t n)
 // ################################
 // ### The rest added by Paul Evans
 
-int vterm_unicode_width(int codepoint)
+INTERNAL int vterm_unicode_width(int codepoint)
 {
   return mk_wcwidth(codepoint);
 }
 
-int vterm_unicode_is_combining(int codepoint)
+INTERNAL int vterm_unicode_is_combining(int codepoint)
 {
   return bisearch(codepoint, combining, sizeof(combining) / sizeof(struct interval) - 1);
 }

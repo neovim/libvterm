@@ -5,6 +5,12 @@
 
 #include <stdarg.h>
 
+#if defined(__GNUC__)
+# define INTERNAL __attribute__((visibility("internal")))
+#else
+# define INTERNAL
+#endif
+
 typedef struct VTermEncoding VTermEncoding;
 
 typedef struct {
