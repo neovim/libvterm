@@ -42,6 +42,10 @@ between states.
  23   ESC *+           = SCS, select character set (G2, G3)
 123   ESC 7            = DECSC - save cursor
 123   ESC 8            = DECRC - restore cursor
+123   ESC # 3          = DECDHL, double-height line (top half)
+123   ESC # 4          = DECDHL, double-height line (bottom half)
+123   ESC # 5          = DECSWL, single-width single-height line
+123   ESC # 6          = DECDWL, double-width single-height line
 123   ESC # 8          = DECALN
 123   ESC <            = Ignored (used by VT100 to exit VT52 mode)
 123   ESC =            = DECKPAM, keypad application mode
@@ -184,10 +188,6 @@ The following sequences are not recognised by libvterm.
 123   0x05             = ENQ
   3   0x11             = DC1 (XON)
   3   0x13             = DC3 (XOFF)
-123   ESC # 3          = DECDHL, double-height line (top half)
-123   ESC # 4          = DECDHL, double-height line (bottom half)
-123   ESC # 5          = DECSWL, single-width line
-123   ESC # 6          = DECDWL, double-width line
 12    ESC Z            = DECID, identify terminal
       DCS $ q          = [DECRQSS]
   3           " p      =   Request DECSCL
