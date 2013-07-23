@@ -25,6 +25,8 @@ typedef struct
 
   /* Extra state storage that isn't strictly pen-related */
   unsigned int protected_cell : 1;
+  unsigned int dwl            : 1; /* on a DECDWL or DECDHL line */
+  unsigned int dhl            : 2; /* on a DECDHL line (1=top 2=bottom) */
 } ScreenPen;
 
 /* Internal representation of a screen cell */
@@ -194,6 +196,8 @@ static int putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
   };
 
   cell->pen.protected_cell = info->protected_cell;
+  cell->pen.dwl            = info->dwl;
+  cell->pen.dhl            = info->dhl;
 
   damagerect(screen, rect);
 
@@ -262,7 +266,9 @@ static int erase_internal(VTermRect rect, int selective, void *user)
 {
   VTermScreen *screen = user;
 
-  for(int row = rect.start_row; row < rect.end_row; row++)
+  for(int row = rect.start_row; row < rect.end_row; row++) {
+    const VTermLineInfo *info = vterm_state_get_lineinfo(screen->state, row);
+
     for(int col = rect.start_col; col < rect.end_col; col++) {
       ScreenCell *cell = getcell(screen, row, col);
 
@@ -271,7 +277,10 @@ static int erase_internal(VTermRect rect, int selective, void *user)
 
       cell->chars[0] = 0;
       cell->pen = screen->pen;
+      cell->pen.dwl = info->doublewidth;
+      cell->pen.dhl = info->doubleheight;
     }
+  }
 
   return 1;
 }
@@ -568,6 +577,37 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
   return 1;
 }
 
+static int setlineinfo(int row, const VTermLineInfo *newinfo, const VTermLineInfo *oldinfo, void *user)
+{
+  VTermScreen *screen = user;
+
+  if(newinfo->doublewidth != oldinfo->doublewidth ||
+     newinfo->doubleheight != oldinfo->doubleheight) {
+    for(int col = 0; col < screen->cols; col++) {
+      ScreenCell *cell = getcell(screen, row, col);
+      cell->pen.dwl = newinfo->doublewidth;
+      cell->pen.dhl = newinfo->doubleheight;
+    }
+
+    VTermRect rect = {
+      .start_row = row,
+      .end_row   = row + 1,
+      .start_col = 0,
+      .end_col   = newinfo->doublewidth ? screen->cols / 2 : screen->cols,
+    };
+    damagerect(screen, rect);
+
+    if(newinfo->doublewidth) {
+      rect.start_col = screen->cols / 2;
+      rect.end_col   = screen->cols;
+
+      erase_internal(rect, 0, user);
+    }
+  }
+
+  return 1;
+}
+
 static VTermStateCallbacks state_cbs = {
   .putglyph     = &putglyph,
   .movecursor   = &movecursor,
@@ -578,6 +618,7 @@ static VTermStateCallbacks state_cbs = {
   .setmousefunc = &setmousefunc,
   .bell         = &bell,
   .resize       = &resize,
+  .setlineinfo  = &setlineinfo,
 };
 
 static VTermScreen *screen_new(VTerm *vt)
@@ -711,6 +752,9 @@ int vterm_screen_get_cell(const VTermScreen *screen, VTermPos pos, VTermScreenCe
   cell->attrs.reverse   = intcell->pen.reverse ^ screen->global_reverse;
   cell->attrs.strike    = intcell->pen.strike;
   cell->attrs.font      = intcell->pen.font;
+
+  cell->attrs.dwl = intcell->pen.dwl;
+  cell->attrs.dhl = intcell->pen.dhl;
 
   cell->fg = intcell->pen.fg;
   cell->bg = intcell->pen.bg;
