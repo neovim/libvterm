@@ -70,12 +70,12 @@ void vterm_free(VTerm *vt)
   vterm_allocator_free(vt, vt);
 }
 
-void *vterm_allocator_malloc(VTerm *vt, size_t size)
+INTERNAL void *vterm_allocator_malloc(VTerm *vt, size_t size)
 {
   return (*vt->allocator->malloc)(size, vt->allocdata);
 }
 
-void vterm_allocator_free(VTerm *vt, void *ptr)
+INTERNAL void vterm_allocator_free(VTerm *vt, void *ptr)
 {
   (*vt->allocator->free)(ptr, vt->allocdata);
 }
@@ -108,7 +108,7 @@ void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
   vt->mode.utf8 = is_utf8;
 }
 
-void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
+INTERNAL void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
 {
   if(len > vt->outbuffer_len - vt->outbuffer_cur) {
     fprintf(stderr, "vterm_push_output(): buffer overflow; truncating output\n");
@@ -119,7 +119,7 @@ void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
   vt->outbuffer_cur += len;
 }
 
-void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
+INTERNAL void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
 {
   int written = vsnprintf(vt->outbuffer + vt->outbuffer_cur,
       vt->outbuffer_len - vt->outbuffer_cur,
@@ -127,7 +127,7 @@ void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
   vt->outbuffer_cur += written;
 }
 
-void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
+INTERNAL void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -135,7 +135,7 @@ void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
   va_end(args);
 }
 
-void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, const char *fmt, ...)
+INTERNAL void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, const char *fmt, ...)
 {
   if(ctrl >= 0x80 && !vt->mode.ctrl8bit)
     vterm_push_output_sprintf(vt, "\e%c", ctrl - 0x40);
@@ -148,7 +148,7 @@ void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, const char *f
   va_end(args);
 }
 
-void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
+INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
 {
   if(!vt->mode.ctrl8bit)
     vterm_push_output_sprintf(vt, "\e%c", C1_DCS - 0x40);

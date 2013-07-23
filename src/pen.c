@@ -133,7 +133,7 @@ static void set_pen_col_ansi(VTermState *state, VTermAttr attr, long col)
   setpenattr_col(state, attr, *colp);
 }
 
-void vterm_state_newpen(VTermState *state)
+INTERNAL void vterm_state_newpen(VTermState *state)
 {
   // 90% grey so that pure white is brighter
   state->default_fg.red = state->default_fg.green = state->default_fg.blue = 240;
@@ -143,7 +143,7 @@ void vterm_state_newpen(VTermState *state)
     state->colors[col] = ansi_colors[col];
 }
 
-void vterm_state_resetpen(VTermState *state)
+INTERNAL void vterm_state_resetpen(VTermState *state)
 {
   state->pen.bold = 0;      setpenattr_bool(state, VTERM_ATTR_BOLD, 0);
   state->pen.underline = 0; setpenattr_int( state, VTERM_ATTR_UNDERLINE, 0);
@@ -159,7 +159,7 @@ void vterm_state_resetpen(VTermState *state)
   state->pen.bg = state->default_bg;  setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->default_bg);
 }
 
-void vterm_state_savepen(VTermState *state, int save)
+INTERNAL void vterm_state_savepen(VTermState *state, int save)
 {
   if(save) {
     state->saved.pen = state->pen;
@@ -207,7 +207,7 @@ void vterm_state_set_bold_highbright(VTermState *state, int bold_is_highbright)
   state->bold_is_highbright = bold_is_highbright;
 }
 
-void vterm_state_setpen(VTermState *state, const long args[], int argcount)
+INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argcount)
 {
   // SGR - ECMA-48 8.3.117
 
@@ -369,7 +369,7 @@ void vterm_state_setpen(VTermState *state, const long args[], int argcount)
   }
 }
 
-int vterm_state_getpen(VTermState *state, long args[], int argcount)
+INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
 {
   int argi = 0;
 
