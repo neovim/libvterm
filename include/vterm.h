@@ -223,6 +223,8 @@ typedef struct {
     unsigned int reverse   : 1;
     unsigned int strike    : 1;
     unsigned int font      : 4; /* 0 to 9 */
+    unsigned int dwl       : 1; /* On a DECDWL or DECDHL line */
+    unsigned int dhl       : 2; /* On a DECDHL line (1=top 2=bottom) */
   } attrs;
   VTermColor fg, bg;
 } VTermScreenCell;
