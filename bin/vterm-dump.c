@@ -21,9 +21,31 @@ static int parser_text(const char bytes[], size_t len, void *user)
   unsigned char *b = (unsigned char *)bytes;
 
   int i;
-  for(i = 0; i < len; i++)
-    if(b[i] < 0x20 || (b[i] >= 0x80 && b[i] < 0xa0))
+  for(i = 0; i < len; /* none */) {
+    if(b[i] < 0x20)        // C0
       break;
+    else if(b[i] < 0x80)   // ASCII
+      i++;
+    else if(b[i] < 0xa0)   // C1
+      break;
+    else if(b[i] < 0xc0)   // UTF-8 continuation
+      break;
+    else if(b[i] < 0xe0) { // UTF-8 2-byte
+      // 2-byte UTF-8
+      if(len < i+2) break;
+      i += 2;
+    }
+    else if(b[i] < 0xf0) { // UTF-8 3-byte
+      if(len < i+3) break;
+      i += 3;
+    }
+    else if(b[i] < 0xf8) { // UTF-8 4-byte
+      if(len < i+4) break;
+      i += 4;
+    }
+    else                   // otherwise invalid
+      break;
+  }
 
   printf("%.*s", i, b);
   return i;
