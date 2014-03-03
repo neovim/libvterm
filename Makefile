@@ -88,7 +88,7 @@ install-inc:
 	install -d $(DESTDIR)$(INCDIR)
 	install -m644 $(HFILES) $(DESTDIR)$(INCDIR)
 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
-	sed "s,@PREFIX@,$(PREFIX)," <vterm.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/vterm.pc
+	sed -e "s,@PREFIX@,$(PREFIX)," -e "s,@LIBDIR@,$(LIBDIR)," <vterm.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/vterm.pc
 
 install-lib: $(LIBRARY)
 	install -d $(DESTDIR)$(LIBDIR)

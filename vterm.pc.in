@@ -1,5 +1,5 @@
 prefix=@PREFIX@
-libdir=${prefix}/lib
+libdir=@LIBDIR@
 includedir=${prefix}/include
 
 Name: vterm
