@@ -47,7 +47,7 @@ all: $(LIBRARY) $(BINFILES)
 
 $(LIBRARY): $(OBJECTS)
 	@echo LINK $@
-	@$(LIBTOOL) --mode=link --tag=CC $(CC) -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -o $@ $^
+	@$(LIBTOOL) --mode=link --tag=CC $(CC) -rpath $(LIBDIR) -version-info $(VERSION_CURRENT):$(VERSION_REVISION):$(VERSION_AGE) -o $@ $^ $(LDFLAGS)
 
 src/%.lo: src/%.c $(HFILES_INT)
 	@echo CC $<
@@ -61,7 +61,7 @@ src/encoding.lo: $(INCFILES)
 
 bin/%: bin/%.c $(LIBRARY)
 	@echo CC $<
-	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $< -lvterm
+	@$(LIBTOOL) --mode=link --tag=CC $(CC) $(CFLAGS) -o $@ $< -lvterm $(LDFLAGS)
 
 t/harness.lo: t/harness.c $(HFILES)
 	@echo CC $<
