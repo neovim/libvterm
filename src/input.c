@@ -11,11 +11,6 @@ void vterm_input_push_char(VTerm *vt, VTermModifier mod, uint32_t c)
    */
   if(c != ' ')
     mod &= ~VTERM_MOD_SHIFT;
-  /* However, since Shift-Space is too easy to mistype accidentally, remove
-   * shift if it's the only modifier
-   */
-  else if(mod == VTERM_MOD_SHIFT)
-    mod = 0;
 
   if(mod == 0) {
     // Normal text - ignore just shift
@@ -128,12 +123,6 @@ static keycodes_s keycodes_kp[] = {
 
 void vterm_input_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
 {
-  /* Since Shift-Enter and Shift-Backspace are too easy to mistype
-   * accidentally, remove shift if it's the only modifier
-   */
-  if((key == VTERM_KEY_ENTER || key == VTERM_KEY_BACKSPACE) && mod == VTERM_MOD_SHIFT)
-    mod = 0;
-
   if(key == VTERM_KEY_NONE)
     return;
 

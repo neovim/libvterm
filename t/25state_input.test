@@ -46,9 +46,8 @@ INCHAR CA 69
 !Special handling of Space
 INCHAR 0 20
   output " "
-# Shift-Space isn't modified as it's too easy to mistype
 INCHAR S 20
-  output " "
+  output "\e[32;2u"
 INCHAR C 20
   output "\e[32;5u"
 INCHAR SC 20
