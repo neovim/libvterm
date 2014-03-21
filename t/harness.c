@@ -729,12 +729,24 @@ int main(int argc, char **argv)
         else if(len == 0)
           printf("\n");
         else {
-          char *text = malloc(len);
-          vterm_screen_get_text(screen, text, len, rect);
-          for(size_t i = 0; i < len; i++) {
-            printf("0x%02x%s", (unsigned char)text[i], i < len-1 ? "," : "\n");
-          }
-          free(text);
+          /* Put an overwrite guard at both ends of the buffer */
+          unsigned char *buffer = malloc(len + 4);
+          unsigned char *text = buffer + 2;
+          text[-2] = 0x55; text[-1] = 0xAA;
+          text[len] = 0x55; text[len+1] = 0xAA;
+
+          vterm_screen_get_text(screen, (char *)text, len, rect);
+
+          if(text[-2] != 0x55 || text[-1] != 0xAA)
+            printf("! screen_get_text buffer overrun left [%02x,%02x]\n", text[-2], text[-1]);
+          else if(text[len] != 0x55 || text[len+1] != 0xAA)
+            printf("! screen_get_text buffer overrun right [%02x,%02x]\n", text[len], text[len+1]);
+          else
+            for(size_t i = 0; i < len; i++) {
+              printf("0x%02x%s", text[i], i < len-1 ? "," : "\n");
+            }
+
+          free(buffer);
         }
       }
       else if(strstartswith(line, "?screen_cell ")) {
