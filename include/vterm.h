@@ -257,6 +257,8 @@ void vterm_screen_flush_damage(VTermScreen *screen);
 void vterm_screen_set_damage_merge(VTermScreen *screen, VTermDamageSize size);
 
 void   vterm_screen_reset(VTermScreen *screen, int hard);
+
+/* Neither of these functions NUL-terminate the buffer */
 size_t vterm_screen_get_chars(const VTermScreen *screen, uint32_t *chars, size_t len, const VTermRect rect);
 size_t vterm_screen_get_text(const VTermScreen *screen, char *str, size_t len, const VTermRect rect);
 
