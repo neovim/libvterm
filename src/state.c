@@ -460,6 +460,7 @@ static void output_mouse(VTermState *state, int code, int pressed, int modifiers
       len += fill_utf8((code | modifiers) + 0x20, utf8 + len);
       len += fill_utf8(col + 0x21, utf8 + len);
       len += fill_utf8(row + 0x21, utf8 + len);
+      utf8[len] = 0;
 
       vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "M%s", utf8);
     }
