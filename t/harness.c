@@ -395,7 +395,7 @@ VTermScreenCallbacks screen_cbs = {
 
 int main(int argc, char **argv)
 {
-  char line[1024];
+  char line[1024] = {0};
   int flag;
 
   int err;
@@ -811,6 +811,7 @@ int main(int argc, char **argv)
       else
         printf("?\n");
 
+      memset(line, 0, sizeof line);
       continue;
     }
 
