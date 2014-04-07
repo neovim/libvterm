@@ -1351,9 +1351,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x72: // DECSTBM - DEC custom
     state->scrollregion_top = CSI_ARG_OR(args[0], 1) - 1;
     state->scrollregion_bottom = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
-    LBOUND(state->scrollregion_top, 0);
+    LBOUND(state->scrollregion_top, -1);
     UBOUND(state->scrollregion_top, state->rows);
-    LBOUND(state->scrollregion_bottom, 0);
+    LBOUND(state->scrollregion_bottom, -1);
     if(state->scrollregion_top == 0 && state->scrollregion_bottom == state->rows)
       state->scrollregion_bottom = -1;
     else
@@ -1365,9 +1365,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     // Always allow setting these margins, just they won't take effect without DECVSSM
     state->scrollregion_left = CSI_ARG_OR(args[0], 1) - 1;
     state->scrollregion_right = argcount < 2 || CSI_ARG_IS_MISSING(args[1]) ? -1 : CSI_ARG(args[1]);
-    LBOUND(state->scrollregion_left, 0);
+    LBOUND(state->scrollregion_left, -1);
     UBOUND(state->scrollregion_left, state->cols);
-    LBOUND(state->scrollregion_right, 0);
+    LBOUND(state->scrollregion_right, -1);
     if(state->scrollregion_left == 0 && state->scrollregion_right == state->cols)
       state->scrollregion_right = -1;
     else
