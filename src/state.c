@@ -953,7 +953,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
-    rect.end_col   = THISROWWIDTH(state);
+    if(state->mode.leftrightmargin)
+      rect.end_col = SCROLLREGION_RIGHT(state);
+    else
+      rect.end_col = THISROWWIDTH(state);
 
     scroll(state, rect, 0, -count);
 
@@ -1117,7 +1120,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
-    rect.end_col   = THISROWWIDTH(state);
+    if(state->mode.leftrightmargin)
+      rect.end_col = SCROLLREGION_RIGHT(state);
+    else
+      rect.end_col = THISROWWIDTH(state);
 
     scroll(state, rect, 0, count);
 
