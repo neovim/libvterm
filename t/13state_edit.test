@@ -17,7 +17,7 @@ PUSH "B"
 PUSH "\e[3@"
   scrollrect 0..1,2..80 => +0,-3
 
-!IL with DECSLRM
+!ICH with DECSLRM
 PUSH "\e[?69h"
 PUSH "\e[;50s"
 PUSH "\e[20G\e[@"
@@ -37,7 +37,7 @@ PUSH "\e[3P"
   scrollrect 0..1,1..80 => +0,+3
   ?cursor = 0,1
 
-!DL with DECSLRM
+!DCH with DECSLRM
 PUSH "\e[?69h"
 PUSH "\e[;50s"
 PUSH "\e[20G\e[P"
