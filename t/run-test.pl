@@ -14,7 +14,7 @@ GetOptions(
 
 my ( $hin, $hout, $hpid );
 {
-   local $ENV{LD_LIBRARY_PATH} = ".";
+   local $ENV{LD_LIBRARY_PATH} = ".libs";
    my @command = "t/.libs/harness";
    unshift @command, "valgrind", "--quiet", "--error-exitcode=126" if $VALGRIND;
 
