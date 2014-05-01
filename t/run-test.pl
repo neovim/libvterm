@@ -2,14 +2,23 @@
 
 use strict;
 use warnings;
+use Getopt::Long;
 use IO::Handle;
 use IPC::Open2 qw( open2 );
 use POSIX qw( WIFEXITED WEXITSTATUS WIFSIGNALED WTERMSIG );
 
+my $VALGRIND = 0;
+GetOptions(
+   'valgrind|v+' => \$VALGRIND,
+) or exit 1;
+
 my ( $hin, $hout, $hpid );
 {
    local $ENV{LD_LIBRARY_PATH} = ".";
-   $hpid = open2 $hout, $hin, "t/harness" or die "Cannot open2 harness - $!";
+   my @command = "t/.libs/harness";
+   unshift @command, "valgrind", "--quiet", "--error-exitcode=126" if $VALGRIND;
+
+   $hpid = open2 $hout, $hin, @command or die "Cannot open2 harness - $!";
 }
 
 my $exitcode = 0;
@@ -181,6 +190,7 @@ waitpid $hpid, 0;
 if( $? ) {
    printf STDERR "Harness exited %d\n", WEXITSTATUS($?)   if WIFEXITED($?);
    printf STDERR "Harness exit signal %d\n", WTERMSIG($?) if WIFSIGNALED($?);
+   $exitcode = WIFEXITED($?) ? WEXITSTATUS($?) : 125;
 }
 
 exit $exitcode;
