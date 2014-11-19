@@ -762,7 +762,7 @@ int main(int argc, char **argv)
         if(!vterm_screen_get_cell(screen, pos, &cell))
           goto abort_line;
         printf("{");
-        for(int i = 0; cell.chars[i] && i < VTERM_MAX_CHARS_PER_CELL; i++) {
+        for(int i = 0; i < VTERM_MAX_CHARS_PER_CELL && cell.chars[i]; i++) {
           printf("%s0x%x", i ? "," : "", cell.chars[i]);
         }
         printf("} width=%d attrs={", cell.width);
