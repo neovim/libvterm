@@ -1,6 +1,10 @@
 #ifndef __VTERM_H__
 #define __VTERM_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -298,5 +302,9 @@ void vterm_copy_cells(VTermRect dest,
                       VTermRect src,
                       void (*copycell)(VTermPos dest, VTermPos src, void *user),
                       void *user);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
