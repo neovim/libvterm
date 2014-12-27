@@ -32,6 +32,9 @@ INCFILES=$(TBLFILES:.tbl=.inc)
 
 HFILES_INT=$(wildcard src/*.h) $(HFILES)
 
+VERSION_MAJOR=0
+VERSION_MINOR=0
+
 VERSION_CURRENT=0
 VERSION_REVISION=0
 VERSION_AGE=0
@@ -98,3 +101,30 @@ install-lib: $(LIBRARY)
 install-bin: $(BINFILES)
 	install -d $(DESTDIR)$(BINDIR)
 	$(LIBTOOL) --mode=install install $(BINFILES) $(DESTDIR)$(BINDIR)/
+
+# DIST CUT
+
+VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
+
+DISTDIR=libvterm-$(VERSION)
+
+distdir: all
+	mkdir __distdir
+	cp LICENSE __distdir
+	mkdir __distdir/src
+	cp src/*.c src/*.h __distdir/src
+	mkdir __distdir/src/encoding
+	cp src/encoding/*.inc __distdir/src/encoding
+	mkdir __distdir/include
+	cp include/*.h __distdir/include
+	mkdir __distdir/bin
+	cp bin/*.c __distdir/bin
+	sed "s,@VERSION@,$(VERSION)," <vterm.pc.in >__distdir/vterm.pc.in
+	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
+	mv __distdir $(DISTDIR)
+
+TARBALL=$(DISTDIR).tar.gz
+
+dist: distdir
+	tar -czf $(TARBALL) $(DISTDIR)
+	rm -rf $(DISTDIR)
