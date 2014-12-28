@@ -525,7 +525,9 @@ int main(int argc, char **argv)
     else if(strstartswith(line, "PUSH ")) {
       char *bytes = line + 5;
       size_t len = inplace_hex2bytes(bytes);
-      vterm_push_bytes(vt, bytes, len);
+      size_t written = vterm_input_write(vt, bytes, len);
+      if(written < len)
+        fprintf(stderr, "! short write\n");
     }
 
     else if(streq(line, "WANTENCODING")) {

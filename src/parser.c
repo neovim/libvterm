@@ -187,7 +187,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
   return 0;
 }
 
-void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len)
+size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
 {
   size_t pos = 0;
   const char *string_start;
@@ -341,4 +341,6 @@ pause:
     size_t remaining = len - (string_start - bytes);
     append_strbuffer(vt, string_start, remaining);
   }
+
+  return len;
 }
