@@ -415,7 +415,7 @@ int main(int argc, char **argv)
     }
 
     else if(streq(line, "WANTPARSER")) {
-      vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
+      vterm_parser_set_callbacks(vt, &parser_cbs, NULL);
     }
 
     else if(strstartswith(line, "WANTSTATE") && (line[9] == '\0' || line[9] == ' ')) {
@@ -500,7 +500,7 @@ int main(int argc, char **argv)
     }
 
     else if(sscanf(line, "UTF8 %d", &flag)) {
-      vterm_parser_set_utf8(vt, flag);
+      vterm_set_utf8(vt, flag);
     }
 
     else if(streq(line, "RESET")) {

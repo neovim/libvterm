@@ -97,13 +97,12 @@ void vterm_set_size(VTerm *vt, int rows, int cols)
     (*vt->parser_callbacks->resize)(rows, cols, vt->cbdata);
 }
 
-void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user)
+int vterm_get_utf8(const VTerm *vt)
 {
-  vt->parser_callbacks = callbacks;
-  vt->cbdata = user;
+  return vt->mode.utf8;
 }
 
-void vterm_parser_set_utf8(VTerm *vt, int is_utf8)
+void vterm_set_utf8(VTerm *vt, int is_utf8)
 {
   vt->mode.utf8 = is_utf8;
 }
@@ -196,6 +195,12 @@ size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len)
   vt->outbuffer_cur -= len;
 
   return len;
+}
+
+void vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user)
+{
+  vt->parser_callbacks = callbacks;
+  vt->cbdata = user;
 }
 
 VTermValueType vterm_get_attr_type(VTermAttr attr)

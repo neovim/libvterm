@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
 
   /* Size matters not for the parser */
   VTerm *vt = vterm_new(25, 80);
-  vterm_parser_set_utf8(vt, 1);
-  vterm_set_parser_callbacks(vt, &parser_cbs, NULL);
+  vterm_set_utf8(vt, 1);
+  vterm_parser_set_callbacks(vt, &parser_cbs, NULL);
 
   int len;
   char buffer[1024];
