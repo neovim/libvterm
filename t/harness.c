@@ -565,7 +565,7 @@ int main(int argc, char **argv)
       VTermModifier state = strpe_modifiers(&linep);
       sscanf(linep, " %x", &c);
 
-      vterm_input_push_char(vt, state, c);
+      vterm_keyboard_push_unichar(vt, state, c);
     }
 
     else if(strstartswith(line, "INKEY ")) {
@@ -577,7 +577,7 @@ int main(int argc, char **argv)
         linep++;
       VTermKey key = strp_key(linep);
 
-      vterm_input_push_key(vt, state, key);
+      vterm_keyboard_push_key(vt, state, key);
     }
 
     else if(strstartswith(line, "MOUSE ")) {
