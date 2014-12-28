@@ -8,7 +8,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "vterm_input.h"
+#include "vterm_keycodes.h"
 
 typedef struct VTerm VTerm;
 typedef struct VTermState VTermState;
@@ -131,14 +131,14 @@ void vterm_set_utf8(VTerm *vt, int is_utf8);
 
 void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len);
 
-void vterm_input_push_char(VTerm *vt, VTermModifier state, uint32_t c);
-void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
-
 size_t vterm_output_get_buffer_size(const VTerm *vt);
 size_t vterm_output_get_buffer_current(const VTerm *vt);
 size_t vterm_output_get_buffer_remaining(const VTerm *vt);
 
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
+
+void vterm_keyboard_push_unichar(VTerm *vt, VTermModifier state, uint32_t c);
+void vterm_keyboard_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 
 // ------------
 // Parser layer
