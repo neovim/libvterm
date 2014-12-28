@@ -126,6 +126,9 @@ void   vterm_free(VTerm* vt);
 void vterm_get_size(const VTerm *vt, int *rowsp, int *colsp);
 void vterm_set_size(VTerm *vt, int rows, int cols);
 
+int  vterm_get_utf8(const VTerm *vt);
+void vterm_set_utf8(VTerm *vt, int is_utf8);
+
 void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len);
 
 void vterm_input_push_char(VTerm *vt, VTermModifier state, uint32_t c);
@@ -174,9 +177,7 @@ typedef struct {
   int (*resize)(int rows, int cols, void *user);
 } VTermParserCallbacks;
 
-void vterm_set_parser_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
-
-void vterm_parser_set_utf8(VTerm *vt, int is_utf8);
+void vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
 
 // -----------
 // State layer
