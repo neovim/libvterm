@@ -134,8 +134,6 @@ void vterm_push_bytes(VTerm *vt, const char *bytes, size_t len);
 void vterm_input_push_char(VTerm *vt, VTermModifier state, uint32_t c);
 void vterm_input_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 
-size_t vterm_output_bufferlen(VTerm *vt); /* deprecated */
-
 size_t vterm_output_get_buffer_size(const VTerm *vt);
 size_t vterm_output_get_buffer_current(const VTerm *vt);
 size_t vterm_output_get_buffer_remaining(const VTerm *vt);

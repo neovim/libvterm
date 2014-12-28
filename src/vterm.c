@@ -162,11 +162,6 @@ INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
   vterm_push_output_sprintf_ctrl(vt, C1_ST, "");
 }
 
-size_t vterm_output_bufferlen(VTerm *vt)
-{
-  return vterm_output_get_buffer_current(vt);
-}
-
 size_t vterm_output_get_buffer_size(const VTerm *vt)
 {
   return vt->outbuffer_len;

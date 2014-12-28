@@ -818,7 +818,7 @@ int main(int argc, char **argv)
     else
       abort_line: err = 1;
 
-    size_t outlen = vterm_output_bufferlen(vt);
+    size_t outlen = vterm_output_get_buffer_current(vt);
     if(outlen > 0) {
       char outbuff[outlen];
       vterm_output_bufferread(vt, outbuff, outlen);
