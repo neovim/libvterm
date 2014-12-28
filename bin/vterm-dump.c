@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
   int len;
   char buffer[1024];
   while((len = read(fd, buffer, sizeof(buffer))) > 0) {
-    vterm_push_bytes(vt, buffer, len);
+    vterm_input_write(vt, buffer, len);
   }
 
   printf("\n");
