@@ -1615,7 +1615,7 @@ VTermState *vterm_obtain_state(VTerm *vt)
   if(*state->encoding_utf8.enc->init)
     (*state->encoding_utf8.enc->init)(state->encoding_utf8.enc, state->encoding_utf8.data);
 
-  vterm_set_parser_callbacks(vt, &parser_callbacks, state);
+  vterm_parser_set_callbacks(vt, &parser_callbacks, state);
 
   return state;
 }
