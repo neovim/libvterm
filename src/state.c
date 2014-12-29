@@ -63,6 +63,9 @@ static VTermState *vterm_state_new(VTerm *vt)
   state->rows = vt->rows;
   state->cols = vt->cols;
 
+  state->callbacks = NULL;
+  state->cbdata    = NULL;
+
   vterm_state_newpen(state);
 
   state->bold_is_highbright = 0;
