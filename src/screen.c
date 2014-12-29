@@ -842,6 +842,11 @@ void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks 
   screen->cbdata = user;
 }
 
+void *vterm_screen_get_cbdata(VTermScreen *screen)
+{
+  return screen->cbdata;
+}
+
 void vterm_screen_flush_damage(VTermScreen *screen)
 {
   if(screen->pending_scrollrect.start_row != -1) {

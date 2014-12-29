@@ -175,7 +175,8 @@ typedef struct {
   int (*resize)(int rows, int cols, void *user);
 } VTermParserCallbacks;
 
-void vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
+void  vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
+void *vterm_parser_get_cbdata(VTerm *vt);
 
 // -----------
 // State layer
@@ -198,8 +199,10 @@ typedef struct {
 
 VTermState *vterm_obtain_state(VTerm *vt);
 
+void  vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
+void *vterm_state_get_cbdata(VTermState *state);
+
 void vterm_state_reset(VTermState *state, int hard);
-void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
 void vterm_state_get_cursorpos(const VTermState *state, VTermPos *cursorpos);
 void vterm_state_get_default_colors(const VTermState *state, VTermColor *default_fg, VTermColor *default_bg);
 void vterm_state_get_palette_color(const VTermState *state, int index, VTermColor *col);
@@ -246,8 +249,10 @@ typedef struct {
 
 VTermScreen *vterm_obtain_screen(VTerm *vt);
 
+void  vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
+void *vterm_screen_get_cbdata(VTermScreen *screen);
+
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen);
-void vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
 
 typedef enum {
   VTERM_DAMAGE_CELL,    /* every cell */

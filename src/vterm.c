@@ -201,6 +201,11 @@ void vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks
   vt->cbdata = user;
 }
 
+void *vterm_parser_get_cbdata(VTerm *vt)
+{
+  return vt->cbdata;
+}
+
 VTermValueType vterm_get_attr_type(VTermAttr attr)
 {
   switch(attr) {
