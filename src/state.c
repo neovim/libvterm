@@ -1706,6 +1706,11 @@ void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *cal
   }
 }
 
+void *vterm_state_get_cbdata(VTermState *state)
+{
+  return state->cbdata;
+}
+
 int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
 {
   /* Only store the new value of the property if usercode said it was happy.
