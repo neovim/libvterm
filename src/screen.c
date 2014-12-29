@@ -642,6 +642,9 @@ static VTermScreen *screen_new(VTerm *vt)
   screen->rows = rows;
   screen->cols = cols;
 
+  screen->callbacks = NULL;
+  screen->cbdata    = NULL;
+
   screen->buffers[0] = realloc_buffer(screen, NULL, rows, cols);
 
   screen->buffer = screen->buffers[0];
