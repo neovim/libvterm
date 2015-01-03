@@ -7,19 +7,21 @@ PUSH "\e[?1000h"
   setmousefunc func
 
 !Press 1
-MOUSE 0 1 1 0,0
+MOUSEMOVE 0,0 0
+MOUSEBTN d 1 0
   output "\e[M\x20\x21\x21"
 
 !Release 1
-MOUSE 0 0 1 0,0
+MOUSEBTN u 1 0
   output "\e[M\x23\x21\x21"
 
 !Button 2
-MOUSE 0 1 2 0,0
+MOUSEBTN d 2 0
   output "\e[M\x21\x21\x21"
-MOUSE 0 0 2 0,0
+MOUSEBTN u 2 0
   output "\e[M\x23\x21\x21"
 
 !Position
-MOUSE 0 1 1 10,20
+MOUSEMOVE 10,20 0
+MOUSEBTN d 1 0
   output "\e[M\x20\x35\x2b"

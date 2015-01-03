@@ -582,17 +582,31 @@ int main(int argc, char **argv)
       vterm_keyboard_push_key(vt, state, key);
     }
 
-    else if(strstartswith(line, "MOUSE ")) {
-      char *linep = line + 6;
-      int press, button, row, col;
+    else if(strstartswith(line, "MOUSEMOVE ")) {
+      char *linep = line + 10;
+      int row, col, len;
       while(linep[0] == ' ')
         linep++;
-      VTermModifier state = strpe_modifiers(&linep);
+      sscanf(linep, "%d,%d%n", &row, &col, &len);
+      linep += len;
       while(linep[0] == ' ')
         linep++;
-      sscanf(linep, "%d %d %d,%d", &press, &button, &row, &col);
-      if(mousefunc)
-        (*mousefunc)(col, row, button, press, state, mousedata);
+      VTermModifier mod = strpe_modifiers(&linep);
+      vterm_mouse_move(vt, row, col, mod);
+    }
+
+    else if(strstartswith(line, "MOUSEBTN ")) {
+      char *linep = line + 9;
+      char press;
+      int button, len;
+      while(linep[0] == ' ')
+        linep++;
+      sscanf(linep, "%c %d%n", &press, &button, &len);
+      linep += len;
+      while(linep[0] == ' ')
+        linep++;
+      VTermModifier mod = strpe_modifiers(&linep);
+      vterm_mouse_button(vt, button, (press == 'd' || press == 'D'), mod);
     }
 
     else if(strstartswith(line, "DAMAGEMERGE ")) {
