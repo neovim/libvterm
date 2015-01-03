@@ -266,7 +266,7 @@ static int erase_internal(VTermRect rect, int selective, void *user)
 {
   VTermScreen *screen = user;
 
-  for(int row = rect.start_row; row < rect.end_row; row++) {
+  for(int row = rect.start_row; row < screen->state->rows && row < rect.end_row; row++) {
     const VTermLineInfo *info = vterm_state_get_lineinfo(screen->state, row);
 
     for(int col = rect.start_col; col < rect.end_col; col++) {
