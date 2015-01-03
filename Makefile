@@ -128,3 +128,9 @@ TARBALL=$(DISTDIR).tar.gz
 dist: distdir
 	tar -czf $(TARBALL) $(DISTDIR)
 	rm -rf $(DISTDIR)
+
+dist+bzr:
+	$(MAKE) dist VERSION=$(VERSION)+bzr`bzr revno`
+
+distdir+bzr:
+	$(MAKE) distdir VERSION=$(VERSION)+bzr`bzr revno`
