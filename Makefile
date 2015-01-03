@@ -119,6 +119,8 @@ distdir: all
 	cp include/*.h __distdir/include
 	mkdir __distdir/bin
 	cp bin/*.c __distdir/bin
+	mkdir __distdir/t
+	cp t/*.test t/harness.c t/run-test.pl __distdir/t
 	sed "s,@VERSION@,$(VERSION)," <vterm.pc.in >__distdir/vterm.pc.in
 	sed "/^# DIST CUT/Q" <Makefile >__distdir/Makefile
 	mv __distdir $(DISTDIR)
