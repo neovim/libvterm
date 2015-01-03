@@ -5,15 +5,9 @@
 
 #define strneq(a,b,n) (strncmp(a,b,n)==0)
 
-#include "utf8.h"
-
 #if defined(DEBUG) && DEBUG > 1
 # define DEBUG_GLYPH_COMBINE
 #endif
-
-#define MOUSE_WANT_CLICK 0x01
-#define MOUSE_WANT_DRAG  0x02
-#define MOUSE_WANT_MOVE  0x04
 
 /* Some convenient wrappers to make callback functions easier */
 
@@ -435,94 +429,14 @@ static int on_control(unsigned char control, void *user)
   return 1;
 }
 
-static void output_mouse(VTermState *state, int code, int pressed, int modifiers, int col, int row)
-{
-  modifiers <<= 2;
-
-  switch(state->mouse_protocol) {
-  case MOUSE_X10:
-    if(col + 0x21 > 0xff)
-      col = 0xff - 0x21;
-    if(row + 0x21 > 0xff)
-      row = 0xff - 0x21;
-
-    if(!pressed)
-      code = 3;
-
-    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "M%c%c%c",
-        (code | modifiers) + 0x20, col + 0x21, row + 0x21);
-    break;
-
-  case MOUSE_UTF8:
-    {
-      char utf8[18]; size_t len = 0;
-
-      if(!pressed)
-        code = 3;
-
-      len += fill_utf8((code | modifiers) + 0x20, utf8 + len);
-      len += fill_utf8(col + 0x21, utf8 + len);
-      len += fill_utf8(row + 0x21, utf8 + len);
-      utf8[len] = 0;
-
-      vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "M%s", utf8);
-    }
-    break;
-
-  case MOUSE_SGR:
-    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "<%d;%d;%d%c",
-        code | modifiers, col + 1, row + 1, pressed ? 'M' : 'm');
-    break;
-
-  case MOUSE_RXVT:
-    if(!pressed)
-      code = 3;
-
-    vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "%d;%d;%dM",
-        code | modifiers, col + 1, row + 1);
-    break;
-  }
-}
-
 static void mousefunc(int col, int row, int button, int pressed, int modifiers, void *data)
 {
   VTermState *state = data;
 
-  int old_col     = state->mouse_col;
-  int old_row     = state->mouse_row;
-  int old_buttons = state->mouse_buttons;
-
-  state->mouse_col = col;
-  state->mouse_row = row;
-
-  if(button > 0 && button <= 3) {
-    if(pressed)
-      state->mouse_buttons |= (1 << (button-1));
-    else
-      state->mouse_buttons &= ~(1 << (button-1));
-  }
-
   modifiers &= 0x7;
 
-
-  /* Most of the time we don't get button releases from 4/5 */
-  if(state->mouse_buttons != old_buttons || button >= 4) {
-    if(button < 4) {
-      output_mouse(state, button-1, pressed, modifiers, col, row);
-    }
-    else if(button < 6) {
-      output_mouse(state, button-4 + 0x40, pressed, modifiers, col, row);
-    }
-  }
-  else if(col != old_col || row != old_row) {
-    if((state->mouse_flags & MOUSE_WANT_DRAG && state->mouse_buttons) ||
-       (state->mouse_flags & MOUSE_WANT_MOVE)) {
-      int button = state->mouse_buttons & 0x01 ? 1 :
-                   state->mouse_buttons & 0x02 ? 2 :
-                   state->mouse_buttons & 0x04 ? 3 : 4;
-      output_mouse(state, button-1 + 0x20, 1, modifiers, col, row);
-    }
-  }
+  vterm_mouse_move(state->vt, row, col, modifiers);
+  vterm_mouse_button(state->vt, button, pressed, modifiers);
 }
 
 static int settermprop_bool(VTermState *state, VTermProp prop, int v)

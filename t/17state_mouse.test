@@ -15,38 +15,42 @@ PUSH "\e[?1000h"
   setmousefunc func
 
 !Press 1
-MOUSE 0 1 1 0,0
+MOUSEMOVE 0,0 0
+MOUSEBTN d 1 0
   output "\e[M\x20\x21\x21"
 
 !Release 1
-MOUSE 0 0 1 0,0
+MOUSEBTN u 1 0
   output "\e[M\x23\x21\x21"
 
 !Ctrl-Press 1
-MOUSE C 1 1 0,0
+MOUSEBTN d 1 C
   output "\e[M\x30\x21\x21"
-MOUSE C 0 1 0,0
+MOUSEBTN u 1 C
   output "\e[M\x33\x21\x21"
 
 !Button 2
-MOUSE 0 1 2 0,0
+MOUSEBTN d 2 0
   output "\e[M\x21\x21\x21"
-MOUSE 0 0 2 0,0
+MOUSEBTN u 2 0
   output "\e[M\x23\x21\x21"
 
 !Position
-MOUSE 0 1 1 10,20
+MOUSEMOVE 10,20 0
+MOUSEBTN d 1 0
   output "\e[M\x20\x35\x2b"
 
-MOUSE 0 0 0 10,21
+MOUSEBTN u 1 0
+  output "\e[M\x23\x35\x2b"
+MOUSEMOVE 10,21 0
   # no output
 
 !Wheel events
-MOUSE 0 1 4 10,21
+MOUSEBTN d 4 0
   output "\e[M\x60\x36\x2b"
-MOUSE 0 1 4 10,21
+MOUSEBTN d 4 0
   output "\e[M\x60\x36\x2b"
-MOUSE 0 1 5 10,21
+MOUSEBTN d 5 0
   output "\e[M\x61\x36\x2b"
 
 !DECRQM on mouse button mode
@@ -62,17 +66,18 @@ RESET
 PUSH "\e[?1002h"
   setmousefunc func
 
-MOUSE 0 1 1 5,5
+MOUSEMOVE 5,5 0
+MOUSEBTN d 1 0
   output "\e[M\x20\x26\x26"
-MOUSE 0 0 0 5,6
+MOUSEMOVE 5,6 0
   output "\e[M\x40\x27\x26"
-MOUSE 0 0 0 6,6
+MOUSEMOVE 6,6 0
   output "\e[M\x40\x27\x27"
-MOUSE 0 0 0 6,6
+MOUSEMOVE 6,6 0
   # no output
-MOUSE 0 0 1 6,6
+MOUSEBTN u 1 0
   output "\e[M\x23\x27\x27"
-MOUSE 0 0 0 6,7
+MOUSEMOVE 6,7
   # no output
 
 !DECRQM on mouse drag mode
@@ -87,7 +92,7 @@ PUSH "\e[?1003\$p"
 PUSH "\e[?1003h"
   setmousefunc func
 
-MOUSE 0 0 0 6,8
+MOUSEMOVE 6,8 0
   output "\e[M\x43\x29\x27"
 
 !DECRQM on mouse motion mode
@@ -99,9 +104,11 @@ PUSH "\e[?1003\$p"
   output "\e[?1003;1\$y"
 
 !Bounds checking
-MOUSE 0 1 1 300,300
+MOUSEMOVE 300,300 0
+  output "\e[M\x43\xff\xff"
+MOUSEBTN d 1 0
   output "\e[M\x20\xff\xff"
-MOUSE 0 0 1 300,300
+MOUSEBTN u 1 0
   output "\e[M\x23\xff\xff"
 
 !DECRQM on standard encoding mode
@@ -115,9 +122,9 @@ PUSH "\e[?1015\$p"
 !UTF-8 extended encoding mode
 # 300 + 32 + 1 = 333 = U+014d = \xc5\x8d
 PUSH "\e[?1005h"
-MOUSE 0 1 1 300,300
+MOUSEBTN d 1 0
   output "\e[M\x20\xc5\x8d\xc5\x8d"
-MOUSE 0 0 1 300,300
+MOUSEBTN u 1 0
   output "\e[M\x23\xc5\x8d\xc5\x8d"
 
 !DECRQM on UTF-8 extended encoding mode
@@ -130,9 +137,9 @@ PUSH "\e[?1015\$p"
 
 !SGR extended encoding mode
 PUSH "\e[?1006h"
-MOUSE 0 1 1 300,300
+MOUSEBTN d 1 0
   output "\e[<0;301;301M"
-MOUSE 0 0 1 300,300
+MOUSEBTN u 1 0
   output "\e[<0;301;301m"
 
 !DECRQM on SGR extended encoding mode
@@ -145,9 +152,9 @@ PUSH "\e[?1015\$p"
 
 !rxvt extended encoding mode
 PUSH "\e[?1015h"
-MOUSE 0 1 1 300,300
+MOUSEBTN d 1 0
   output "\e[0;301;301M"
-MOUSE 0 0 1 300,300
+MOUSEBTN u 1 0
   output "\e[3;301;301M"
 
 !DECRQM on rxvt extended encoding mode
