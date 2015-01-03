@@ -230,15 +230,22 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
 }
 
 static int want_mouse = 0;
-static VTermMouseFunc mousefunc;
-static void *mousedata;
-static int setmousefunc(VTermMouseFunc func, void *data, void *user)
+static VTermMouseMode mousemode;
+static int setmousemode(VTermMouseMode mode, void *user)
 {
-  mousefunc = func;
-  mousedata = data;
+  mousemode = mode;
 
   if(want_mouse)
-    printf("setmousefunc %s\n", func ? "func" : "(null)");
+    switch(mode) {
+      case VTERM_MOUSE_NONE:
+        printf("setmousemode NONE\n"); break;
+      case VTERM_MOUSE_CLICK:
+        printf("setmousemode CLICK\n"); break;
+      case VTERM_MOUSE_DRAG:
+        printf("setmousemode DRAG\n"); break;
+      case VTERM_MOUSE_MOVE:
+        printf("setmousemode MOVE\n"); break;
+    }
 
   return 1;
 }
@@ -338,7 +345,7 @@ VTermStateCallbacks state_cbs = {
   .erase        = state_erase,
   .setpenattr   = state_setpenattr,
   .settermprop  = settermprop,
-  .setmousefunc = setmousefunc,
+  .setmousemode = setmousemode,
   .setlineinfo  = state_setlineinfo,
 };
 
@@ -388,7 +395,7 @@ VTermScreenCallbacks screen_cbs = {
   .moverect     = moverect,
   .movecursor   = movecursor,
   .settermprop  = settermprop,
-  .setmousefunc = setmousefunc,
+  .setmousemode = setmousemode,
   .sb_pushline  = screen_sb_pushline,
   .sb_popline   = screen_sb_popline,
 };

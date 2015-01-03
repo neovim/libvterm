@@ -12,7 +12,7 @@ PUSH "\e[?1003\$p"
 !Mouse in simple button report mode
 RESET
 PUSH "\e[?1000h"
-  setmousefunc func
+  setmousemode CLICK
 
 !Press 1
 MOUSEMOVE 0,0 0
@@ -64,7 +64,7 @@ PUSH "\e[?1003\$p"
 !Drag events
 RESET
 PUSH "\e[?1002h"
-  setmousefunc func
+  setmousemode DRAG
 
 MOUSEMOVE 5,5 0
 MOUSEBTN d 1 0
@@ -90,7 +90,7 @@ PUSH "\e[?1003\$p"
 
 !Non-drag motion events
 PUSH "\e[?1003h"
-  setmousefunc func
+  setmousemode MOVE
 
 MOUSEMOVE 6,8 0
   output "\e[M\x43\x29\x27"

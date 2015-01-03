@@ -429,16 +429,6 @@ static int on_control(unsigned char control, void *user)
   return 1;
 }
 
-static void mousefunc(int col, int row, int button, int pressed, int modifiers, void *data)
-{
-  VTermState *state = data;
-
-  modifiers &= 0x7;
-
-  vterm_mouse_move(state->vt, row, col, modifiers);
-  vterm_mouse_button(state->vt, button, pressed, modifiers);
-}
-
 static int settermprop_bool(VTermState *state, VTermProp prop, int v)
 {
   VTermValue val = { .boolean = v };
@@ -708,8 +698,15 @@ static void set_dec_mode(VTermState *state, int num, int val)
       state->mouse_flags = 0;
     }
 
-    if(state->callbacks && state->callbacks->setmousefunc)
-      (*state->callbacks->setmousefunc)(val ? mousefunc : NULL, state, state->cbdata);
+    if(state->callbacks && state->callbacks->setmousemode) {
+      VTermMouseMode mode =
+        (state->mouse_flags & MOUSE_WANT_MOVE) ? VTERM_MOUSE_MOVE :
+        (state->mouse_flags & MOUSE_WANT_DRAG) ? VTERM_MOUSE_DRAG :
+        state->mouse_flags                     ? VTERM_MOUSE_CLICK :
+                                                 VTERM_MOUSE_NONE;
+
+      (*state->callbacks->setmousemode)(mode, state->cbdata);
+    }
 
     break;
 

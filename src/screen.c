@@ -457,12 +457,12 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
   return 1;
 }
 
-static int setmousefunc(VTermMouseFunc func, void *data, void *user)
+static int setmousemode(VTermMouseMode mode, void *user)
 {
   VTermScreen *screen = user;
 
-  if(screen->callbacks && screen->callbacks->setmousefunc)
-    return (*screen->callbacks->setmousefunc)(func, data, screen->cbdata);
+  if(screen->callbacks && screen->callbacks->setmousemode)
+    return (*screen->callbacks->setmousemode)(mode, screen->cbdata);
 
   return 0;
 }
@@ -615,7 +615,7 @@ static VTermStateCallbacks state_cbs = {
   .erase        = &erase,
   .setpenattr   = &setpenattr,
   .settermprop  = &settermprop,
-  .setmousefunc = &setmousefunc,
+  .setmousemode = &setmousemode,
   .bell         = &bell,
   .resize       = &resize,
   .setlineinfo  = &setlineinfo,
