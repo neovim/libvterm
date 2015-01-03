@@ -7,6 +7,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "vterm_keycodes.h"
 
@@ -97,7 +98,7 @@ enum {
   VTERM_PROP_CURSORSHAPE_BAR_LEFT,
 };
 
-typedef void (*VTermMouseFunc)(int x, int y, int button, int pressed, int modifiers, void *data);
+typedef void (*VTermMouseFunc)(int col, int row, int button, int pressed, int modifiers, void *data);
 
 typedef struct {
   const uint32_t *chars;
@@ -139,6 +140,9 @@ size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
 
 void vterm_keyboard_push_unichar(VTerm *vt, VTermModifier state, uint32_t c);
 void vterm_keyboard_push_key(VTerm *vt, VTermModifier state, VTermKey key);
+
+void vterm_mouse_move(VTerm *vt, int row, int col, VTermModifier mod);
+void vterm_mouse_button(VTerm *vt, int button, bool pressed, VTermModifier mod);
 
 // ------------
 // Parser layer
