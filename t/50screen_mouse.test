@@ -4,7 +4,7 @@ WANTSCREEN M
 !Mouse in simple button report mode
 RESET
 PUSH "\e[?1000h"
-  setmousefunc func
+  setmousemode CLICK
 
 !Press 1
 MOUSEMOVE 0,0 0
