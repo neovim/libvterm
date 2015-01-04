@@ -815,7 +815,7 @@ int main(int argc, char **argv)
     size_t outlen = vterm_output_get_buffer_current(vt);
     if(outlen > 0) {
       char outbuff[outlen];
-      vterm_output_bufferread(vt, outbuff, outlen);
+      vterm_output_read(vt, outbuff, outlen);
 
       printf("output ");
       for(int i = 0; i < outlen; i++)

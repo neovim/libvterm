@@ -180,7 +180,7 @@ size_t vterm_output_get_buffer_remaining(const VTerm *vt)
   return vt->outbuffer_len - vt->outbuffer_cur;
 }
 
-size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len)
+size_t vterm_output_read(VTerm *vt, char *buffer, size_t len)
 {
   if(len > vt->outbuffer_cur)
     len = vt->outbuffer_cur;
