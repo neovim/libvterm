@@ -229,27 +229,6 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
   return 0;
 }
 
-static int want_mouse = 0;
-static VTermMouseMode mousemode;
-static int setmousemode(VTermMouseMode mode, void *user)
-{
-  mousemode = mode;
-
-  if(want_mouse)
-    switch(mode) {
-      case VTERM_MOUSE_NONE:
-        printf("setmousemode NONE\n"); break;
-      case VTERM_MOUSE_CLICK:
-        printf("setmousemode CLICK\n"); break;
-      case VTERM_MOUSE_DRAG:
-        printf("setmousemode DRAG\n"); break;
-      case VTERM_MOUSE_MOVE:
-        printf("setmousemode MOVE\n"); break;
-    }
-
-  return 1;
-}
-
 /* These callbacks are for State */
 
 static int want_state_putglyph = 0;
@@ -338,15 +317,14 @@ static int state_setlineinfo(int row, const VTermLineInfo *newinfo, const VTermL
 }
 
 VTermStateCallbacks state_cbs = {
-  .putglyph     = state_putglyph,
-  .movecursor   = movecursor,
-  .scrollrect   = scrollrect,
-  .moverect     = moverect,
-  .erase        = state_erase,
-  .setpenattr   = state_setpenattr,
-  .settermprop  = settermprop,
-  .setmousemode = setmousemode,
-  .setlineinfo  = state_setlineinfo,
+  .putglyph    = state_putglyph,
+  .movecursor  = movecursor,
+  .scrollrect  = scrollrect,
+  .moverect    = moverect,
+  .erase       = state_erase,
+  .setpenattr  = state_setpenattr,
+  .settermprop = settermprop,
+  .setlineinfo = state_setlineinfo,
 };
 
 static int want_screen_damage = 0;
@@ -391,13 +369,12 @@ static int screen_sb_popline(int cols, VTermScreenCell *cells, void *user)
 }
 
 VTermScreenCallbacks screen_cbs = {
-  .damage       = screen_damage,
-  .moverect     = moverect,
-  .movecursor   = movecursor,
-  .settermprop  = settermprop,
-  .setmousemode = setmousemode,
-  .sb_pushline  = screen_sb_pushline,
-  .sb_popline   = screen_sb_popline,
+  .damage      = screen_damage,
+  .moverect    = moverect,
+  .movecursor  = movecursor,
+  .settermprop = settermprop,
+  .sb_pushline = screen_sb_pushline,
+  .sb_popline  = screen_sb_popline,
 };
 
 int main(int argc, char **argv)
@@ -460,9 +437,6 @@ int main(int argc, char **argv)
         case 'p':
           want_settermprop = sense;
           break;
-        case 'M':
-          want_mouse = sense;
-          break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
         }
@@ -494,9 +468,6 @@ int main(int argc, char **argv)
           break;
         case 'p':
           want_settermprop = 1;
-          break;
-        case 'M':
-          want_mouse = sense;
           break;
         case 'b':
           want_screen_scrollback = sense;

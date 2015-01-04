@@ -698,14 +698,13 @@ static void set_dec_mode(VTermState *state, int num, int val)
       state->mouse_flags = 0;
     }
 
-    if(state->callbacks && state->callbacks->setmousemode) {
-      VTermMouseMode mode =
-        (state->mouse_flags & MOUSE_WANT_MOVE) ? VTERM_MOUSE_MOVE :
-        (state->mouse_flags & MOUSE_WANT_DRAG) ? VTERM_MOUSE_DRAG :
-        state->mouse_flags                     ? VTERM_MOUSE_CLICK :
-                                                 VTERM_MOUSE_NONE;
-
-      (*state->callbacks->setmousemode)(mode, state->cbdata);
+    {
+      int mode =
+        (state->mouse_flags & MOUSE_WANT_MOVE) ? VTERM_PROP_MOUSE_MOVE :
+        (state->mouse_flags & MOUSE_WANT_DRAG) ? VTERM_PROP_MOUSE_DRAG :
+        state->mouse_flags                     ? VTERM_PROP_MOUSE_CLICK :
+                                                 VTERM_PROP_MOUSE_NONE;
+      settermprop_int(state, VTERM_PROP_MOUSE, mode);
     }
 
     break;
