@@ -1,5 +1,5 @@
 INIT
-WANTSTATE M
+WANTSTATE p
 
 !DECRQM on with mouse off
 PUSH "\e[?1000\$p"
@@ -11,8 +11,11 @@ PUSH "\e[?1003\$p"
 
 !Mouse in simple button report mode
 RESET
+  settermprop 1 true
+  settermprop 2 true
+  settermprop 7 1
 PUSH "\e[?1000h"
-  setmousemode CLICK
+  settermprop 8 1
 
 !Press 1
 MOUSEMOVE 0,0 0
@@ -63,8 +66,11 @@ PUSH "\e[?1003\$p"
 
 !Drag events
 RESET
+  settermprop 1 true
+  settermprop 2 true
+  settermprop 7 1
 PUSH "\e[?1002h"
-  setmousemode DRAG
+  settermprop 8 2
 
 MOUSEMOVE 5,5 0
 MOUSEBTN d 1 0
@@ -90,7 +96,7 @@ PUSH "\e[?1003\$p"
 
 !Non-drag motion events
 PUSH "\e[?1003h"
-  setmousemode MOVE
+  settermprop 8 3
 
 MOUSEMOVE 6,8 0
   output "\e[M\x43\x29\x27"

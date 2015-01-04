@@ -457,16 +457,6 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
   return 1;
 }
 
-static int setmousemode(VTermMouseMode mode, void *user)
-{
-  VTermScreen *screen = user;
-
-  if(screen->callbacks && screen->callbacks->setmousemode)
-    return (*screen->callbacks->setmousemode)(mode, screen->cbdata);
-
-  return 0;
-}
-
 static int bell(void *user)
 {
   VTermScreen *screen = user;
@@ -609,16 +599,15 @@ static int setlineinfo(int row, const VTermLineInfo *newinfo, const VTermLineInf
 }
 
 static VTermStateCallbacks state_cbs = {
-  .putglyph     = &putglyph,
-  .movecursor   = &movecursor,
-  .scrollrect   = &scrollrect,
-  .erase        = &erase,
-  .setpenattr   = &setpenattr,
-  .settermprop  = &settermprop,
-  .setmousemode = &setmousemode,
-  .bell         = &bell,
-  .resize       = &resize,
-  .setlineinfo  = &setlineinfo,
+  .putglyph    = &putglyph,
+  .movecursor  = &movecursor,
+  .scrollrect  = &scrollrect,
+  .erase       = &erase,
+  .setpenattr  = &setpenattr,
+  .settermprop = &settermprop,
+  .bell        = &bell,
+  .resize      = &resize,
+  .setlineinfo = &setlineinfo,
 };
 
 static VTermScreen *screen_new(VTerm *vt)
