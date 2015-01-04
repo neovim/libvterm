@@ -542,22 +542,22 @@ int main(int argc, char **argv)
       int c = 0;
       while(linep[0] == ' ')
         linep++;
-      VTermModifier state = strpe_modifiers(&linep);
+      VTermModifier mod = strpe_modifiers(&linep);
       sscanf(linep, " %x", &c);
 
-      vterm_keyboard_push_unichar(vt, state, c);
+      vterm_keyboard_unichar(vt, c, mod);
     }
 
     else if(strstartswith(line, "INKEY ")) {
       char *linep = line + 6;
       while(linep[0] == ' ')
         linep++;
-      VTermModifier state = strpe_modifiers(&linep);
+      VTermModifier mod = strpe_modifiers(&linep);
       while(linep[0] == ' ')
         linep++;
       VTermKey key = strp_key(linep);
 
-      vterm_keyboard_push_key(vt, state, key);
+      vterm_keyboard_key(vt, key, mod);
     }
 
     else if(strstartswith(line, "MOUSEMOVE ")) {
