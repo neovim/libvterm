@@ -142,7 +142,7 @@ size_t vterm_output_get_buffer_size(const VTerm *vt);
 size_t vterm_output_get_buffer_current(const VTerm *vt);
 size_t vterm_output_get_buffer_remaining(const VTerm *vt);
 
-size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
+size_t vterm_output_read(VTerm *vt, char *buffer, size_t len);
 
 void vterm_keyboard_unichar(VTerm *vt, uint32_t c, VTermModifier mod);
 void vterm_keyboard_key(VTerm *vt, VTermKey key, VTermModifier mod);
