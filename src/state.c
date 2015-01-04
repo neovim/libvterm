@@ -686,26 +686,15 @@ static void set_dec_mode(VTermState *state, int num, int val)
       state->mouse_row     = 0;
       state->mouse_buttons = 0;
 
-      state->mouse_flags = MOUSE_WANT_CLICK;
       state->mouse_protocol = MOUSE_X10;
 
-      if(num == 1002)
-        state->mouse_flags |= MOUSE_WANT_DRAG;
-      if(num == 1003)
-        state->mouse_flags |= MOUSE_WANT_MOVE;
+      settermprop_int(state, VTERM_PROP_MOUSE,
+          (num == 1000) ? VTERM_PROP_MOUSE_CLICK :
+          (num == 1002) ? VTERM_PROP_MOUSE_DRAG  :
+                          VTERM_PROP_MOUSE_MOVE);
     }
-    else {
-      state->mouse_flags = 0;
-    }
-
-    {
-      int mode =
-        (state->mouse_flags & MOUSE_WANT_MOVE) ? VTERM_PROP_MOUSE_MOVE :
-        (state->mouse_flags & MOUSE_WANT_DRAG) ? VTERM_PROP_MOUSE_DRAG :
-        state->mouse_flags                     ? VTERM_PROP_MOUSE_CLICK :
-                                                 VTERM_PROP_MOUSE_NONE;
-      settermprop_int(state, VTERM_PROP_MOUSE, mode);
-    }
+    else
+      settermprop_int(state, VTERM_PROP_MOUSE, VTERM_PROP_MOUSE_NONE);
 
     break;
 
@@ -1657,6 +1646,15 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
       };
       erase(state, rect, 0);
     }
+    return 1;
+  case VTERM_PROP_MOUSE:
+    state->mouse_flags = 0;
+    if(val->number)
+      state->mouse_flags |= MOUSE_WANT_CLICK;
+    if(val->number == VTERM_PROP_MOUSE_DRAG)
+      state->mouse_flags |= MOUSE_WANT_DRAG;
+    if(val->number == VTERM_PROP_MOUSE_MOVE)
+      state->mouse_flags |= MOUSE_WANT_MOVE;
     return 1;
   }
 
