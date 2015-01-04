@@ -144,8 +144,8 @@ size_t vterm_output_get_buffer_remaining(const VTerm *vt);
 
 size_t vterm_output_bufferread(VTerm *vt, char *buffer, size_t len);
 
-void vterm_keyboard_push_unichar(VTerm *vt, VTermModifier state, uint32_t c);
-void vterm_keyboard_push_key(VTerm *vt, VTermModifier state, VTermKey key);
+void vterm_keyboard_unichar(VTerm *vt, uint32_t c, VTermModifier mod);
+void vterm_keyboard_key(VTerm *vt, VTermKey key, VTermModifier mod);
 
 void vterm_mouse_move(VTerm *vt, int row, int col, VTermModifier mod);
 void vterm_mouse_button(VTerm *vt, int button, bool pressed, VTermModifier mod);

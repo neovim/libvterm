@@ -4,7 +4,7 @@
 
 #include "utf8.h"
 
-void vterm_keyboard_push_unichar(VTerm *vt, VTermModifier mod, uint32_t c)
+void vterm_keyboard_unichar(VTerm *vt, uint32_t c, VTermModifier mod)
 {
   /* The shift modifier is never important for Unicode characters
    * apart from Space
@@ -121,7 +121,7 @@ static keycodes_s keycodes_kp[] = {
   { KEYCODE_KEYPAD, '=', 'X' }, // KP_EQUAL
 };
 
-void vterm_keyboard_push_key(VTerm *vt, VTermModifier mod, VTermKey key)
+void vterm_keyboard_key(VTerm *vt, VTermKey key, VTermModifier mod)
 {
   if(key == VTERM_KEY_NONE)
     return;
