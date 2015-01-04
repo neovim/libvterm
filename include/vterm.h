@@ -90,12 +90,20 @@ typedef enum {
   VTERM_PROP_ICONNAME,          // string
   VTERM_PROP_REVERSE,           // bool
   VTERM_PROP_CURSORSHAPE,       // number
+  VTERM_PROP_MOUSE,             // number
 } VTermProp;
 
 enum {
   VTERM_PROP_CURSORSHAPE_BLOCK = 1,
   VTERM_PROP_CURSORSHAPE_UNDERLINE,
   VTERM_PROP_CURSORSHAPE_BAR_LEFT,
+};
+
+enum {
+  VTERM_PROP_MOUSE_NONE = 0,
+  VTERM_PROP_MOUSE_CLICK,
+  VTERM_PROP_MOUSE_DRAG,
+  VTERM_PROP_MOUSE_MOVE,
 };
 
 typedef struct {
@@ -141,13 +149,6 @@ void vterm_keyboard_push_key(VTerm *vt, VTermModifier state, VTermKey key);
 
 void vterm_mouse_move(VTerm *vt, int row, int col, VTermModifier mod);
 void vterm_mouse_button(VTerm *vt, int button, bool pressed, VTermModifier mod);
-
-typedef enum {
-  VTERM_MOUSE_NONE = 0,
-  VTERM_MOUSE_CLICK = 1,
-  VTERM_MOUSE_DRAG = 2,
-  VTERM_MOUSE_MOVE = 3,
-} VTermMouseMode;
 
 // ------------
 // Parser layer
@@ -200,7 +201,6 @@ typedef struct {
   int (*initpen)(void *user);
   int (*setpenattr)(VTermAttr attr, VTermValue *val, void *user);
   int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
-  int (*setmousemode)(VTermMouseMode mode, void *user);
   int (*bell)(void *user);
   int (*resize)(int rows, int cols, VTermPos *delta, void *user);
   int (*setlineinfo)(int row, const VTermLineInfo *newinfo, const VTermLineInfo *oldinfo, void *user);
@@ -249,7 +249,6 @@ typedef struct {
   int (*moverect)(VTermRect dest, VTermRect src, void *user);
   int (*movecursor)(VTermPos pos, VTermPos oldpos, int visible, void *user);
   int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
-  int (*setmousemode)(VTermMouseMode mode, void *user);
   int (*bell)(void *user);
   int (*resize)(int rows, int cols, void *user);
   int (*sb_pushline)(int cols, const VTermScreenCell *cells, void *user);
