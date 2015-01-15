@@ -108,7 +108,7 @@ VERSION=$(VERSION_MAJOR).$(VERSION_MINOR)
 
 DISTDIR=libvterm-$(VERSION)
 
-distdir: all
+distdir:
 	mkdir __distdir
 	cp LICENSE __distdir
 	mkdir __distdir/src
