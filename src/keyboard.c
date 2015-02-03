@@ -23,7 +23,7 @@ void vterm_keyboard_unichar(VTerm *vt, uint32_t c, VTermModifier mod)
   int needs_CSIu;
   switch(c) {
     /* Special Ctrl- letters that can't be represented elsewise */
-    case 'h': case 'i': case 'j': case 'm': case '[':
+    case 'i': case 'j': case 'm': case '[':
       needs_CSIu = 1;
       break;
     /* Ctrl-\ ] ^ _ don't need CSUu */
