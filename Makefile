@@ -8,15 +8,15 @@ ifneq ($(VERBOSE),1)
   LIBTOOL +=--quiet
 endif
 
-CFLAGS  +=-Wall -Iinclude -std=c99
+override CFLAGS +=-Wall -Iinclude -std=c99
 
 ifeq ($(DEBUG),1)
-  CFLAGS +=-ggdb -DDEBUG
+  override CFLAGS +=-ggdb -DDEBUG
 endif
 
 ifeq ($(PROFILE),1)
-  CFLAGS +=-pg
-  LDFLAGS+=-pg
+  override CFLAGS +=-pg
+  override LDFLAGS+=-pg
 endif
 
 CFILES=$(wildcard src/*.c)
