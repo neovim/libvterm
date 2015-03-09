@@ -86,7 +86,7 @@ static int lookup_colour(const VTermState *state, int palette, const long args[]
     return argcount ? 1 : 0;
 
   default:
-    fprintf(stderr, "Unrecognised colour palette %d\n", palette);
+    DEBUG_LOG("Unrecognised colour palette %d\n", palette);
     return 0;
   }
 }
@@ -97,7 +97,7 @@ static void setpenattr(VTermState *state, VTermAttr attr, VTermValueType type, V
 {
 #ifdef DEBUG
   if(type != vterm_get_attr_type(attr)) {
-    fprintf(stderr, "Cannot set attr %d as it has type %d, not type %d\n",
+    DEBUG_LOG("Cannot set attr %d as it has type %d, not type %d\n",
         attr, vterm_get_attr_type(attr), type);
     return;
   }
@@ -363,7 +363,7 @@ INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argco
     }
 
     if(!done)
-      fprintf(stderr, "libvterm: Unhandled CSI SGR %lu\n", arg);
+      DEBUG_LOG("libvterm: Unhandled CSI SGR %lu\n", arg);
 
     while(CSI_ARG_HAS_MORE(args[argi++]));
   }
