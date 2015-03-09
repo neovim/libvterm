@@ -25,7 +25,7 @@ static void putglyph(VTermState *state, const uint32_t chars[], int width, VTerm
     if((*state->callbacks->putglyph)(&info, pos, state->cbdata))
       return;
 
-  fprintf(stderr, "libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
+  DEBUG_LOG("libvterm: Unhandled putglyph U+%04x at (%d,%d)\n", chars[0], pos.col, pos.row);
 }
 
 static void updatecursor(VTermState *state, VTermPos *oldpos, int cancel_phantom)
@@ -259,7 +259,7 @@ static int on_text(const char bytes[], size_t len, void *user)
       putglyph(state, state->combine_chars, state->combine_width, state->combine_pos);
     }
     else {
-      fprintf(stderr, "libvterm: TODO: Skip over split char+combining\n");
+      DEBUG_LOG("libvterm: TODO: Skip over split char+combining\n");
     }
   }
 
@@ -629,7 +629,7 @@ static void set_mode(VTermState *state, int num, int val)
     break;
 
   default:
-    fprintf(stderr, "libvterm: Unknown mode %d\n", num);
+    DEBUG_LOG("libvterm: Unknown mode %d\n", num);
     return;
   }
 }
@@ -724,7 +724,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   default:
-    fprintf(stderr, "libvterm: Unknown DEC mode %d\n", num);
+    DEBUG_LOG("libvterm: Unknown DEC mode %d\n", num);
     return;
   }
 }

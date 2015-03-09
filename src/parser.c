@@ -13,7 +13,7 @@ static void do_control(VTerm *vt, unsigned char control)
     if((*vt->parser_callbacks->control)(control, vt->cbdata))
       return;
 
-  fprintf(stderr, "libvterm: Unhandled control 0x%02x\n", control);
+  DEBUG_LOG("libvterm: Unhandled control 0x%02x\n", control);
 }
 
 static void do_string_csi(VTerm *vt, const char *args, size_t arglen, char command)
@@ -84,7 +84,7 @@ done_leader: ;
   intermed[intermedlen] = 0;
 
   if(i < arglen) {
-    fprintf(stderr, "libvterm: TODO unhandled CSI bytes \"%.*s\"\n", (int)(arglen - i), args + i);
+    DEBUG_LOG("libvterm: TODO unhandled CSI bytes \"%.*s\"\n", (int)(arglen - i), args + i);
   }
 
   //printf("Parsed CSI args %.*s as:\n", arglen, args);
@@ -100,14 +100,14 @@ done_leader: ;
     if((*vt->parser_callbacks->csi)(leaderlen ? leader : NULL, csi_args, argcount, intermedlen ? intermed : NULL, command, vt->cbdata))
       return;
 
-  fprintf(stderr, "libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
+  DEBUG_LOG("libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
 }
 
 static void append_strbuffer(VTerm *vt, const char *str, size_t len)
 {
   if(len > vt->strbuffer_len - vt->strbuffer_cur) {
     len = vt->strbuffer_len - vt->strbuffer_cur;
-    fprintf(stderr, "Truncating strbuffer preserve to %zd bytes\n", len);
+    DEBUG_LOG("Truncating strbuffer preserve to %zd bytes\n", len);
   }
 
   if(len > 0) {
@@ -126,7 +126,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
     len = vt->strbuffer_cur;
   }
   else if(!str_frag) {
-    fprintf(stderr, "parser.c: TODO: No strbuffer _and_ no final fragment???\n");
+    DEBUG_LOG("parser.c: TODO: No strbuffer _and_ no final fragment???\n");
     len = 0;
   }
 
@@ -140,7 +140,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
       if((eaten = (*vt->parser_callbacks->text)(str_frag, len, vt->cbdata)))
         return eaten;
 
-    fprintf(stderr, "libvterm: Unhandled text (%zu chars)\n", len);
+    DEBUG_LOG("libvterm: Unhandled text (%zu chars)\n", len);
     return 0;
 
   case ESC:
@@ -155,7 +155,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
       if((*vt->parser_callbacks->escape)(str_frag, len, vt->cbdata))
         return 0;
 
-    fprintf(stderr, "libvterm: Unhandled escape ESC 0x%02x\n", str_frag[len-1]);
+    DEBUG_LOG("libvterm: Unhandled escape ESC 0x%02x\n", str_frag[len-1]);
     return 0;
 
   case CSI:
@@ -167,7 +167,7 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
       if((*vt->parser_callbacks->osc)(str_frag, len, vt->cbdata))
         return 0;
 
-    fprintf(stderr, "libvterm: Unhandled OSC %.*s\n", (int)len, str_frag);
+    DEBUG_LOG("libvterm: Unhandled OSC %.*s\n", (int)len, str_frag);
     return 0;
 
   case DCS:
@@ -175,12 +175,12 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
       if((*vt->parser_callbacks->dcs)(str_frag, len, vt->cbdata))
         return 0;
 
-    fprintf(stderr, "libvterm: Unhandled DCS %.*s\n", (int)len, str_frag);
+    DEBUG_LOG("libvterm: Unhandled DCS %.*s\n", (int)len, str_frag);
     return 0;
 
   case ESC_IN_OSC:
   case ESC_IN_DCS:
-    fprintf(stderr, "libvterm: ARGH! Should never do_string() in ESC_IN_{OSC,DCS}\n");
+    DEBUG_LOG("libvterm: ARGH! Should never do_string() in ESC_IN_{OSC,DCS}\n");
     return 0;
   }
 
@@ -284,7 +284,7 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
           /* intermediate byte */
         }
         else {
-          fprintf(stderr, "TODO: Unhandled byte %02x in Escape\n", c);
+          DEBUG_LOG("TODO: Unhandled byte %02x in Escape\n", c);
         }
       }
       break;
