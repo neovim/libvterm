@@ -113,7 +113,7 @@ void vterm_set_utf8(VTerm *vt, int is_utf8)
 INTERNAL void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
 {
   if(len > vt->outbuffer_len - vt->outbuffer_cur) {
-    fprintf(stderr, "vterm_push_output(): buffer overflow; truncating output\n");
+    DEBUG_LOG("vterm_push_output(): buffer overflow; truncating output\n");
     len = vt->outbuffer_len - vt->outbuffer_cur;
   }
 

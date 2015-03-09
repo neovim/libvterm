@@ -149,7 +149,7 @@ static void damagerect(VTermScreen *screen, VTermRect rect)
     return;
 
   default:
-    fprintf(stderr, "TODO: Maybe merge damage for level %d\n", screen->damage_merge);
+    DEBUG_LOG("TODO: Maybe merge damage for level %d\n", screen->damage_merge);
     return;
   }
 
@@ -373,7 +373,7 @@ static int scrollrect(VTermRect rect, int downward, int rightward, void *user)
     }
   }
   else {
-    fprintf(stderr, "TODO: Just flush and redo damaged=" STRFrect " rect=" STRFrect "\n",
+    DEBUG_LOG("TODO: Just flush and redo damaged=" STRFrect " rect=" STRFrect "\n",
         ARGSrect(screen->damaged), ARGSrect(rect));
   }
 
