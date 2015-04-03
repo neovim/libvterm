@@ -480,8 +480,10 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
     // Fewer rows - determine if we're going to scroll at all, and if so, push
     // those lines to scrollback
     VTermPos pos = { 0, 0 };
+    VTermPos cursor = screen->state->pos;
+    // Find the first blank row after the cursor.
     for(pos.row = old_rows - 1; pos.row >= new_rows; pos.row--)
-      if(!vterm_screen_is_eol(screen, pos))
+      if(!vterm_screen_is_eol(screen, pos) || cursor.row == pos.row)
         break;
 
     int first_blank_row = pos.row + 1;
