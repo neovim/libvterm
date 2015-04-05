@@ -116,7 +116,10 @@ between states.
  23   CSI ? n          = DECDSR; behaves as DSR but uses CSI ? instead of CSI to respond
  23   CSI ! p          = DECSTR, soft terminal reset
   3   CSI ? $ p        = DECRQM, request mode
-      CSI Sp q         = DECSCUSR
+      CSI Sp   q       = DECSCUSR (odd numbers blink, even numbers solid)
+             1 or 2    =   block
+             3 or 4    =   underline
+             5 or 6    =   I-beam to left
  23   CSI " q          = DECSCA, select character attributes
 123   CSI r            = DECSTBM
       CSI s            = DECSLRM
