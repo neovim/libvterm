@@ -1465,6 +1465,11 @@ static int on_resize(int rows, int cols, void *user)
   state->rows = rows;
   state->cols = cols;
 
+  if(state->scrollregion_bottom > -1)
+    UBOUND(state->scrollregion_bottom, state->rows);
+  if(state->scrollregion_right > -1)
+    UBOUND(state->scrollregion_right, state->cols);
+
   VTermPos delta = { 0, 0 };
 
   if(state->callbacks && state->callbacks->resize)
