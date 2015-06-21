@@ -33,18 +33,21 @@ static int ramp24[] = {
   0x85, 0x90, 0x9B, 0xA6, 0xB1, 0xBC, 0xC7, 0xD2, 0xDD, 0xE8, 0xF3, 0xFF,
 };
 
-static void lookup_colour_ansi(const VTermState *state, long index, VTermColor *col)
+static bool lookup_colour_ansi(const VTermState *state, long index, VTermColor *col)
 {
   if(index >= 0 && index < 16) {
     *col = state->colors[index];
+    return true;
   }
+
+  return false;
 }
 
-static void lookup_colour_palette(const VTermState *state, long index, VTermColor *col)
+static bool lookup_colour_palette(const VTermState *state, long index, VTermColor *col)
 {
   if(index >= 0 && index < 16) {
     // Normal 8 colours or high intensity - parse as palette 0
-    lookup_colour_ansi(state, index, col);
+    return lookup_colour_ansi(state, index, col);
   }
   else if(index >= 16 && index < 232) {
     // 216-colour cube
@@ -53,15 +56,21 @@ static void lookup_colour_palette(const VTermState *state, long index, VTermColo
     col->blue  = ramp6[index     % 6];
     col->green = ramp6[index/6   % 6];
     col->red   = ramp6[index/6/6 % 6];
+
+    return true;
   }
   else if(index >= 232 && index < 256) {
     // 24 greyscales
     index -= 232;
 
-    col->red   = ramp24[index];
-    col->green = ramp24[index];
     col->blue  = ramp24[index];
+    col->green = ramp24[index];
+    col->red   = ramp24[index];
+
+    return true;
   }
+
+  return false;
 }
 
 static int lookup_colour(const VTermState *state, int palette, const long args[], int argcount, VTermColor *col, int *index)
