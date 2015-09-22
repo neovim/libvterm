@@ -146,3 +146,20 @@ PUSH "\e[HABCD\r\nEFGH\r\nIJKL\e[2;5r\e[5H\r\nMNOP"
 DAMAGEFLUSH
   moverect 2..5,0..80 -> 1..4,0..80
   damage 0..5,0..80
+
+!Merge scroll*2 with damage
+RESET
+  damage 0..25,0..80
+DAMAGEMERGE SCROLL
+
+PUSH "\e[25H\r\nABCDE\b\b\b\e[2P\r\n"
+  sb_pushline 80
+  moverect 1..25,0..80 -> 0..24,0..80
+  damage 24..25,0..80
+  sb_pushline 80
+  moverect 24..25,4..80 -> 24..25,2..78
+  damage 24..25,78..80
+DAMAGEFLUSH
+  moverect 1..25,0..80 -> 0..24,0..80
+  damage 24..25,0..80
+  ?screen_chars 23,0,24,5 = 0x41,0x42,0x45
