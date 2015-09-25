@@ -40,6 +40,7 @@ static char *helptext[] = {
   "curshape [block|under|bar]",
   "mouse [off|click|clickdrag|motion]",
   "altscreen [off|on]",
+  "bracketpaste [off|on]",
   "icontitle [STR]",
   "icon [STR]",
   "title [STR]",
@@ -108,6 +109,9 @@ int main(int argc, char *argv[])
     }
     else if(streq(arg, "altscreen")) {
       printf("\e[?1049%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+    }
+    else if(streq(arg, "bracketpaste")) {
+      printf("\e[?2004%c", getbool(&argi, argc, argv) ? 'h' : 'l');
     }
     else if(streq(arg, "icontitle")) {
       printf("\e]0;%s\a", getvalue(&argi, argc, argv));

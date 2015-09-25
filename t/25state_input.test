@@ -119,3 +119,14 @@ INKEY 0 KP0
 PUSH "\e="
 INKEY 0 KP0
   output "\eOp"
+
+!Bracketed paste mode off
+PASTE START
+PASTE END
+
+!Bracketed paste mode on
+PUSH "\e[?2004h"
+PASTE START
+  output "\e[200~"
+PASTE END
+  output "\e[201~"

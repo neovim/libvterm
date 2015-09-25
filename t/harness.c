@@ -560,6 +560,16 @@ int main(int argc, char **argv)
       vterm_keyboard_key(vt, key, mod);
     }
 
+    else if(strstartswith(line, "PASTE ")) {
+      char *linep = line + 6;
+      if(streq(linep, "START"))
+        vterm_keyboard_start_paste(vt);
+      else if(streq(linep, "END"))
+        vterm_keyboard_end_paste(vt);
+      else
+        goto abort_line;
+    }
+
     else if(strstartswith(line, "MOUSEMOVE ")) {
       char *linep = line + 10;
       int row, col, len;

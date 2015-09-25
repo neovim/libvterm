@@ -208,3 +208,15 @@ void vterm_keyboard_key(VTerm *vt, VTermKey key, VTermModifier mod)
       goto case_LITERAL;
   }
 }
+
+void vterm_keyboard_start_paste(VTerm *vt)
+{
+  if(vt->state->mode.bracketpaste)
+    vterm_push_output_sprintf_ctrl(vt, C1_CSI, "200~");
+}
+
+void vterm_keyboard_end_paste(VTerm *vt)
+{
+  if(vt->state->mode.bracketpaste)
+    vterm_push_output_sprintf_ctrl(vt, C1_CSI, "201~");
+}

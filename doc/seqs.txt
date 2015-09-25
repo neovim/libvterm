@@ -155,6 +155,7 @@ between states.
       DECSM 1047       = Altscreen
       DECSM 1048       = Save cursor
       DECSM 1049       = 1047 + 1048
+      DECSM 2004       = Bracketed paste
 
    Graphic Renditions
 

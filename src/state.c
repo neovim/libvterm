@@ -723,6 +723,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
     savecursor(state, val);
     break;
 
+  case 2004:
+    state->mode.bracketpaste = val;
+    break;
+
   default:
     DEBUG_LOG("libvterm: Unknown DEC mode %d\n", num);
     return;
@@ -789,6 +793,9 @@ static void request_dec_mode(VTermState *state, int num)
     case 1047:
       reply = state->mode.alt_screen;
       break;
+
+    case 2004:
+      reply = state->mode.bracketpaste;
 
     default:
       vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "?%d;%d$y", num, 0);
@@ -1542,6 +1549,7 @@ void vterm_state_reset(VTermState *state, int hard)
   state->mode.alt_screen      = 0;
   state->mode.origin          = 0;
   state->mode.leftrightmargin = 0;
+  state->mode.bracketpaste    = 0;
 
   state->vt->mode.ctrl8bit   = 0;
 
