@@ -328,13 +328,46 @@ VTermStateCallbacks state_cbs = {
 };
 
 static int want_screen_damage = 0;
+static int want_screen_damage_cells = 0;
 static int screen_damage(VTermRect rect, void *user)
 {
   if(!want_screen_damage)
     return 1;
 
-  printf("damage %d..%d,%d..%d\n",
+  printf("damage %d..%d,%d..%d",
       rect.start_row, rect.end_row, rect.start_col, rect.end_col);
+
+  if(want_screen_damage_cells) {
+    bool equals = false;
+
+    for(int row = rect.start_row; row < rect.end_row; row++) {
+      int eol = rect.end_col;
+      while(eol > rect.start_col) {
+        VTermScreenCell cell;
+        vterm_screen_get_cell(screen, (VTermPos) { .row = row, .col = eol-1 }, &cell);
+        if(cell.chars[0])
+          break;
+
+        eol--;
+      }
+
+      if(eol == rect.start_col)
+        break;
+
+      if(!equals)
+        printf(" ="), equals = true;
+
+      printf(" %d<", row);
+      for(int col = rect.start_col; col < eol; col++) {
+        VTermScreenCell cell;
+        vterm_screen_get_cell(screen, (VTermPos) { .row = row, .col = col }, &cell);
+        printf(col == rect.start_col ? "%02X" : " %02X", cell.chars[0]);
+      }
+      printf(">");
+    }
+  }
+
+  printf("\n");
 
   return 1;
 }
@@ -467,6 +500,10 @@ int main(int argc, char **argv)
           break;
         case 'd':
           want_screen_damage = sense;
+          break;
+        case 'D':
+          want_screen_damage = sense;
+          want_screen_damage_cells = sense;
           break;
         case 'm':
           want_moverect = sense;
