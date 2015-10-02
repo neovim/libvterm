@@ -345,7 +345,15 @@ static int screen_sb_pushline(int cols, const VTermScreenCell *cells, void *user
   if(!want_screen_scrollback)
     return 1;
 
-  printf("sb_pushline %d\n", cols);
+  int eol = cols;
+  while(eol && !cells[eol-1].chars[0])
+    eol--;
+
+  printf("sb_pushline %d =", cols);
+  for(int c = 0; c < eol; c++)
+    printf(" %02X", cells[c].chars[0]);
+  printf("\n");
+
   return 1;
 }
 
