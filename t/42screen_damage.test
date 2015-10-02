@@ -108,17 +108,17 @@ RESET
 DAMAGEMERGE SCROLL
 
 PUSH "\e[25H\n\n\n"
-  sb_pushline 80
-  sb_pushline 80
-  sb_pushline 80
+  sb_pushline 80 =
+  sb_pushline 80 =
+  sb_pushline 80 =
 DAMAGEFLUSH
   moverect 3..25,0..80 -> 0..22,0..80
   damage 22..25,0..80
 
 !Merge scroll with damage
 PUSH "ABCDE\r\nEFGH\r\n"
-  sb_pushline 80
-  sb_pushline 80
+  sb_pushline 80 =
+  sb_pushline 80 =
 DAMAGEFLUSH
   moverect 2..25,0..80 -> 0..23,0..80
   damage 22..25,0..80
@@ -153,10 +153,10 @@ RESET
 DAMAGEMERGE SCROLL
 
 PUSH "\e[25H\r\nABCDE\b\b\b\e[2P\r\n"
-  sb_pushline 80
+  sb_pushline 80 =
   moverect 1..25,0..80 -> 0..24,0..80
   damage 24..25,0..80
-  sb_pushline 80
+  sb_pushline 80 =
   moverect 24..25,4..80 -> 24..25,2..78
   damage 24..25,78..80
 DAMAGEFLUSH
