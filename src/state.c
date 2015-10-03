@@ -421,6 +421,10 @@ static int on_control(unsigned char control, void *user)
     break;
 
   default:
+    if(state->fallbacks && state->fallbacks->control)
+      if((*state->fallbacks->control)(control, state->fbdata))
+        return 1;
+
     return 0;
   }
 
@@ -1315,6 +1319,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
   default:
+    if(state->fallbacks && state->fallbacks->csi)
+      if((*state->fallbacks->csi)(leader, args, argcount, intermed, command, state->fbdata))
+        return 1;
+
     return 0;
   }
 
@@ -1356,6 +1364,9 @@ static int on_osc(const char *command, size_t cmdlen, void *user)
     settermprop_string(state, VTERM_PROP_TITLE, command + 2, cmdlen - 2);
     return 1;
   }
+  else if(state->fallbacks && state->fallbacks->osc)
+    if((*state->fallbacks->osc)(command, cmdlen, state->fbdata))
+      return 1;
 
   return 0;
 }
@@ -1417,6 +1428,9 @@ static int on_dcs(const char *command, size_t cmdlen, void *user)
     request_status_string(state, command+2, cmdlen-2);
     return 1;
   }
+  else if(state->fallbacks && state->fallbacks->dcs)
+    if((*state->fallbacks->dcs)(command, cmdlen, state->fbdata))
+      return 1;
 
   return 0;
 }
@@ -1621,6 +1635,23 @@ void vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *cal
 void *vterm_state_get_cbdata(VTermState *state)
 {
   return state->cbdata;
+}
+
+void vterm_state_set_unrecognised_fallbacks(VTermState *state, const VTermParserCallbacks *fallbacks, void *user)
+{
+  if(fallbacks) {
+    state->fallbacks = fallbacks;
+    state->fbdata = user;
+  }
+  else {
+    state->fallbacks = NULL;
+    state->fbdata = NULL;
+  }
+}
+
+void *vterm_state_get_unrecognised_fbdata(VTermState *state)
+{
+  return state->fbdata;
 }
 
 int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
