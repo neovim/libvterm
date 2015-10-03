@@ -478,6 +478,9 @@ int main(int argc, char **argv)
         case 'p':
           want_settermprop = sense;
           break;
+        case 'f':
+          vterm_state_set_unrecognised_fallbacks(state, sense ? &parser_cbs : NULL, NULL);
+          break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
         }
