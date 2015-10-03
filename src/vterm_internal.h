@@ -51,6 +51,9 @@ struct VTermState
   const VTermStateCallbacks *callbacks;
   void *cbdata;
 
+  const VTermParserCallbacks *fallbacks;
+  void *fbdata;
+
   int rows;
   int cols;
 
