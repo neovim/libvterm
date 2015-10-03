@@ -842,6 +842,16 @@ void *vterm_screen_get_cbdata(VTermScreen *screen)
   return screen->cbdata;
 }
 
+void vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermParserCallbacks *fallbacks, void *user)
+{
+  vterm_state_set_unrecognised_fallbacks(screen->state, fallbacks, user);
+}
+
+void *vterm_screen_get_unrecognised_fbdata(VTermScreen *screen)
+{
+  return vterm_state_get_unrecognised_fbdata(screen->state);
+}
+
 void vterm_screen_flush_damage(VTermScreen *screen)
 {
   if(screen->pending_scrollrect.start_row != -1) {

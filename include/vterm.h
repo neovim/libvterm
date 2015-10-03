@@ -267,6 +267,10 @@ VTermScreen *vterm_obtain_screen(VTerm *vt);
 void  vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
 void *vterm_screen_get_cbdata(VTermScreen *screen);
 
+// Only invokes control, csi, osc, dcs
+void  vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermParserCallbacks *fallbacks, void *user);
+void *vterm_screen_get_unrecognised_fbdata(VTermScreen *screen);
+
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen);
 
 typedef enum {
