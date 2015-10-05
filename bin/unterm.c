@@ -199,8 +199,11 @@ static VTermScreenCallbacks cb_screen = {
 
 int main(int argc, char *argv[])
 {
+  rows = 25;
+  cols = 80;
+
   int opt;
-  while((opt = getopt(argc, argv, "f:")) != -1) {
+  while((opt = getopt(argc, argv, "f:l:c:")) != -1) {
     switch(opt) {
       case 'f':
         if(streq(optarg, "plain"))
@@ -212,6 +215,18 @@ int main(int argc, char *argv[])
           exit(1);
         }
         break;
+
+      case 'l':
+        rows = atoi(optarg);
+        if(!rows)
+          rows = 25;
+        break;
+
+      case 'c':
+        cols = atoi(optarg);
+        if(!cols)
+          cols = 80;
+        break;
     }
   }
 
@@ -221,9 +236,6 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Cannot open %s - %s\n", file, strerror(errno));
     exit(1);
   }
-
-  rows = 25;
-  cols = 80;
 
   vt = vterm_new(rows, cols);
   vts = vterm_obtain_screen(vt);
