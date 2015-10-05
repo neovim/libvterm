@@ -128,7 +128,7 @@ static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevce
       break;
   }
 
-  for(int i = 0; cell->chars[i]; i++) {
+  for(int i = 0; i < VTERM_MAX_CHARS_PER_CELL && cell->chars[i]; i++) {
     char bytes[6];
     bytes[fill_utf8(cell->chars[i], bytes)] = 0;
     printf("%s", bytes);
