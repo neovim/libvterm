@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +27,7 @@ static int getchoice(int *argip, int argc, char *argv[], const char *options[])
   exit(1);
 }
 
-static int getbool(int *argip, int argc, char *argv[])
+static bool getbool(int *argip, int argc, char *argv[])
 {
   return getchoice(argip, argc, argv, (const char *[]){"off", "on", NULL});
 }
