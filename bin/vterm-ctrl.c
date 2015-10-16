@@ -122,6 +122,44 @@ static void usage(int exitcode)
   exit(exitcode);
 }
 
+static bool query_dec_mode(int mode)
+{
+  printf("\e[?%d$p", mode);
+
+  char *s = NULL;
+  do {
+    if(s)
+      free(s);
+    s = read_csi();
+
+    /* expect "?" mode ";" value "$y" */
+
+    int reply_mode, reply_value;
+    char reply_cmd;
+    /* If the sscanf format string ends in a literal, we can't tell from
+     * its return value if it matches. Hence we'll %c the cmd and check it
+     * explicitly
+     */
+    if(sscanf(s, "?%d;%d$%c", &reply_mode, &reply_value, &reply_cmd) < 3)
+      continue;
+    if(reply_cmd != 'y')
+      continue;
+
+    if(reply_mode != mode)
+      continue;
+
+    free(s);
+
+    if(reply_value == 1 || reply_value == 3)
+      return true;
+    if(reply_value == 2 || reply_value == 4)
+      return false;
+
+    printf("Unrecognised reply to DECRQM: %d\n", reply_value);
+    return false;
+  } while(1);
+}
+
 static void do_dec_mode(int mode, BoolQuery val, const char *name)
 {
   switch(val) {
@@ -130,42 +168,12 @@ static void do_dec_mode(int mode, BoolQuery val, const char *name)
       printf("\e[?%d%c", mode, val == ON ? 'h' : 'l');
       break;
 
-    case QUERY: {
-      printf("\e[?%d$p", mode);
-
-      char *s = NULL;
-      do {
-        if(s)
-          free(s);
-        s = read_csi();
-
-        /* expect "?" mode ";" value "$y" */
-
-        int reply_mode, reply_value;
-        char reply_cmd;
-        /* If the sscanf format string ends in a literal, we can't tell from
-         * its return value if it matches. Hence we'll %c the cmd and check it
-         * explicitly
-         */
-        if(sscanf(s, "?%d;%d$%c", &reply_mode, &reply_value, &reply_cmd) < 3)
-          continue;
-        if(reply_cmd != 'y')
-          continue;
-
-        if(reply_mode != mode)
-          continue;
-
-        if(reply_value == 1 || reply_value == 3)
-          printf("%s on\n", name);
-        else if(reply_value == 2 || reply_value == 4)
-          printf("%s off\n", name);
-
-        break;
-      } while(1);
-
-      free(s);
+    case QUERY:
+      if(query_dec_mode(mode))
+        printf("%s on\n", name);
+      else
+        printf("%s off\n", name);
       break;
-    }
   }
 }
 
