@@ -80,6 +80,18 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
   if(!downward && !rightward)
     return;
 
+  int rows = rect.end_row - rect.start_row;
+  if(downward > rows)
+    downward = rows;
+  else if(downward < -rows)
+    downward = -rows;
+
+  int cols = rect.end_col - rect.start_col;
+  if(rightward > cols)
+    rightward = cols;
+  else if(rightward < -cols)
+    rightward = -cols;
+
   // Update lineinfo if full line
   if(rect.start_col == 0 && rect.end_col == state->cols && rightward == 0) {
     int height = rect.end_row - rect.start_row - abs(downward);
