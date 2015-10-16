@@ -60,6 +60,11 @@ static void usage(int exitcode)
   exit(exitcode);
 }
 
+static void do_dec_mode(int mode, bool on)
+{
+  printf("\e[?%d%c", mode, on ? 'h' : 'l');
+}
+
 int main(int argc, char *argv[])
 {
   int argi = 1;
@@ -82,13 +87,13 @@ int main(int argc, char *argv[])
       }
     }
     else if(streq(arg, "screen")) {
-      printf("\e[?5%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+      do_dec_mode(5, getbool(&argi, argc, argv));
     }
     else if(streq(arg, "cursor")) {
-      printf("\e[?25%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+      do_dec_mode(25, getbool(&argi, argc, argv));
     }
     else if(streq(arg, "curblink")) {
-      printf("\e[?12%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+      do_dec_mode(12, getbool(&argi, argc, argv));
     }
     else if(streq(arg, "curshape")) {
       // TODO: This ought to query the current value of DECSCUSR because it
@@ -109,10 +114,10 @@ int main(int argc, char *argv[])
       }
     }
     else if(streq(arg, "altscreen")) {
-      printf("\e[?1049%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+      do_dec_mode(1049, getbool(&argi, argc, argv));
     }
     else if(streq(arg, "bracketpaste")) {
-      printf("\e[?2004%c", getbool(&argi, argc, argv) ? 'h' : 'l');
+      do_dec_mode(2004, getbool(&argi, argc, argv));
     }
     else if(streq(arg, "icontitle")) {
       printf("\e]0;%s\a", getvalue(&argi, argc, argv));
