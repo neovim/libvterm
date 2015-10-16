@@ -76,6 +76,8 @@ PUSH "\e[S"
 PUSH "\e[2S"
   scrollrect 0..25,0..80 => +2,+0
   ?cursor = 0,0
+PUSH "\e[100S"
+  scrollrect 0..25,0..80 => +25,+0
 
 !Scroll Up
 PUSH "\e[T"
@@ -84,6 +86,8 @@ PUSH "\e[T"
 PUSH "\e[2T"
   scrollrect 0..25,0..80 => -2,+0
   ?cursor = 0,0
+PUSH "\e[100T"
+  scrollrect 0..25,0..80 => -25,+0
 
 !SD/SU in DECSTBM
 PUSH "\e[5;20r"
