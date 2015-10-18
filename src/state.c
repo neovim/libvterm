@@ -1290,6 +1290,12 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     else
       UBOUND(state->scrollregion_bottom, state->rows);
 
+    if(SCROLLREGION_BOTTOM(state) <= state->scrollregion_top) {
+      // Invalid
+      state->scrollregion_top    = 0;
+      state->scrollregion_bottom = -1;
+    }
+
     break;
 
   case 0x73: // DECSLRM - DEC custom
@@ -1303,6 +1309,12 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       state->scrollregion_right = -1;
     else
       UBOUND(state->scrollregion_right, state->cols);
+
+    if(SCROLLREGION_RIGHT(state) <= SCROLLREGION_LEFT(state)) {
+      // Invalid
+      state->scrollregion_left  = 0;
+      state->scrollregion_right = -1;
+    }
 
     break;
 

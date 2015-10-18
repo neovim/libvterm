@@ -110,6 +110,12 @@ PUSH "\e[?69l"
 PUSH "\e[S"
   scrollrect 2..10,0..80 => +1,+0
 
+!Invalid boundaries
+RESET
+
+PUSH "\e[100;105r\eD"
+PUSH "\e[5;2r\eD"
+
 RESET
 WANTSTATE -s+me
 
