@@ -1361,7 +1361,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   if(state->mode.origin) {
     LBOUND(state->pos.row, state->scrollregion_top);
-    UBOUND(state->pos.row, state->scrollregion_bottom-1);
+    UBOUND(state->pos.row, SCROLLREGION_BOTTOM(state)-1);
     LBOUND(state->pos.col, SCROLLREGION_LEFT(state));
     UBOUND(state->pos.col, SCROLLREGION_RIGHT(state)-1);
   }
