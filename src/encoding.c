@@ -163,7 +163,7 @@ static void decode_usascii(VTermEncoding *enc, void *data,
   for(; *pos < bytelen && *cpi < cplen; (*pos)++) {
     unsigned char c = bytes[*pos] ^ is_gr;
 
-    if(c < 0x20 || c >= 0x80)
+    if(c < 0x20 || c == 0x7f || c >= 0x80)
       return;
 
     cp[(*cpi)++] = c;
@@ -189,7 +189,7 @@ static void decode_table(VTermEncoding *enc, void *data,
   for(; *pos < bytelen && *cpi < cplen; (*pos)++) {
     unsigned char c = bytes[*pos] ^ is_gr;
 
-    if(c < 0x20 || c >= 0x80)
+    if(c < 0x20 || c == 0x7f || c >= 0x80)
       return;
 
     if(table->chars[c])
