@@ -352,6 +352,15 @@ static int on_text(const char bytes[], size_t len, void *user)
 
   updatecursor(state, &oldpos, 0);
 
+#ifdef DEBUG
+  if(state->pos.row < 0 || state->pos.row >= state->rows ||
+     state->pos.col < 0 || state->pos.col >= state->cols) {
+    fprintf(stderr, "Position out of bounds after text: (%d,%d)\n",
+        state->pos.row, state->pos.col);
+    abort();
+  }
+#endif
+
   return eaten;
 }
 
