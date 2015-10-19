@@ -79,3 +79,8 @@ PUSH "\e[10A"
   ?cursor = 4,0
 PUSH "\e[20B"
   ?cursor = 14,0
+
+!Origin mode without scroll region
+PUSH "\e[?6l"
+PUSH "\e[r\e[?6h"
+  ?cursor = 0,0
