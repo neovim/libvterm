@@ -193,3 +193,8 @@ PUSH "\x{7f}"
 !DEL ignored within CSI
 PUSH "\e[12\x{7f}3m"
   csi 0x6d 123
+
+!DEL inside text"
+PUSH "AB\x{7f}C"
+  text 0x41,0x42
+  text 0x43
