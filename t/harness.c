@@ -70,7 +70,7 @@ static int parser_text(const char bytes[], size_t len, void *user)
   int i;
   for(i = 0; i < len; i++) {
     unsigned char b = bytes[i];
-    if(b < 0x20 || (b >= 0x80 && b < 0xa0))
+    if(b < 0x20 || b == 0x7f || (b >= 0x80 && b < 0xa0))
       break;
     printf(i ? ",%x" : "%x", b);
   }
