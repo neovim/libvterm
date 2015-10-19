@@ -442,6 +442,15 @@ static int on_control(unsigned char control, void *user)
 
   updatecursor(state, &oldpos, 1);
 
+#ifdef DEBUG
+  if(state->pos.row < 0 || state->pos.row >= state->rows ||
+     state->pos.col < 0 || state->pos.col >= state->cols) {
+    fprintf(stderr, "Position out of bounds after Ctrl %02x: (%d,%d)\n",
+        control, state->pos.row, state->pos.col);
+    abort();
+  }
+#endif
+
   return 1;
 }
 
@@ -1364,6 +1373,15 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   }
 
   updatecursor(state, &oldpos, 1);
+
+#ifdef DEBUG
+  if(state->pos.row < 0 || state->pos.row >= state->rows ||
+     state->pos.col < 0 || state->pos.col >= state->cols) {
+    fprintf(stderr, "Position out of bounds after CSI %c: (%d,%d)\n",
+        command, state->pos.row, state->pos.col);
+    abort();
+  }
+#endif
 
   return 1;
 }
