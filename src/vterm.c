@@ -123,10 +123,21 @@ INTERNAL void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
 
 INTERNAL void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
 {
+  if(vt->outbuffer_cur >= vt->outbuffer_len - 1) {
+    DEBUG_LOG("vterm_push_output(): buffer overflow; truncating output\n");
+    return;
+  }
+
   int written = vsnprintf(vt->outbuffer + vt->outbuffer_cur,
       vt->outbuffer_len - vt->outbuffer_cur,
       format, args);
-  vt->outbuffer_cur += written;
+
+  if(written == vt->outbuffer_len - vt->outbuffer_cur) {
+    /* output was truncated */
+    vt->outbuffer_cur = vt->outbuffer_len - 1;
+  }
+  else
+    vt->outbuffer_cur += written;
 }
 
 INTERNAL void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
