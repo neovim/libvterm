@@ -23,6 +23,10 @@ PUSH "\e[;50s"
 PUSH "\e[20G\e[@"
   scrollrect 0..1,19..50 => +0,-1
 
+!ICH outside DECSLRM
+PUSH "\e[70G\e[@"
+  # nothing happens
+
 !DCH
 RESET
   erase 0..25,0..80
@@ -42,6 +46,10 @@ PUSH "\e[?69h"
 PUSH "\e[;50s"
 PUSH "\e[20G\e[P"
   scrollrect 0..1,19..50 => +0,+1
+
+!DCH outside DECSLRM
+PUSH "\e[70G\e[P"
+  # nothing happens
 
 !ECH
 RESET
@@ -81,10 +89,14 @@ PUSH "\e[5;15r"
 PUSH "\e[5H\e[L"
   scrollrect 4..15,0..80 => -1,+0
 
+!IL outside DECSTBM
+PUSH "\e[20H\e[L"
+  # nothing happens
+
 !IL with DECSTBM+DECSLRM
 PUSH "\e[?69h"
 PUSH "\e[10;50s"
-PUSH "\e[L"
+PUSH "\e[5;10H\e[L"
   scrollrect 4..15,9..50 => -1,+0
 
 !DL
@@ -107,10 +119,14 @@ PUSH "\e[5;15r"
 PUSH "\e[5H\e[M"
   scrollrect 4..15,0..80 => +1,+0
 
+!DL outside DECSTBM
+PUSH "\e[20H\e[M"
+  # nothing happens
+
 !DL with DECSTBM+DECSLRM
 PUSH "\e[?69h"
 PUSH "\e[10;50s"
-PUSH "\e[M"
+PUSH "\e[5;10H\e[M"
   scrollrect 4..15,9..50 => +1,+0
 
 !DECIC
@@ -122,8 +138,12 @@ PUSH "\e[20G\e[5'}"
 !DECIC with DECSTBM+DECSLRM
 PUSH "\e[?69h"
 PUSH "\e[4;20r\e[20;60s"
-PUSH "\e[3'}"
+PUSH "\e[4;20H\e[3'}"
   scrollrect 3..20,19..60 => +0,-3
+
+!DECIC outside DECSLRM
+PUSH "\e[70G\e['}"
+  # nothing happens
 
 !DECDC
 RESET
@@ -134,8 +154,12 @@ PUSH "\e[20G\e[5'~"
 !DECDC with DECSTBM+DECSLRM
 PUSH "\e[?69h"
 PUSH "\e[4;20r\e[20;60s"
-PUSH "\e[3'~"
+PUSH "\e[4;20H\e[3'~"
   scrollrect 3..20,19..60 => +0,+3
+
+!DECDC outside DECSLRM
+PUSH "\e[70G\e['~"
+  # nothing happens
 
 !EL 0
 RESET
