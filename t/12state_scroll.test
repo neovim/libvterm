@@ -33,7 +33,14 @@ PUSH "\n"
   scrollrect 0..10,0..80 => +1,+0
   ?cursor = 9,0
 
+!Linefeed outside DECSTBM
+PUSH "\e[20H"
+  ?cursor = 19,0
+PUSH "\n"
+  ?cursor = 20,0
+
 !Index in DECSTBM
+PUSH "\e[10H"
 PUSH "\e[9;10r"
 PUSH "\eM"
   ?cursor = 8,0
