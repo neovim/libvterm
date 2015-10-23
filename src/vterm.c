@@ -121,9 +121,14 @@ INTERNAL void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
   vt->outbuffer_cur += len;
 }
 
+static int outbuffer_is_full(VTerm *vt)
+{
+  return vt->outbuffer_cur >= vt->outbuffer_len - 1;
+}
+
 INTERNAL void vterm_push_output_vsprintf(VTerm *vt, const char *format, va_list args)
 {
-  if(vt->outbuffer_cur >= vt->outbuffer_len - 1) {
+  if(outbuffer_is_full(vt)) {
     DEBUG_LOG("vterm_push_output(): buffer overflow; truncating output\n");
     return;
   }
@@ -150,6 +155,8 @@ INTERNAL void vterm_push_output_sprintf(VTerm *vt, const char *format, ...)
 
 INTERNAL void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, const char *fmt, ...)
 {
+  size_t orig_cur = vt->outbuffer_cur;
+
   if(ctrl >= 0x80 && !vt->mode.ctrl8bit)
     vterm_push_output_sprintf(vt, "\e%c", ctrl - 0x40);
   else
@@ -159,10 +166,15 @@ INTERNAL void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, cons
   va_start(args, fmt);
   vterm_push_output_vsprintf(vt, fmt, args);
   va_end(args);
+
+  if(outbuffer_is_full(vt))
+    vt->outbuffer_cur = orig_cur;
 }
 
 INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
 {
+  size_t orig_cur = vt->outbuffer_cur;
+
   if(!vt->mode.ctrl8bit)
     vterm_push_output_sprintf(vt, "\e%c", C1_DCS - 0x40);
   else
@@ -174,6 +186,9 @@ INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
   va_end(args);
 
   vterm_push_output_sprintf_ctrl(vt, C1_ST, "");
+
+  if(outbuffer_is_full(vt))
+    vt->outbuffer_cur = orig_cur;
 }
 
 size_t vterm_output_get_buffer_size(const VTerm *vt)
