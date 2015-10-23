@@ -162,6 +162,18 @@ static int is_col_tabstop(VTermState *state, int col)
   return state->tabstops[col >> 3] & mask;
 }
 
+static int is_cursor_in_scrollregion(const VTermState *state)
+{
+  if(state->pos.row < state->scrollregion_top ||
+     state->pos.row >= SCROLLREGION_BOTTOM(state))
+    return 0;
+  if(state->pos.col < SCROLLREGION_LEFT(state) ||
+     state->pos.col >= SCROLLREGION_RIGHT(state))
+    return 0;
+
+  return 1;
+}
+
 static void tab(VTermState *state, int count, int direction)
 {
   while(count--)
@@ -893,6 +905,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x40: // ICH - ECMA-48 8.3.64
     count = CSI_ARG_COUNT(args[0]);
 
+    if(!is_cursor_in_scrollregion(state))
+      break;
+
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
     rect.start_col = state->pos.col;
@@ -1036,6 +1051,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x4c: // IL - ECMA-48 8.3.67
     count = CSI_ARG_COUNT(args[0]);
 
+    if(!is_cursor_in_scrollregion(state))
+      break;
+
     rect.start_row = state->pos.row;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = SCROLLREGION_LEFT(state);
@@ -1048,6 +1066,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case 0x4d: // DL - ECMA-48 8.3.32
     count = CSI_ARG_COUNT(args[0]);
 
+    if(!is_cursor_in_scrollregion(state))
+      break;
+
     rect.start_row = state->pos.row;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = SCROLLREGION_LEFT(state);
@@ -1059,6 +1080,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   case 0x50: // DCH - ECMA-48 8.3.26
     count = CSI_ARG_COUNT(args[0]);
+
+    if(!is_cursor_in_scrollregion(state))
+      break;
 
     rect.start_row = state->pos.row;
     rect.end_row   = state->pos.row + 1;
@@ -1339,6 +1363,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   case INTERMED('\'', 0x7D): // DECIC
     count = CSI_ARG_COUNT(args[0]);
 
+    if(!is_cursor_in_scrollregion(state))
+      break;
+
     rect.start_row = state->scrollregion_top;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
     rect.start_col = state->pos.col;
@@ -1350,6 +1377,9 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   case INTERMED('\'', 0x7E): // DECDC
     count = CSI_ARG_COUNT(args[0]);
+
+    if(!is_cursor_in_scrollregion(state))
+      break;
 
     rect.start_row = state->scrollregion_top;
     rect.end_row   = SCROLLREGION_BOTTOM(state);
