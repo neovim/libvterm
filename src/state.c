@@ -250,6 +250,12 @@ static int on_text(const char bytes[], size_t len, void *user)
       codepoints, &npoints, state->gsingle_set ? 1 : len,
       bytes, &eaten, len);
 
+  /* There's a chance an encoding (e.g. UTF-8) hasn't found enough bytes yet
+   * for even a single codepoint
+   */
+  if(!npoints)
+    return 0;
+
   if(state->gsingle_set && npoints)
     state->gsingle_set = 0;
 
