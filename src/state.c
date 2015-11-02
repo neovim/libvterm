@@ -176,13 +176,23 @@ static int is_cursor_in_scrollregion(const VTermState *state)
 
 static void tab(VTermState *state, int count, int direction)
 {
-  while(count--)
-    while(state->pos.col >= 0 && state->pos.col < THISROWWIDTH(state)-1) {
-      state->pos.col += direction;
+  while(count > 0) {
+    if(direction > 0) {
+      if(state->pos.col >= THISROWWIDTH(state)-1)
+        return;
 
-      if(is_col_tabstop(state, state->pos.col))
-        break;
+      state->pos.col++;
     }
+    else if(direction < 0) {
+      if(state->pos.col < 1)
+        return;
+
+      state->pos.col--;
+    }
+
+    if(is_col_tabstop(state, state->pos.col))
+      count--;
+  }
 }
 
 #define NO_FORCE 0
