@@ -1443,6 +1443,18 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
         command, state->pos.row, state->pos.col);
     abort();
   }
+
+  if(SCROLLREGION_BOTTOM(state) <= state->scrollregion_top) {
+    fprintf(stderr, "Scroll region height out of bounds after CSI %c: %d <= %d\n",
+        command, SCROLLREGION_BOTTOM(state), state->scrollregion_top);
+    abort();
+  }
+
+  if(SCROLLREGION_RIGHT(state) <= SCROLLREGION_LEFT(state)) {
+    fprintf(stderr, "Scroll region width out of bounds after CSI %c: %d <= %d\n",
+        command, SCROLLREGION_RIGHT(state), SCROLLREGION_LEFT(state));
+    abort();
+  }
 #endif
 
   return 1;
