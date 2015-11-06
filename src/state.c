@@ -1375,7 +1375,8 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     else
       UBOUND(state->scrollregion_right, state->cols);
 
-    if(SCROLLREGION_RIGHT(state) <= SCROLLREGION_LEFT(state)) {
+    if(state->scrollregion_right > -1 &&
+       state->scrollregion_right <= state->scrollregion_left) {
       // Invalid
       state->scrollregion_left  = 0;
       state->scrollregion_right = -1;
