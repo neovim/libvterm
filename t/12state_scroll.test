@@ -74,6 +74,9 @@ PUSH "\eP\$qr\e\\"
 PUSH "\eP\$qs\e\\"
   output "\eP1\$r10;40s\e\\"
 
+!Setting invalid DECSLRM with !DECVSSM is still rejected
+PUSH "\e[?69l\e[;0s\e[?69h"
+
 RESET
 
 !Scroll Down
