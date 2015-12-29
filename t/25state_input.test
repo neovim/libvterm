@@ -49,7 +49,7 @@ INCHAR 0 20
 INCHAR S 20
   output "\e[32;2u"
 INCHAR C 20
-  output "\e[32;5u"
+  output "\0"
 INCHAR SC 20
   output "\e[32;6u"
 INCHAR A 20
@@ -57,7 +57,7 @@ INCHAR A 20
 INCHAR SA 20
   output "\e[32;4u"
 INCHAR CA 20
-  output "\e[32;7u"
+  output "\e\0"
 INCHAR SCA 20
   output "\e[32;8u"
 
