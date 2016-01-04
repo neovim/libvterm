@@ -10,6 +10,10 @@ endif
 
 override CFLAGS +=-Wall -Iinclude -std=c99
 
+ifeq ($(shell uname),SunOS)
+  override CFLAGS +=-D__EXTENSIONS__ -D_XPG6 -D__XOPEN_OR_POSIX
+endif
+
 ifeq ($(DEBUG),1)
   override CFLAGS +=-ggdb -DDEBUG
 endif
