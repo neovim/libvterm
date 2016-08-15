@@ -48,7 +48,7 @@ void vterm_keyboard_unichar(VTerm *vt, uint32_t c, VTermModifier mod)
   if(mod & VTERM_MOD_CTRL)
     c &= 0x1f;
 
-  vterm_push_output_sprintf(vt, "%s%c", mod & VTERM_MOD_ALT ? "\e" : "", c);
+  vterm_push_output_sprintf(vt, "%s%c", mod & VTERM_MOD_ALT ? ESC_S : "", c);
 }
 
 typedef struct {
@@ -73,7 +73,7 @@ static keycodes_s keycodes[] = {
   { KEYCODE_ENTER,   '\r'   }, // ENTER
   { KEYCODE_TAB,     '\t'   }, // TAB
   { KEYCODE_LITERAL, '\x7f' }, // BACKSPACE == ASCII DEL
-  { KEYCODE_LITERAL, '\e'   }, // ESCAPE
+  { KEYCODE_LITERAL, '\x1b' }, // ESCAPE
 
   { KEYCODE_CSI_CURSOR, 'A' }, // UP
   { KEYCODE_CSI_CURSOR, 'B' }, // DOWN
@@ -173,7 +173,7 @@ void vterm_keyboard_key(VTerm *vt, VTermKey key, VTermModifier mod)
     if(mod & (VTERM_MOD_SHIFT|VTERM_MOD_CTRL))
       vterm_push_output_sprintf_ctrl(vt, C1_CSI, "%d;%du", k.literal, mod+1);
     else
-      vterm_push_output_sprintf(vt, mod & VTERM_MOD_ALT ? "\e%c" : "%c", k.literal);
+      vterm_push_output_sprintf(vt, mod & VTERM_MOD_ALT ? ESC_S "%c" : "%c", k.literal);
     break;
 
   case KEYCODE_SS3: case_SS3:
