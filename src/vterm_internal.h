@@ -17,6 +17,8 @@
 # define DEBUG_LOG(...)
 #endif
 
+#define ESC_S "\x1b"
+
 typedef struct VTermEncoding VTermEncoding;
 
 typedef struct {
