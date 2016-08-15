@@ -158,7 +158,7 @@ INTERNAL void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, cons
   size_t orig_cur = vt->outbuffer_cur;
 
   if(ctrl >= 0x80 && !vt->mode.ctrl8bit)
-    vterm_push_output_sprintf(vt, "\e%c", ctrl - 0x40);
+    vterm_push_output_sprintf(vt, ESC_S "%c", ctrl - 0x40);
   else
     vterm_push_output_sprintf(vt, "%c", ctrl);
 
@@ -176,7 +176,7 @@ INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
   size_t orig_cur = vt->outbuffer_cur;
 
   if(!vt->mode.ctrl8bit)
-    vterm_push_output_sprintf(vt, "\e%c", C1_DCS - 0x40);
+    vterm_push_output_sprintf(vt, ESC_S "%c", C1_DCS - 0x40);
   else
     vterm_push_output_sprintf(vt, "%c", C1_DCS);
 
