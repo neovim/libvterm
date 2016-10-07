@@ -234,10 +234,6 @@ const VTermLineInfo *vterm_state_get_lineinfo(const VTermState *state, int row);
 // ------------
 
 typedef struct {
-#define VTERM_MAX_CHARS_PER_CELL 6
-  uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
-  char     width;
-  struct {
     unsigned int bold      : 1;
     unsigned int underline : 2;
     unsigned int italic    : 1;
@@ -247,7 +243,13 @@ typedef struct {
     unsigned int font      : 4; /* 0 to 9 */
     unsigned int dwl       : 1; /* On a DECDWL or DECDHL line */
     unsigned int dhl       : 2; /* On a DECDHL line (1=top 2=bottom) */
-  } attrs;
+} VTermScreenCellAttrs;
+
+typedef struct {
+#define VTERM_MAX_CHARS_PER_CELL 6
+  uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
+  char     width;
+  VTermScreenCellAttrs attrs;
   VTermColor fg, bg;
 } VTermScreenCell;
 
