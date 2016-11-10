@@ -57,6 +57,12 @@ static VTermState *vterm_state_new(VTerm *vt)
   state->rows = vt->rows;
   state->cols = vt->cols;
 
+  state->mouse_col     = 0;
+  state->mouse_row     = 0;
+  state->mouse_buttons = 0;
+
+  state->mouse_protocol = MOUSE_X10;
+
   state->callbacks = NULL;
   state->cbdata    = NULL;
 
@@ -750,21 +756,11 @@ static void set_dec_mode(VTermState *state, int num, int val)
   case 1000:
   case 1002:
   case 1003:
-    if(val) {
-      state->mouse_col     = 0;
-      state->mouse_row     = 0;
-      state->mouse_buttons = 0;
-
-      state->mouse_protocol = MOUSE_X10;
-
-      settermprop_int(state, VTERM_PROP_MOUSE,
-          (num == 1000) ? VTERM_PROP_MOUSE_CLICK :
-          (num == 1002) ? VTERM_PROP_MOUSE_DRAG  :
-                          VTERM_PROP_MOUSE_MOVE);
-    }
-    else
-      settermprop_int(state, VTERM_PROP_MOUSE, VTERM_PROP_MOUSE_NONE);
-
+    settermprop_int(state, VTERM_PROP_MOUSE,
+        (num == 1000) ? VTERM_PROP_MOUSE_CLICK :
+        (num == 1002) ? VTERM_PROP_MOUSE_DRAG  :
+        (num == 1003) ? VTERM_PROP_MOUSE_MOVE  :
+                        VTERM_PROP_MOUSE_NONE);
     break;
 
   case 1005:
