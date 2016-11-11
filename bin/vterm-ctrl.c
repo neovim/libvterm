@@ -177,6 +177,13 @@ static void do_dec_mode(int mode, BoolQuery val, const char *name)
   }
 }
 
+bool wasicanon;
+
+void restoreicanon(void)
+{
+  seticanon(wasicanon, true);
+}
+
 int main(int argc, char *argv[])
 {
   int argi = 1;
@@ -184,7 +191,8 @@ int main(int argc, char *argv[])
   if(argc == 1)
     usage(0);
 
-  bool wasicanon = seticanon(false, false);
+  wasicanon = seticanon(false, false);
+  atexit(restoreicanon);
 
   while(argi < argc) {
     const char *arg = argv[argi++];
@@ -247,6 +255,4 @@ int main(int argc, char *argv[])
       exit(1);
     }
   }
-
-  seticanon(wasicanon, true);
 }
