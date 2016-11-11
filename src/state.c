@@ -757,10 +757,10 @@ static void set_dec_mode(VTermState *state, int num, int val)
   case 1002:
   case 1003:
     settermprop_int(state, VTERM_PROP_MOUSE,
+        !val          ? VTERM_PROP_MOUSE_NONE  :
         (num == 1000) ? VTERM_PROP_MOUSE_CLICK :
         (num == 1002) ? VTERM_PROP_MOUSE_DRAG  :
-        (num == 1003) ? VTERM_PROP_MOUSE_MOVE  :
-                        VTERM_PROP_MOUSE_NONE);
+                        VTERM_PROP_MOUSE_MOVE);
     break;
 
   case 1005:
