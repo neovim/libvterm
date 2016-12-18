@@ -415,6 +415,18 @@ INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
     args[argi++] = CSI_ARG_FLAG_MORE|5;
     args[argi++] = state->fg_index;
   }
+  else if(state->fg_index == -1) {
+    // Send palette 2 if the actual FG colour is not default
+    if(state->pen.fg.red   != state->default_fg.red   ||
+       state->pen.fg.green != state->default_fg.green ||
+       state->pen.fg.blue  != state->default_fg.blue  ) {
+      args[argi++] = CSI_ARG_FLAG_MORE|38;
+      args[argi++] = CSI_ARG_FLAG_MORE|2;
+      args[argi++] = CSI_ARG_FLAG_MORE | state->pen.fg.red;
+      args[argi++] = CSI_ARG_FLAG_MORE | state->pen.fg.green;
+      args[argi++] = state->pen.fg.blue;
+    }
+  }
 
   if(state->bg_index >= 0 && state->bg_index < 8)
     args[argi++] = 40 + state->bg_index;
@@ -424,6 +436,18 @@ INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
     args[argi++] = CSI_ARG_FLAG_MORE|48;
     args[argi++] = CSI_ARG_FLAG_MORE|5;
     args[argi++] = state->bg_index;
+  }
+  else if(state->bg_index == -1) {
+    // Send palette 2 if the actual BG colour is not default
+    if(state->pen.bg.red   != state->default_bg.red   ||
+       state->pen.bg.green != state->default_bg.green ||
+       state->pen.bg.blue  != state->default_bg.blue  ) {
+      args[argi++] = CSI_ARG_FLAG_MORE|48;
+      args[argi++] = CSI_ARG_FLAG_MORE|2;
+      args[argi++] = CSI_ARG_FLAG_MORE | state->pen.bg.red;
+      args[argi++] = CSI_ARG_FLAG_MORE | state->pen.bg.green;
+      args[argi++] = state->pen.bg.blue;
+    }
   }
 
   return argi;
