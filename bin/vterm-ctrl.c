@@ -44,6 +44,7 @@ static BoolQuery getboolq(int *argip, int argc, char *argv[])
 
 static char *helptext[] = {
   "reset",
+  "s8c1t [off|on]",
   "keypad [app|num]",
   "screen [off|on|query]",
   "cursor [off|on|query]",
@@ -259,6 +260,14 @@ int main(int argc, char *argv[])
 
     if(streq(arg, "reset")) {
       printf("\ec");
+    }
+    else if(streq(arg, "s8c1t")) {
+      switch(getchoice(&argi, argc, argv, (const char *[]){"off", "on", NULL})) {
+      case 0:
+        printf("\e F"); break;
+      case 1:
+        printf("\e G"); break;
+      }
     }
     else if(streq(arg, "keypad")) {
       switch(getchoice(&argi, argc, argv, (const char *[]){"app", "num", NULL})) {
