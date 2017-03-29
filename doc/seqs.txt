@@ -33,6 +33,7 @@ between states.
  23   0x8f             = SS3
      (0x90             = DCS)
      (0x9B             = CSI)
+     (0x9C             = ST)
      (0x9D             = OSC)
 
    Escape sequences
@@ -54,6 +55,7 @@ between states.
  23   ESC Sp G         = S8C1T
      (ESC P            = DCS)
      (ESC [            = CSI)
+     (ESC \            = ST)
      (ESC ]            = OSC)
 123   ESC c            = RIS, reset initial state
   3   ESC n            = LS2
@@ -64,7 +66,7 @@ between states.
 
    DCSes
 
-  3   DCS $ q          = DECRQSS
+  3   DCS $ q      ST  = DECRQSS
   3           m        =   Request SGR
               Sp q     =   Request DECSCUSR
   3           " q      =   Request DECSCA
