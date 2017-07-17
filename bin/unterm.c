@@ -117,7 +117,7 @@ static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevce
         if(!sgri)
           break;
 
-        printf("\e[");
+        printf("\x1b[");
         for(int i = 0; i < sgri; i++)
           printf(!i               ? "%d" :
               sgr[i] & (1<<31) ? ":%d" :
@@ -144,7 +144,7 @@ static void dump_eol(const VTermScreenCell *prevcell)
       if(prevcell->attrs.bold || prevcell->attrs.underline || prevcell->attrs.italic ||
          prevcell->attrs.blink || prevcell->attrs.reverse || prevcell->attrs.strike ||
          prevcell->attrs.font)
-        printf("\e[m");
+        printf("\x1b[m");
       break;
   }
 
