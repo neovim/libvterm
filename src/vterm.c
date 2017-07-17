@@ -244,6 +244,8 @@ VTermValueType vterm_get_attr_type(VTermAttr attr)
     case VTERM_ATTR_FONT:       return VTERM_VALUETYPE_INT;
     case VTERM_ATTR_FOREGROUND: return VTERM_VALUETYPE_COLOR;
     case VTERM_ATTR_BACKGROUND: return VTERM_VALUETYPE_COLOR;
+
+    case VTERM_N_ATTRS: return 0;
   }
   return 0; /* UNREACHABLE */
 }
@@ -259,6 +261,8 @@ VTermValueType vterm_get_prop_type(VTermProp prop)
     case VTERM_PROP_REVERSE:       return VTERM_VALUETYPE_BOOL;
     case VTERM_PROP_CURSORSHAPE:   return VTERM_VALUETYPE_INT;
     case VTERM_PROP_MOUSE:         return VTERM_VALUETYPE_INT;
+
+    case VTERM_N_PROPS: return 0;
   }
   return 0; /* UNREACHABLE */
 }

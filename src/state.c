@@ -1813,6 +1813,9 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
     if(val->number == VTERM_PROP_MOUSE_MOVE)
       state->mouse_flags |= MOUSE_WANT_MOVE;
     return 1;
+
+  case VTERM_N_PROPS:
+    return 0;
   }
 
   return 0;
