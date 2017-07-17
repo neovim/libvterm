@@ -258,4 +258,6 @@ int main(int argc, char *argv[])
   close(fd);
 
   vterm_free(vt);
+
+  return 0;
 }
