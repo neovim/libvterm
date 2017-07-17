@@ -155,7 +155,7 @@ static void usage(int exitcode)
 
 static bool query_dec_mode(int mode)
 {
-  printf("\e[?%d$p", mode);
+  printf("\x1b[?%d$p", mode);
 
   char *s = NULL;
   do {
@@ -196,7 +196,7 @@ static void do_dec_mode(int mode, BoolQuery val, const char *name)
   switch(val) {
     case OFF:
     case ON:
-      printf("\e[?%d%c", mode, val == ON ? 'h' : 'l');
+      printf("\x1b[?%d%c", mode, val == ON ? 'h' : 'l');
       break;
 
     case QUERY:
@@ -210,7 +210,7 @@ static void do_dec_mode(int mode, BoolQuery val, const char *name)
 
 static int query_rqss_numeric(char *cmd)
 {
-  printf("\eP$q%s\e\\", cmd);
+  printf("\x1bP$q%s\x1b\\", cmd);
 
   char *s = NULL;
   do {
@@ -259,22 +259,22 @@ int main(int argc, char *argv[])
     const char *arg = argv[argi++];
 
     if(streq(arg, "reset")) {
-      printf("\ec");
+      printf("\x1b" "c");
     }
     else if(streq(arg, "s8c1t")) {
       switch(getchoice(&argi, argc, argv, (const char *[]){"off", "on", NULL})) {
       case 0:
-        printf("\e F"); break;
+        printf("\x1b F"); break;
       case 1:
-        printf("\e G"); break;
+        printf("\x1b G"); break;
       }
     }
     else if(streq(arg, "keypad")) {
       switch(getchoice(&argi, argc, argv, (const char *[]){"app", "num", NULL})) {
       case 0:
-        printf("\e="); break;
+        printf("\x1b="); break;
       case 1:
-        printf("\e>"); break;
+        printf("\x1b>"); break;
       }
     }
     else if(streq(arg, "screen")) {
@@ -309,20 +309,20 @@ int main(int argc, char *argv[])
         case 0:
         case 1:
         case 2:
-          printf("\e[%d q", 1 + (shape * 2));
+          printf("\x1b[%d q", 1 + (shape * 2));
           break;
       }
     }
     else if(streq(arg, "mouse")) {
       switch(getchoice(&argi, argc, argv, (const char *[]){"off", "click", "clickdrag", "motion", NULL})) {
       case 0:
-        printf("\e[?1000l"); break;
+        printf("\x1b[?1000l"); break;
       case 1:
-        printf("\e[?1000h"); break;
+        printf("\x1b[?1000h"); break;
       case 2:
-        printf("\e[?1002h"); break;
+        printf("\x1b[?1002h"); break;
       case 3:
-        printf("\e[?1003h"); break;
+        printf("\x1b[?1003h"); break;
       }
     }
     else if(streq(arg, "altscreen")) {
@@ -332,13 +332,13 @@ int main(int argc, char *argv[])
       do_dec_mode(2004, getboolq(&argi, argc, argv), "bracketpaste");
     }
     else if(streq(arg, "icontitle")) {
-      printf("\e]0;%s\a", getvalue(&argi, argc, argv));
+      printf("\x1b]0;%s\a", getvalue(&argi, argc, argv));
     }
     else if(streq(arg, "icon")) {
-      printf("\e]1;%s\a", getvalue(&argi, argc, argv));
+      printf("\x1b]1;%s\a", getvalue(&argi, argc, argv));
     }
     else if(streq(arg, "title")) {
-      printf("\e]2;%s\a", getvalue(&argi, argc, argv));
+      printf("\x1b]2;%s\a", getvalue(&argi, argc, argv));
     }
     else {
       fprintf(stderr, "Unrecognised command %s\n", arg);
