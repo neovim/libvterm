@@ -7,6 +7,8 @@
 #define CSI_LEADER_MAX 16
 #define CSI_INTERMED_MAX 16
 
+#undef DEBUG_PARSER
+
 static void do_control(VTerm *vt, unsigned char control)
 {
   if(vt->parser_callbacks && vt->parser_callbacks->control)
@@ -87,14 +89,16 @@ done_leader: ;
     DEBUG_LOG("libvterm: TODO unhandled CSI bytes \"%.*s\"\n", (int)(arglen - i), args + i);
   }
 
-  //printf("Parsed CSI args %.*s as:\n", arglen, args);
-  //printf(" leader: %s\n", leader);
-  //for(argi = 0; argi < argcount; argi++) {
-  //  printf(" %lu", CSI_ARG(csi_args[argi]));
-  //  if(!CSI_ARG_HAS_MORE(csi_args[argi]))
-  //    printf("\n");
-  //printf(" intermed: %s\n", intermed);
-  //}
+#ifdef DEBUG_PARSER
+  printf("Parsed CSI args %.*s as:\n", arglen, args);
+  printf(" leader: %s\n", leader);
+  for(argi = 0; argi < argcount; argi++) {
+    printf(" %lu", CSI_ARG(csi_args[argi]));
+    if(!CSI_ARG_HAS_MORE(csi_args[argi]))
+      printf("\n");
+  printf(" intermed: %s\n", intermed);
+  }
+#endif
 
   if(vt->parser_callbacks && vt->parser_callbacks->csi)
     if((*vt->parser_callbacks->csi)(leaderlen ? leader : NULL, csi_args, argcount, intermedlen ? intermed : NULL, command, vt->cbdata))
