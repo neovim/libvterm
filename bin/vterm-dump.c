@@ -202,8 +202,8 @@ int main(int argc, char *argv[])
   }
 
   if(use_colour) {
-    special_begin = "\e[7m{";
-    special_end   = "}\e[m";
+    special_begin = "\x1b[7m{";
+    special_end   = "}\x1b[m";
   }
 
   /* Size matters not for the parser */
