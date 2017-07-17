@@ -59,6 +59,8 @@ typedef enum {
   VTERM_VALUETYPE_INT,
   VTERM_VALUETYPE_STRING,
   VTERM_VALUETYPE_COLOR,
+
+  VTERM_N_VALUETYPES
 } VTermValueType;
 
 typedef union {
@@ -79,6 +81,8 @@ typedef enum {
   VTERM_ATTR_FONT,       // number: 10-19
   VTERM_ATTR_FOREGROUND, // color:  30-39 90-97
   VTERM_ATTR_BACKGROUND, // color:  40-49 100-107
+
+  VTERM_N_ATTRS
 } VTermAttr;
 
 typedef enum {
@@ -91,12 +95,16 @@ typedef enum {
   VTERM_PROP_REVERSE,           // bool
   VTERM_PROP_CURSORSHAPE,       // number
   VTERM_PROP_MOUSE,             // number
+
+  VTERM_N_PROPS
 } VTermProp;
 
 enum {
   VTERM_PROP_CURSORSHAPE_BLOCK = 1,
   VTERM_PROP_CURSORSHAPE_UNDERLINE,
   VTERM_PROP_CURSORSHAPE_BAR_LEFT,
+
+  VTERM_N_PROP_CURSORSHAPES
 };
 
 enum {
@@ -104,6 +112,8 @@ enum {
   VTERM_PROP_MOUSE_CLICK,
   VTERM_PROP_MOUSE_DRAG,
   VTERM_PROP_MOUSE_MOVE,
+
+  VTERM_N_PROP_MOUSES
 };
 
 typedef struct {
@@ -280,6 +290,8 @@ typedef enum {
   VTERM_DAMAGE_ROW,     /* entire rows */
   VTERM_DAMAGE_SCREEN,  /* entire screen */
   VTERM_DAMAGE_SCROLL,  /* entire screen + scrollrect */
+
+  VTERM_N_DAMAGES
 } VTermDamageSize;
 
 void vterm_screen_flush_damage(VTermScreen *screen);
@@ -301,6 +313,8 @@ typedef enum {
   VTERM_ATTR_FONT_MASK       = 1 << 6,
   VTERM_ATTR_FOREGROUND_MASK = 1 << 7,
   VTERM_ATTR_BACKGROUND_MASK = 1 << 8,
+
+  VTERM_ALL_ATTRS_MASK = (1 << 9) - 1
 } VTermAttrMask;
 
 int vterm_screen_get_attrs_extent(const VTermScreen *screen, VTermRect *extent, VTermPos pos, VTermAttrMask attrs);
