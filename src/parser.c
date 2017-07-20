@@ -11,8 +11,8 @@
 
 static void do_control(VTerm *vt, unsigned char control)
 {
-  if(vt->parser_callbacks && vt->parser_callbacks->control)
-    if((*vt->parser_callbacks->control)(control, vt->cbdata))
+  if(vt->parser.callbacks && vt->parser.callbacks->control)
+    if((*vt->parser.callbacks->control)(control, vt->parser.cbdata))
       return;
 
   DEBUG_LOG("libvterm: Unhandled control 0x%02x\n", control);
@@ -100,8 +100,8 @@ done_leader: ;
   }
 #endif
 
-  if(vt->parser_callbacks && vt->parser_callbacks->csi)
-    if((*vt->parser_callbacks->csi)(leaderlen ? leader : NULL, csi_args, argcount, intermedlen ? intermed : NULL, command, vt->cbdata))
+  if(vt->parser.callbacks && vt->parser.callbacks->csi)
+    if((*vt->parser.callbacks->csi)(leaderlen ? leader : NULL, csi_args, argcount, intermedlen ? intermed : NULL, command, vt->parser.cbdata))
       return;
 
   DEBUG_LOG("libvterm: Unhandled CSI %.*s %c\n", (int)arglen, args, command);
@@ -138,10 +138,10 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
 
   size_t eaten;
 
-  switch(vt->parser_state) {
+  switch(vt->parser.state) {
   case NORMAL:
-    if(vt->parser_callbacks && vt->parser_callbacks->text)
-      if((eaten = (*vt->parser_callbacks->text)(str_frag, len, vt->cbdata)))
+    if(vt->parser.callbacks && vt->parser.callbacks->text)
+      if((eaten = (*vt->parser.callbacks->text)(str_frag, len, vt->parser.cbdata)))
         return eaten;
 
     DEBUG_LOG("libvterm: Unhandled text (%zu chars)\n", len);
@@ -155,8 +155,8 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
       return 0;
     }
 
-    if(vt->parser_callbacks && vt->parser_callbacks->escape)
-      if((*vt->parser_callbacks->escape)(str_frag, len, vt->cbdata))
+    if(vt->parser.callbacks && vt->parser.callbacks->escape)
+      if((*vt->parser.callbacks->escape)(str_frag, len, vt->parser.cbdata))
         return 0;
 
     DEBUG_LOG("libvterm: Unhandled escape ESC 0x%02x\n", str_frag[len-1]);
@@ -167,16 +167,16 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
     return 0;
 
   case OSC:
-    if(vt->parser_callbacks && vt->parser_callbacks->osc)
-      if((*vt->parser_callbacks->osc)(str_frag, len, vt->cbdata))
+    if(vt->parser.callbacks && vt->parser.callbacks->osc)
+      if((*vt->parser.callbacks->osc)(str_frag, len, vt->parser.cbdata))
         return 0;
 
     DEBUG_LOG("libvterm: Unhandled OSC %.*s\n", (int)len, str_frag);
     return 0;
 
   case DCS:
-    if(vt->parser_callbacks && vt->parser_callbacks->dcs)
-      if((*vt->parser_callbacks->dcs)(str_frag, len, vt->cbdata))
+    if(vt->parser.callbacks && vt->parser.callbacks->dcs)
+      if((*vt->parser.callbacks->dcs)(str_frag, len, vt->parser.cbdata))
         return 0;
 
     DEBUG_LOG("libvterm: Unhandled DCS %.*s\n", (int)len, str_frag);
@@ -196,7 +196,7 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
   size_t pos = 0;
   const char *string_start;
 
-  switch(vt->parser_state) {
+  switch(vt->parser.state) {
   case NORMAL:
     string_start = NULL;
     break;
@@ -210,14 +210,14 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
     break;
   }
 
-#define ENTER_STRING_STATE(st) do { vt->parser_state = st; string_start = bytes + pos + 1; } while(0)
-#define ENTER_NORMAL_STATE()   do { vt->parser_state = NORMAL; string_start = NULL; } while(0)
+#define ENTER_STRING_STATE(st) do { vt->parser.state = st; string_start = bytes + pos + 1; } while(0)
+#define ENTER_NORMAL_STATE()   do { vt->parser.state = NORMAL; string_start = NULL; } while(0)
 
   for( ; pos < len; pos++) {
     unsigned char c = bytes[pos];
 
     if(c == 0x00 || c == 0x7f) { // NUL, DEL
-      if(vt->parser_state != NORMAL) {
+      if(vt->parser.state != NORMAL) {
         append_strbuffer(vt, string_start, bytes + pos - string_start);
         string_start = bytes + pos + 1;
       }
@@ -228,42 +228,42 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
       continue;
     }
     else if(c == 0x1b) { // ESC
-      if(vt->parser_state == OSC)
-        vt->parser_state = ESC_IN_OSC;
-      else if(vt->parser_state == DCS)
-        vt->parser_state = ESC_IN_DCS;
+      if(vt->parser.state == OSC)
+        vt->parser.state = ESC_IN_OSC;
+      else if(vt->parser.state == DCS)
+        vt->parser.state = ESC_IN_DCS;
       else
         ENTER_STRING_STATE(ESC);
       continue;
     }
     else if(c == 0x07 &&  // BEL, can stand for ST in OSC or DCS state
-            (vt->parser_state == OSC || vt->parser_state == DCS)) {
+            (vt->parser.state == OSC || vt->parser.state == DCS)) {
       // fallthrough
     }
     else if(c < 0x20) { // other C0
-      if(vt->parser_state != NORMAL)
+      if(vt->parser.state != NORMAL)
         append_strbuffer(vt, string_start, bytes + pos - string_start);
       do_control(vt, c);
-      if(vt->parser_state != NORMAL)
+      if(vt->parser.state != NORMAL)
         string_start = bytes + pos + 1;
       continue;
     }
     // else fallthrough
 
-    switch(vt->parser_state) {
+    switch(vt->parser.state) {
     case ESC_IN_OSC:
     case ESC_IN_DCS:
       if(c == 0x5c) { // ST
-        switch(vt->parser_state) {
-          case ESC_IN_OSC: vt->parser_state = OSC; break;
-          case ESC_IN_DCS: vt->parser_state = DCS; break;
+        switch(vt->parser.state) {
+          case ESC_IN_OSC: vt->parser.state = OSC; break;
+          case ESC_IN_DCS: vt->parser.state = DCS; break;
           default: break;
         }
         do_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
         break;
       }
-      vt->parser_state = ESC;
+      vt->parser.state = ESC;
       string_start = bytes + pos;
       // else fallthrough
 
@@ -347,4 +347,15 @@ pause:
   }
 
   return len;
+}
+
+void vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user)
+{
+  vt->parser.callbacks = callbacks;
+  vt->parser.cbdata = user;
+}
+
+void *vterm_parser_get_cbdata(VTerm *vt)
+{
+  return vt->parser.cbdata;
 }
