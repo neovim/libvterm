@@ -152,17 +152,20 @@ struct VTerm
     unsigned int ctrl8bit:1;
   } mode;
 
-  enum VTermParserState {
-    NORMAL,
-    CSI,
-    OSC,
-    DCS,
-    ESC,
-    ESC_IN_OSC,
-    ESC_IN_DCS,
-  } parser_state;
-  const VTermParserCallbacks *parser_callbacks;
-  void *cbdata;
+  struct {
+    enum VTermParserState {
+      NORMAL,
+      CSI,
+      OSC,
+      DCS,
+      ESC,
+      ESC_IN_OSC,
+      ESC_IN_DCS,
+    } state;
+
+    const VTermParserCallbacks *callbacks;
+    void *cbdata;
+  } parser;
 
   /* len == malloc()ed size; cur == number of valid bytes */
   char  *strbuffer;

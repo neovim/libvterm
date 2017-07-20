@@ -43,10 +43,10 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
   vt->rows = rows;
   vt->cols = cols;
 
-  vt->parser_state = NORMAL;
+  vt->parser.state = NORMAL;
 
-  vt->parser_callbacks = NULL;
-  vt->cbdata           = NULL;
+  vt->parser.callbacks = NULL;
+  vt->parser.cbdata    = NULL;
 
   vt->strbuffer_len = 64;
   vt->strbuffer_cur = 0;
@@ -96,8 +96,8 @@ void vterm_set_size(VTerm *vt, int rows, int cols)
   vt->rows = rows;
   vt->cols = cols;
 
-  if(vt->parser_callbacks && vt->parser_callbacks->resize)
-    (*vt->parser_callbacks->resize)(rows, cols, vt->cbdata);
+  if(vt->parser.callbacks && vt->parser.callbacks->resize)
+    (*vt->parser.callbacks->resize)(rows, cols, vt->parser.cbdata);
 }
 
 int vterm_get_utf8(const VTerm *vt)
@@ -219,17 +219,6 @@ size_t vterm_output_read(VTerm *vt, char *buffer, size_t len)
   vt->outbuffer_cur -= len;
 
   return len;
-}
-
-void vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user)
-{
-  vt->parser_callbacks = callbacks;
-  vt->cbdata = user;
-}
-
-void *vterm_parser_get_cbdata(VTerm *vt)
-{
-  return vt->cbdata;
 }
 
 VTermValueType vterm_get_attr_type(VTermAttr attr)
