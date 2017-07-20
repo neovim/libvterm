@@ -154,7 +154,7 @@ static void dump_eol(const VTermScreenCell *prevcell)
 void dump_row(int row)
 {
   VTermPos pos = { .row = row, .col = 0 };
-  VTermScreenCell prevcell = {};
+  VTermScreenCell prevcell = { 0 };
   vterm_state_get_default_colors(vterm_obtain_state(vt), &prevcell.fg, &prevcell.bg);
 
   while(pos.col < cols) {
@@ -172,7 +172,7 @@ void dump_row(int row)
 
 static int screen_sb_pushline(int cols, const VTermScreenCell *cells, void *user)
 {
-  VTermScreenCell prevcell = {};
+  VTermScreenCell prevcell = { 0 };
   vterm_state_get_default_colors(vterm_obtain_state(vt), &prevcell.fg, &prevcell.bg);
 
   for(int col = 0; col < cols; col++) {
