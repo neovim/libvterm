@@ -19,6 +19,10 @@
 
 #define ESC_S "\x1b"
 
+#define CSI_ARGS_MAX 16
+#define CSI_LEADER_MAX 16
+#define CSI_INTERMED_MAX 16
+
 typedef struct VTermEncoding VTermEncoding;
 
 typedef struct {
@@ -155,13 +159,25 @@ struct VTerm
   struct {
     enum VTermParserState {
       NORMAL,
-      CSI,
+      CSI_LEADER,
+      CSI_ARGS,
+      CSI_INTERMED,
+      /* below here are the "string states" */
       OSC,
       DCS,
       ESC,
       ESC_IN_OSC,
       ESC_IN_DCS,
     } state;
+
+    int csi_leaderlen;
+    char csi_leader[CSI_LEADER_MAX];
+
+    int csi_argi;
+    long csi_args[CSI_ARGS_MAX];
+
+    int csi_intermedlen;
+    char csi_intermed[CSI_INTERMED_MAX];
 
     const VTermParserCallbacks *callbacks;
     void *cbdata;
