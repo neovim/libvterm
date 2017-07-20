@@ -12,7 +12,7 @@ static size_t inplace_hex2bytes(char *s)
   char *inpos = s, *outpos = s;
 
   while(*inpos) {
-    int ch;
+    unsigned int ch;
     sscanf(inpos, "%2x", &ch);
     *outpos = ch;
     outpos += 1; inpos += 2;
@@ -224,6 +224,9 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
   case VTERM_VALUETYPE_COLOR:
     printf("settermprop %d rgb(%d,%d,%d)\n", prop, val->color.red, val->color.green, val->color.blue);
     return 1;
+
+  case VTERM_N_VALUETYPES:
+    return 0;
   }
 
   return 0;
@@ -306,6 +309,9 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
   case VTERM_ATTR_BACKGROUND:
     state_pen.background = val->color;
     break;
+
+  case VTERM_N_ATTRS:
+    return 0;
   }
 
   return 1;
@@ -587,7 +593,7 @@ int main(int argc, char **argv)
 
     else if(strstartswith(line, "INCHAR ")) {
       char *linep = line + 7;
-      int c = 0;
+      unsigned int c = 0;
       while(linep[0] == ' ')
         linep++;
       VTermModifier mod = strpe_modifiers(&linep);
