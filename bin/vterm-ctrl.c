@@ -78,9 +78,9 @@ static bool seticanon(bool icanon, bool echo)
   return ret;
 }
 
-static void await_c1(char c1)
+static void await_c1(unsigned char c1)
 {
-  char c;
+  unsigned char c;
 
   /* await CSI - 8bit or 2byte 7bit form */
   bool in_esc = false;
