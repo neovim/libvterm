@@ -96,19 +96,19 @@ struct VTermState
   VTermPos combine_pos;   // Position before movement
 
   struct {
-    int keypad:1;
-    int cursor:1;
-    int autowrap:1;
-    int insert:1;
-    int newline:1;
-    int cursor_visible:1;
-    int cursor_blink:1;
+    unsigned int keypad:1;
+    unsigned int cursor:1;
+    unsigned int autowrap:1;
+    unsigned int insert:1;
+    unsigned int newline:1;
+    unsigned int cursor_visible:1;
+    unsigned int cursor_blink:1;
     unsigned int cursor_shape:2;
-    int alt_screen:1;
-    int origin:1;
-    int screen:1;
-    int leftrightmargin:1;
-    int bracketpaste:1;
+    unsigned int alt_screen:1;
+    unsigned int origin:1;
+    unsigned int screen:1;
+    unsigned int leftrightmargin:1;
+    unsigned int bracketpaste:1;
   } mode;
 
   VTermEncodingInstance encoding[4], encoding_utf8;
@@ -132,8 +132,8 @@ struct VTermState
     struct VTermPen pen;
 
     struct {
-      int cursor_visible:1;
-      int cursor_blink:1;
+      unsigned int cursor_visible:1;
+      unsigned int cursor_blink:1;
       unsigned int cursor_shape:2;
     } mode;
   } saved;
@@ -148,8 +148,8 @@ struct VTerm
   int cols;
 
   struct {
-    int utf8:1;
-    int ctrl8bit:1;
+    unsigned int utf8:1;
+    unsigned int ctrl8bit:1;
   } mode;
 
   enum VTermParserState {
