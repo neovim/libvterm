@@ -260,7 +260,7 @@ static int on_text(const char bytes[], size_t len, void *user)
    * for even a single codepoint
    */
   if(!npoints)
-    return 0;
+    return eaten;
 
   if(state->gsingle_set && npoints)
     state->gsingle_set = 0;
