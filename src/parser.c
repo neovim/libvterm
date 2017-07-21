@@ -90,15 +90,9 @@ static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
 
   vt->strbuffer_cur = 0;
 
-  size_t eaten;
-
   switch(vt->parser.state) {
   case NORMAL:
-    if(vt->parser.callbacks && vt->parser.callbacks->text)
-      if((eaten = (*vt->parser.callbacks->text)(str_frag, len, vt->parser.cbdata)))
-        return eaten;
-
-    DEBUG_LOG("libvterm: Unhandled text (%zu chars)\n", len);
+    DEBUG_LOG("libvterm: ARGH! Should never do_string() in NORMAL\n");
     return 0;
 
   case ESC:
@@ -329,23 +323,20 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
         }
       }
       else {
-        size_t text_eaten = do_string(vt, bytes + pos, len - pos);
+        size_t eaten = 0;
+        if(vt->parser.callbacks && vt->parser.callbacks->text)
+          eaten = (*vt->parser.callbacks->text)(bytes + pos, len - pos, vt->parser.cbdata);
 
-        if(text_eaten == 0) {
-          string_start = bytes + pos;
-          goto pause;
+        if(!eaten) {
+          DEBUG_LOG("libvterm: Text callback did not consume any input\n");
+          /* force it to make progress */
+          eaten = 1;
         }
 
-        pos += (text_eaten - 1); // we'll ++ it again in a moment
+        pos += (eaten - 1); // we'll ++ it again in a moment
       }
       break;
     }
-  }
-
-pause:
-  if(string_start && string_start < len + bytes) {
-    size_t remaining = len - (string_start - bytes);
-    append_strbuffer(vt, string_start, remaining);
   }
 
   return len;
