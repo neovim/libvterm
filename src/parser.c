@@ -63,14 +63,14 @@ static void do_escape(VTerm *vt, char command)
 
 static void append_strbuffer(VTerm *vt, const char *str, size_t len)
 {
-  if(len > vt->strbuffer_len - vt->strbuffer_cur) {
-    len = vt->strbuffer_len - vt->strbuffer_cur;
+  if(len > vt->parser.strbuffer_len - vt->parser.strbuffer_cur) {
+    len = vt->parser.strbuffer_len - vt->parser.strbuffer_cur;
     DEBUG_LOG("Truncating strbuffer preserve to %zd bytes\n", len);
   }
 
   if(len > 0) {
-    strncpy(vt->strbuffer + vt->strbuffer_cur, str, len);
-    vt->strbuffer_cur += len;
+    strncpy(vt->parser.strbuffer + vt->parser.strbuffer_cur, str, len);
+    vt->parser.strbuffer_cur += len;
   }
 }
 
@@ -78,7 +78,7 @@ static void start_string(VTerm *vt, VTermParserStringType type)
 {
   vt->parser.stringtype = type;
 
-  vt->strbuffer_cur = 0;
+  vt->parser.strbuffer_cur = 0;
 }
 
 static void more_string(VTerm *vt, const char *str, size_t len)
@@ -88,12 +88,12 @@ static void more_string(VTerm *vt, const char *str, size_t len)
 
 static void done_string(VTerm *vt, const char *str, size_t len)
 {
-  if(vt->strbuffer_cur) {
+  if(vt->parser.strbuffer_cur) {
     if(str)
       append_strbuffer(vt, str, len);
 
-    str = vt->strbuffer;
-    len = vt->strbuffer_cur;
+    str = vt->parser.strbuffer;
+    len = vt->parser.strbuffer_cur;
   }
   else if(!str) {
     DEBUG_LOG("parser.c: TODO: No strbuffer _and_ no final fragment???\n");

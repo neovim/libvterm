@@ -189,12 +189,12 @@ struct VTerm
     void *cbdata;
 
     VTermParserStringType stringtype;
+    char  *strbuffer;
+    size_t strbuffer_len;
+    size_t strbuffer_cur;
   } parser;
 
   /* len == malloc()ed size; cur == number of valid bytes */
-  char  *strbuffer;
-  size_t strbuffer_len;
-  size_t strbuffer_cur;
 
   char  *outbuffer;
   size_t outbuffer_len;
