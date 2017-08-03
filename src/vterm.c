@@ -48,9 +48,9 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
   vt->parser.callbacks = NULL;
   vt->parser.cbdata    = NULL;
 
-  vt->strbuffer_len = 64;
-  vt->strbuffer_cur = 0;
-  vt->strbuffer = vterm_allocator_malloc(vt, vt->strbuffer_len);
+  vt->parser.strbuffer_len = 64;
+  vt->parser.strbuffer_cur = 0;
+  vt->parser.strbuffer = vterm_allocator_malloc(vt, vt->parser.strbuffer_len);
 
   vt->outbuffer_len = 64;
   vt->outbuffer_cur = 0;
@@ -67,7 +67,7 @@ void vterm_free(VTerm *vt)
   if(vt->state)
     vterm_state_free(vt->state);
 
-  vterm_allocator_free(vt, vt->strbuffer);
+  vterm_allocator_free(vt, vt->parser.strbuffer);
   vterm_allocator_free(vt, vt->outbuffer);
 
   vterm_allocator_free(vt, vt);
