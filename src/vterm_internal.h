@@ -144,6 +144,13 @@ struct VTermState
   } saved;
 };
 
+typedef enum {
+  VTERM_PARSER_OSC,
+  VTERM_PARSER_DCS,
+
+  VTERM_N_PARSER_TYPES
+} VTermParserStringType;
+
 struct VTerm
 {
   VTermAllocatorFunctions *allocator;
@@ -165,10 +172,8 @@ struct VTerm
       CSI_INTERMED,
       ESC,
       /* below here are the "string states" */
-      OSC,
-      DCS,
-      ESC_IN_OSC,
-      ESC_IN_DCS,
+      STRING,
+      ESC_IN_STRING,
     } state;
 
     int intermedlen;
@@ -182,6 +187,8 @@ struct VTerm
 
     const VTermParserCallbacks *callbacks;
     void *cbdata;
+
+    VTermParserStringType stringtype;
   } parser;
 
   /* len == malloc()ed size; cur == number of valid bytes */

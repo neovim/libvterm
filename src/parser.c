@@ -74,60 +74,52 @@ static void append_strbuffer(VTerm *vt, const char *str, size_t len)
   }
 }
 
-static size_t do_string(VTerm *vt, const char *str_frag, size_t len)
+static void start_string(VTerm *vt, VTermParserStringType type)
+{
+  vt->parser.stringtype = type;
+
+  vt->strbuffer_cur = 0;
+}
+
+static void more_string(VTerm *vt, const char *str, size_t len)
+{
+  append_strbuffer(vt, str, len);
+}
+
+static void done_string(VTerm *vt, const char *str, size_t len)
 {
   if(vt->strbuffer_cur) {
-    if(str_frag)
-      append_strbuffer(vt, str_frag, len);
+    if(str)
+      append_strbuffer(vt, str, len);
 
-    str_frag = vt->strbuffer;
+    str = vt->strbuffer;
     len = vt->strbuffer_cur;
   }
-  else if(!str_frag) {
+  else if(!str) {
     DEBUG_LOG("parser.c: TODO: No strbuffer _and_ no final fragment???\n");
     len = 0;
   }
 
-  vt->strbuffer_cur = 0;
-
-  switch(vt->parser.state) {
-  case NORMAL:
-    DEBUG_LOG("libvterm: ARGH! Should never do_string() in NORMAL\n");
-    return 0;
-
-  case ESC:
-    DEBUG_LOG("libvterm: ARGH! Should never do_string() in ESC\n");
-    return 0;
-
-  case CSI_LEADER:
-  case CSI_ARGS:
-  case CSI_INTERMED:
-    DEBUG_LOG("libvterm: ARGH! Should never do_string() in CSI_*\n");
-    return 0;
-
-  case OSC:
+  switch(vt->parser.stringtype) {
+  case VTERM_PARSER_OSC:
     if(vt->parser.callbacks && vt->parser.callbacks->osc)
-      if((*vt->parser.callbacks->osc)(str_frag, len, vt->parser.cbdata))
-        return 0;
+      if((*vt->parser.callbacks->osc)(str, len, vt->parser.cbdata))
+        return;
 
-    DEBUG_LOG("libvterm: Unhandled OSC %.*s\n", (int)len, str_frag);
-    return 0;
+    DEBUG_LOG("libvterm: Unhandled OSC %.*s\n", (int)len, str);
+    return;
 
-  case DCS:
+  case VTERM_PARSER_DCS:
     if(vt->parser.callbacks && vt->parser.callbacks->dcs)
-      if((*vt->parser.callbacks->dcs)(str_frag, len, vt->parser.cbdata))
-        return 0;
+      if((*vt->parser.callbacks->dcs)(str, len, vt->parser.cbdata))
+        return;
 
-    DEBUG_LOG("libvterm: Unhandled DCS %.*s\n", (int)len, str_frag);
-    return 0;
+    DEBUG_LOG("libvterm: Unhandled DCS %.*s\n", (int)len, str);
+    return;
 
-  case ESC_IN_OSC:
-  case ESC_IN_DCS:
-    DEBUG_LOG("libvterm: ARGH! Should never do_string() in ESC_IN_{OSC,DCS}\n");
-    return 0;
+  case VTERM_N_PARSER_TYPES:
+    return;
   }
-
-  return 0;
 }
 
 size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
@@ -143,15 +135,13 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
   case ESC:
     string_start = NULL;
     break;
-  case ESC_IN_OSC:
-  case ESC_IN_DCS:
-  case OSC:
-  case DCS:
+  case STRING:
+  case ESC_IN_STRING:
     string_start = bytes;
     break;
   }
 
-#define ENTER_STRING_STATE(st) do { vt->parser.state = st; string_start = bytes + pos + 1; } while(0)
+#define ENTER_STRING_STATE(st) do { vt->parser.state = STRING; string_start = bytes + pos + 1; } while(0)
 #define ENTER_STATE(st)        do { vt->parser.state = st; string_start = NULL; } while(0)
 #define ENTER_NORMAL_STATE()   ENTER_STATE(NORMAL)
 
@@ -159,8 +149,8 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
     unsigned char c = bytes[pos];
 
     if(c == 0x00 || c == 0x7f) { // NUL, DEL
-      if(vt->parser.state >= OSC) {
-        append_strbuffer(vt, string_start, bytes + pos - string_start);
+      if(vt->parser.state >= STRING) {
+        more_string(vt, string_start, bytes + pos - string_start);
         string_start = bytes + pos + 1;
       }
       continue;
@@ -171,38 +161,31 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
     }
     else if(c == 0x1b) { // ESC
       vt->parser.intermedlen = 0;
-      if(vt->parser.state == OSC)
-        vt->parser.state = ESC_IN_OSC;
-      else if(vt->parser.state == DCS)
-        vt->parser.state = ESC_IN_DCS;
+      if(vt->parser.state == STRING)
+        vt->parser.state = ESC_IN_STRING;
       else
         ENTER_STATE(ESC);
       continue;
     }
     else if(c == 0x07 &&  // BEL, can stand for ST in OSC or DCS state
-            (vt->parser.state == OSC || vt->parser.state == DCS)) {
+            vt->parser.state == STRING) {
       // fallthrough
     }
     else if(c < 0x20) { // other C0
-      if(vt->parser.state >= OSC)
-        append_strbuffer(vt, string_start, bytes + pos - string_start);
+      if(vt->parser.state >= STRING)
+        more_string(vt, string_start, bytes + pos - string_start);
       do_control(vt, c);
-      if(vt->parser.state >= OSC)
+      if(vt->parser.state >= STRING)
         string_start = bytes + pos + 1;
       continue;
     }
     // else fallthrough
 
     switch(vt->parser.state) {
-    case ESC_IN_OSC:
-    case ESC_IN_DCS:
+    case ESC_IN_STRING:
       if(c == 0x5c) { // ST
-        switch(vt->parser.state) {
-          case ESC_IN_OSC: vt->parser.state = OSC; break;
-          case ESC_IN_DCS: vt->parser.state = DCS; break;
-          default: break;
-        }
-        do_string(vt, string_start, bytes + pos - string_start - 1);
+        vt->parser.state = STRING;
+        done_string(vt, string_start, bytes + pos - string_start - 1);
         ENTER_NORMAL_STATE();
         break;
       }
@@ -212,14 +195,16 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
     case ESC:
       switch(c) {
       case 0x50: // DCS
-        ENTER_STRING_STATE(DCS);
+        start_string(vt, VTERM_PARSER_DCS);
+        ENTER_STRING_STATE();
         break;
       case 0x5b: // CSI
         vt->parser.csi_leaderlen = 0;
         ENTER_STATE(CSI_LEADER);
         break;
       case 0x5d: // OSC
-        ENTER_STRING_STATE(OSC);
+        start_string(vt, VTERM_PARSER_OSC);
+        ENTER_STRING_STATE();
         break;
       default:
         if(is_intermed(c)) {
@@ -297,10 +282,9 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
       ENTER_NORMAL_STATE();
       break;
 
-    case OSC:
-    case DCS:
+    case STRING:
       if(c == 0x07 || (c == 0x9c && !vt->mode.utf8)) {
-        do_string(vt, string_start, bytes + pos - string_start);
+        done_string(vt, string_start, bytes + pos - string_start);
         ENTER_NORMAL_STATE();
       }
       break;
@@ -309,13 +293,15 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
       if(c >= 0x80 && c < 0xa0 && !vt->mode.utf8) {
         switch(c) {
         case 0x90: // DCS
-          ENTER_STRING_STATE(DCS);
+          start_string(vt, VTERM_PARSER_DCS);
+          ENTER_STRING_STATE();
           break;
         case 0x9b: // CSI
           ENTER_STATE(CSI_LEADER);
           break;
         case 0x9d: // OSC
-          ENTER_STRING_STATE(OSC);
+          start_string(vt, VTERM_PARSER_OSC);
+          ENTER_STRING_STATE();
           break;
         default:
           do_control(vt, c);
