@@ -53,6 +53,7 @@ static char *helptext[] = {
   "mouse [off|click|clickdrag|motion]",
   "altscreen [off|on|query]",
   "bracketpaste [off|on|query]",
+  "reportfocus [off|on|query]",
   "icontitle [STR]",
   "icon [STR]",
   "title [STR]",
@@ -330,6 +331,9 @@ int main(int argc, char *argv[])
     }
     else if(streq(arg, "bracketpaste")) {
       do_dec_mode(2004, getboolq(&argi, argc, argv), "bracketpaste");
+    }
+    else if(streq(arg, "reportfocus")) {
+      do_dec_mode(1004, getboolq(&argi, argc, argv), "reportfocus");
     }
     else if(streq(arg, "icontitle")) {
       printf("\x1b]0;%s\a", getvalue(&argi, argc, argv));
