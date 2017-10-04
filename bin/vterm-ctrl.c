@@ -51,9 +51,9 @@ static char *helptext[] = {
   "curblink [off|on|query]",
   "curshape [block|under|bar|query]",
   "mouse [off|click|clickdrag|motion]",
+  "reportfocus [off|on|query]",
   "altscreen [off|on|query]",
   "bracketpaste [off|on|query]",
-  "reportfocus [off|on|query]",
   "icontitle [STR]",
   "icon [STR]",
   "title [STR]",
@@ -326,14 +326,14 @@ int main(int argc, char *argv[])
         printf("\x1b[?1003h"); break;
       }
     }
+    else if(streq(arg, "reportfocus")) {
+      do_dec_mode(1004, getboolq(&argi, argc, argv), "reportfocus");
+    }
     else if(streq(arg, "altscreen")) {
       do_dec_mode(1049, getboolq(&argi, argc, argv), "altscreen");
     }
     else if(streq(arg, "bracketpaste")) {
       do_dec_mode(2004, getboolq(&argi, argc, argv), "bracketpaste");
-    }
-    else if(streq(arg, "reportfocus")) {
-      do_dec_mode(1004, getboolq(&argi, argc, argv), "reportfocus");
     }
     else if(streq(arg, "icontitle")) {
       printf("\x1b]0;%s\a", getvalue(&argi, argc, argv));
