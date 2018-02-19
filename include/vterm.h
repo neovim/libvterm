@@ -175,8 +175,8 @@ void vterm_mouse_button(VTerm *vt, int button, bool pressed, VTermModifier mod);
  *
  * Don't confuse this with the final byte of the CSI escape; 'a' in this case.
  */
-#define CSI_ARG_FLAG_MORE (1<<31)
-#define CSI_ARG_MASK      (~(1<<31))
+#define CSI_ARG_FLAG_MORE (1U<<31)
+#define CSI_ARG_MASK      (~(1U<<31))
 
 #define CSI_ARG_HAS_MORE(a) ((a) & CSI_ARG_FLAG_MORE)
 #define CSI_ARG(a)          ((a) & CSI_ARG_MASK)
