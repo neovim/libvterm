@@ -92,8 +92,8 @@ static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevce
             sgr[sgri++] = 90 + (index - 8);
           else {
             sgr[sgri++] = 38;
-            sgr[sgri++] = 5 | (1<<31);
-            sgr[sgri++] = index | (1<<31);
+            sgr[sgri++] = 5 | CSI_ARG_FLAG_MORE;
+            sgr[sgri++] = index | CSI_ARG_FLAG_MORE;
           }
         }
 
@@ -109,8 +109,8 @@ static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevce
             sgr[sgri++] = 100 + (index - 8);
           else {
             sgr[sgri++] = 48;
-            sgr[sgri++] = 5 | (1<<31);
-            sgr[sgri++] = index | (1<<31);
+            sgr[sgri++] = 5 | CSI_ARG_FLAG_MORE;
+            sgr[sgri++] = index | CSI_ARG_FLAG_MORE;
           }
         }
 
@@ -120,9 +120,9 @@ static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevce
         printf("\x1b[");
         for(int i = 0; i < sgri; i++)
           printf(!i               ? "%d" :
-              sgr[i] & (1<<31) ? ":%d" :
+              CSI_ARG_HAS_MORE(sgr[i]) ? ":%d" :
               ";%d",
-              sgr[i] & ~(1<<31));
+              CSI_ARG(sgr[i]));
         printf("m");
       }
       break;
