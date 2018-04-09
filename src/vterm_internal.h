@@ -29,7 +29,7 @@ typedef struct VTermEncoding VTermEncoding;
 typedef struct {
   VTermEncoding *enc;
 
-  // This size should be increased if required by other stateful encodings
+  /* This size should be increased if required by other stateful encodings */
   char           data[4*sizeof(uint32_t)];
 } VTermEncodingInstance;
 
@@ -96,9 +96,9 @@ struct VTermState
 
   /* Last glyph output, for Unicode recombining purposes */
   uint32_t *combine_chars;
-  size_t combine_chars_size; // Number of ELEMENTS in the above
-  int combine_width; // The width of the glyph above
-  VTermPos combine_pos;   // Position before movement
+  size_t combine_chars_size; /* Number of ELEMENTS in the above */
+  int combine_width; /* The width of the glyph above */
+  VTermPos combine_pos;   /* Position before movement */
 
   struct {
     unsigned int keypad:1;
@@ -124,7 +124,7 @@ struct VTermState
 
   VTermColor default_fg;
   VTermColor default_bg;
-  VTermColor colors[16]; // Store the 8 ANSI and the 8 ANSI high-brights only
+  VTermColor colors[16]; /* Store the 8 ANSI and the 8 ANSI high-brights only */
 
   int fg_index;
   int bg_index;
