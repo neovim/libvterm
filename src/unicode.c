@@ -319,8 +319,15 @@ static int mk_wcswidth_cjk(const uint32_t *pwcs, size_t n)
 // ################################
 // ### The rest added by Paul Evans
 
+static const struct interval fullwidth[] = {
+#include "fullwidth.inc"
+};
+
 INTERNAL int vterm_unicode_width(uint32_t codepoint)
 {
+  if(bisearch(codepoint, fullwidth, sizeof(fullwidth) / sizeof(fullwidth[0]) - 1))
+    return 2;
+
   return mk_wcwidth(codepoint);
 }
 
