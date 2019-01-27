@@ -311,6 +311,9 @@ INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argco
           case 2:
             state->pen.underline = VTERM_UNDERLINE_DOUBLE;
             break;
+          case 3:
+            state->pen.underline = VTERM_UNDERLINE_CURLY;
+            break;
         }
       }
       setpenattr_int(state, VTERM_ATTR_UNDERLINE, state->pen.underline);
@@ -479,6 +482,8 @@ INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
 
   if(state->pen.underline == VTERM_UNDERLINE_SINGLE)
     args[argi++] = 4;
+  if(state->pen.underline == VTERM_UNDERLINE_CURLY)
+    args[argi++] = 4 | CSI_ARG_FLAG_MORE, args[argi++] = 3;
 
   if(state->pen.blink)
     args[argi++] = 5;
