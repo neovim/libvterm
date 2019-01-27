@@ -194,6 +194,9 @@ struct VTerm
   size_t outbuffer_len;
   size_t outbuffer_cur;
 
+  char  *tmpbuffer;
+  size_t tmpbuffer_len;
+
   VTermState *state;
   VTermScreen *screen;
 };

@@ -59,4 +59,4 @@ PUSH "\e F"
 
 !Truncation on attempted buffer overflow
 PUSH "\e[6n" x 20
-  output "\e[10;10R" x 7
+  output "\e[10;10R" x 8
