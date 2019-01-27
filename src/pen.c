@@ -298,8 +298,8 @@ INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argco
       break;
 
     case 4: // Underline single
-      state->pen.underline = 1;
-      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 1);
+      state->pen.underline = VTERM_UNDERLINE_SINGLE;
+      setpenattr_int(state, VTERM_ATTR_UNDERLINE, state->pen.underline);
       break;
 
     case 5: // Blink
@@ -324,8 +324,8 @@ INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argco
       break;
 
     case 21: // Underline double
-      state->pen.underline = 2;
-      setpenattr_int(state, VTERM_ATTR_UNDERLINE, 2);
+      state->pen.underline = VTERM_UNDERLINE_DOUBLE;
+      setpenattr_int(state, VTERM_ATTR_UNDERLINE, state->pen.underline);
       break;
 
     case 22: // Bold off
@@ -463,7 +463,7 @@ INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
   if(state->pen.italic)
     args[argi++] = 3;
 
-  if(state->pen.underline == 1)
+  if(state->pen.underline == VTERM_UNDERLINE_SINGLE)
     args[argi++] = 4;
 
   if(state->pen.blink)
@@ -478,7 +478,7 @@ INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
   if(state->pen.font)
     args[argi++] = 10 + state->pen.font;
 
-  if(state->pen.underline == 2)
+  if(state->pen.underline == VTERM_UNDERLINE_DOUBLE)
     args[argi++] = 21;
 
   argi = vterm_state_getpen_color(&state->pen.fg, argi, args, true);

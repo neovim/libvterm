@@ -418,6 +418,12 @@ typedef struct {
     unsigned int dhl       : 2; /* On a DECDHL line (1=top 2=bottom) */
 } VTermScreenCellAttrs;
 
+enum {
+  VTERM_UNDERLINE_OFF,
+  VTERM_UNDERLINE_SINGLE,
+  VTERM_UNDERLINE_DOUBLE,
+};
+
 typedef struct {
 #define VTERM_MAX_CHARS_PER_CELL 6
   uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
