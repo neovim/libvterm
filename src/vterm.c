@@ -52,6 +52,9 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
   vt->parser.strbuffer_cur = 0;
   vt->parser.strbuffer = vterm_allocator_malloc(vt, vt->parser.strbuffer_len);
 
+  vt->outfunc = NULL;
+  vt->outdata = NULL;
+
   vt->outbuffer_len = 64;
   vt->outbuffer_cur = 0;
   vt->outbuffer = vterm_allocator_malloc(vt, vt->outbuffer_len);
@@ -113,8 +116,19 @@ void vterm_set_utf8(VTerm *vt, int is_utf8)
   vt->mode.utf8 = is_utf8;
 }
 
+void vterm_output_set_callback(VTerm *vt, VTermOutputCallback *func, void *user)
+{
+  vt->outfunc = func;
+  vt->outdata = user;
+}
+
 INTERNAL void vterm_push_output_bytes(VTerm *vt, const char *bytes, size_t len)
 {
+  if(vt->outfunc) {
+    (vt->outfunc)(bytes, len, vt->outdata);
+    return;
+  }
+
   if(len > vt->outbuffer_len - vt->outbuffer_cur)
     return;
 
