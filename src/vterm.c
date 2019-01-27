@@ -166,14 +166,10 @@ INTERNAL void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, cons
 
 INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
 {
-  size_t cur;
+  size_t cur = 0;
 
-  if(!vt->mode.ctrl8bit)
-    cur = snprintf(vt->tmpbuffer, vt->tmpbuffer_len,
-        ESC_S "%c", C1_DCS - 0x40);
-  else
-    cur = snprintf(vt->tmpbuffer, vt->tmpbuffer_len,
-        "%c", C1_DCS);
+  cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
+      vt->mode.ctrl8bit ? "\x90" : ESC_S "P"); // DCS
 
   if(cur >= vt->tmpbuffer_len)
     return;
@@ -187,12 +183,8 @@ INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
   if(cur >= vt->tmpbuffer_len)
     return;
 
-  if(!vt->mode.ctrl8bit)
-    cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
-        ESC_S "%c", C1_ST - 0x40);
-  else
-    cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
-        "%c", C1_ST);
+  cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
+      vt->mode.ctrl8bit ? "\x9C" : ESC_S "\\"); // ST
 
   if(cur >= vt->tmpbuffer_len)
     return;
