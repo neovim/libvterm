@@ -297,8 +297,22 @@ INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argco
       setpenattr_bool(state, VTERM_ATTR_ITALIC, 1);
       break;
 
-    case 4: // Underline single
+    case 4: // Underline
       state->pen.underline = VTERM_UNDERLINE_SINGLE;
+      if(CSI_ARG_HAS_MORE(args[argi])) {
+        argi++;
+        switch(CSI_ARG(args[argi])) {
+          case 0:
+            state->pen.underline = 0;
+            break;
+          case 1:
+            state->pen.underline = VTERM_UNDERLINE_SINGLE;
+            break;
+          case 2:
+            state->pen.underline = VTERM_UNDERLINE_DOUBLE;
+            break;
+        }
+      }
       setpenattr_int(state, VTERM_ATTR_UNDERLINE, state->pen.underline);
       break;
 
