@@ -1514,28 +1514,44 @@ static int on_osc(const char *command, size_t cmdlen, void *user)
 
 static void request_status_string(VTermState *state, const char *command, size_t cmdlen)
 {
+  VTerm *vt = state->vt;
+
   if(cmdlen == 1)
     switch(command[0]) {
       case 'm': // Query SGR
         {
           long args[20];
           int argc = vterm_state_getpen(state, args, sizeof(args)/sizeof(args[0]));
-          vterm_push_output_sprintf_ctrl(state->vt, C1_DCS, "1$r");
-          for(int argi = 0; argi < argc; argi++)
-            vterm_push_output_sprintf(state->vt,
-                argi == argc - 1             ? "%d" :
-                CSI_ARG_HAS_MORE(args[argi]) ? "%d:" :
-                                               "%d;",
+          size_t cur = 0;
+
+          cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
+              vt->mode.ctrl8bit ? "\x90" "1$r" : ESC_S "P" "1$r"); // DCS 1$r ...
+          if(cur >= vt->tmpbuffer_len)
+            return;
+
+          for(int argi = 0; argi < argc; argi++) {
+            cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
+                argi == argc - 1             ? "%ld" :
+                CSI_ARG_HAS_MORE(args[argi]) ? "%ld:" :
+                                               "%ld;",
                 CSI_ARG(args[argi]));
-          vterm_push_output_sprintf(state->vt, "m");
-          vterm_push_output_sprintf_ctrl(state->vt, C1_ST, "");
+            if(cur >= vt->tmpbuffer_len)
+              return;
+          }
+
+          cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
+              vt->mode.ctrl8bit ? "m" "\x9C" : "m" ESC_S "\\"); // ... m ST
+          if(cur >= vt->tmpbuffer_len)
+            return;
+
+          vterm_push_output_bytes(vt, vt->tmpbuffer, cur);
         }
         return;
       case 'r': // Query DECSTBM
-        vterm_push_output_sprintf_dcs(state->vt, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
+        vterm_push_output_sprintf_dcs(vt, "1$r%d;%dr", state->scrollregion_top+1, SCROLLREGION_BOTTOM(state));
         return;
       case 's': // Query DECSLRM
-        vterm_push_output_sprintf_dcs(state->vt, "1$r%d;%ds", SCROLLREGION_LEFT(state)+1, SCROLLREGION_RIGHT(state));
+        vterm_push_output_sprintf_dcs(vt, "1$r%d;%ds", SCROLLREGION_LEFT(state)+1, SCROLLREGION_RIGHT(state));
         return;
     }
 
@@ -1549,11 +1565,11 @@ static void request_status_string(VTermState *state, const char *command, size_t
       }
       if(state->mode.cursor_blink)
         reply--;
-      vterm_push_output_sprintf_dcs(state->vt, "1$r%d q", reply);
+      vterm_push_output_sprintf_dcs(vt, "1$r%d q", reply);
       return;
     }
     else if(strneq(command, "\"q", 2)) {
-      vterm_push_output_sprintf_dcs(state->vt, "1$r%d\"q", state->protected_cell ? 1 : 2);
+      vterm_push_output_sprintf_dcs(vt, "1$r%d\"q", state->protected_cell ? 1 : 2);
       return;
     }
   }
