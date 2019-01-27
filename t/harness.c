@@ -85,6 +85,13 @@ static VTermScreen *screen;
 
 static VTermEncodingInstance encoding;
 
+static void term_output(const char *s, size_t len, void *user)
+{
+  printf("output ");
+  for(int i = 0; i < len; i++)
+    printf("%x%s", (unsigned char)s[i], i < len-1 ? "," : "\n");
+}
+
 static int parser_text(const char bytes[], size_t len, void *user)
 {
   printf("text ");
@@ -466,6 +473,8 @@ int main(int argc, char **argv)
     if(streq(line, "INIT")) {
       if(!vt)
         vt = vterm_new(25, 80);
+
+      vterm_output_set_callback(vt, term_output, NULL);
     }
 
     else if(streq(line, "WANTPARSER")) {
@@ -921,9 +930,7 @@ int main(int argc, char **argv)
       char outbuff[outlen];
       vterm_output_read(vt, outbuff, outlen);
 
-      printf("output ");
-      for(int i = 0; i < outlen; i++)
-        printf("%x%s", (unsigned char)outbuff[i], i < outlen-1 ? "," : "\n");
+      term_output(outbuff, outlen, NULL);
     }
 
     printf(err ? "?\n" : "DONE\n");

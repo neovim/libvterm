@@ -56,7 +56,3 @@ PUSH "\e G"
 PUSH "\e[5n"
   output "\x{9b}0n"
 PUSH "\e F"
-
-!Truncation on attempted buffer overflow
-PUSH "\e[6n" x 20
-  output "\e[10;10R" x 8
