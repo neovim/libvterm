@@ -190,6 +190,9 @@ struct VTerm
 
   /* len == malloc()ed size; cur == number of valid bytes */
 
+  VTermOutputCallback *outfunc;
+  void                *outdata;
+
   char  *outbuffer;
   size_t outbuffer_len;
   size_t outbuffer_cur;
