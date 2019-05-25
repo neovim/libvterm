@@ -174,7 +174,7 @@ static int putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
   VTermScreen *screen = user;
   ScreenCell *cell = getcell(screen, pos.row, pos.col);
 
-  if(!cell)
+  if(!cell || !info)
     return 0;
 
   int i;
@@ -185,8 +185,12 @@ static int putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
   if(i < VTERM_MAX_CHARS_PER_CELL)
     cell->chars[i] = 0;
 
-  for(int col = 1; col < info->width; col++)
-    getcell(screen, pos.row, pos.col + col)->chars[0] = (uint32_t)-1;
+  for(int col = 1; col < info->width; col++) {
+    ScreenCell *c = getcell(screen, pos.row, pos.col + col);
+    if (!c)
+      return 0;
+    c->chars[0] = (uint32_t)-1;
+  }
 
   VTermRect rect = {
     .start_row = pos.row,
@@ -271,6 +275,8 @@ static int erase_internal(VTermRect rect, int selective, void *user)
 
     for(int col = rect.start_col; col < rect.end_col; col++) {
       ScreenCell *cell = getcell(screen, row, col);
+      if (!cell)
+          return 0;
 
       if(selective && cell->pen.protected_cell)
         continue;
@@ -584,6 +590,9 @@ static int setlineinfo(int row, const VTermLineInfo *newinfo, const VTermLineInf
      newinfo->doubleheight != oldinfo->doubleheight) {
     for(int col = 0; col < screen->cols; col++) {
       ScreenCell *cell = getcell(screen, row, col);
+      if (!cell)
+          return 0;
+
       cell->pen.dwl = newinfo->doublewidth;
       cell->pen.dhl = newinfo->doubleheight;
     }
@@ -696,6 +705,8 @@ static size_t _get_chars(const VTermScreen *screen, const int utf8, void *buffer
   for(int row = rect.start_row; row < rect.end_row; row++) {
     for(int col = rect.start_col; col < rect.end_col; col++) {
       ScreenCell *cell = getcell(screen, row, col);
+      if (!cell)
+          return 0;
 
       if(cell->chars[0] == 0)
         // Erased cell, might need a space
@@ -805,7 +816,7 @@ int vterm_screen_is_eol(const VTermScreen *screen, VTermPos pos)
   /* This cell is EOL if this and every cell to the right is black */
   for(; pos.col < screen->cols; pos.col++) {
     ScreenCell *cell = getcell(screen, pos.row, pos.col);
-    if(cell->chars[0] != 0)
+    if(!cell || cell->chars[0] != 0)
       return 0;
   }
 
