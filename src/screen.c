@@ -832,7 +832,6 @@ VTermScreen *vterm_obtain_screen(VTerm *vt)
 
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen)
 {
-
   if(!screen->buffers[BUFIDX_ALTSCREEN] && altscreen) {
     int rows, cols;
     vterm_get_size(screen->vt, &rows, &cols);

@@ -83,7 +83,9 @@ static VTermState *vterm_state_new(VTerm *vt)
 
   state->tabstops = vterm_allocator_malloc(state->vt, (state->cols + 7) / 8);
 
-  state->lineinfos[BUFIDX_PRIMARY] = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
+  state->lineinfos[BUFIDX_PRIMARY]   = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
+  /* TODO: Make an 'enable' function */
+  state->lineinfos[BUFIDX_ALTSCREEN] = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
   state->lineinfo = state->lineinfos[BUFIDX_PRIMARY];
 
   state->encoding_utf8.enc = vterm_lookup_encoding(ENC_UTF8, 'u');
@@ -1866,8 +1868,6 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
     return 1;
   case VTERM_PROP_ALTSCREEN:
     state->mode.alt_screen = val->boolean;
-    if(state->mode.alt_screen && !state->lineinfos[BUFIDX_ALTSCREEN])
-      state->lineinfos[BUFIDX_ALTSCREEN] = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
     state->lineinfo = state->lineinfos[state->mode.alt_screen ? BUFIDX_ALTSCREEN : BUFIDX_PRIMARY];
     if(state->mode.alt_screen) {
       VTermRect rect = {
