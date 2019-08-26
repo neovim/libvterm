@@ -117,7 +117,7 @@ DISTDIR=libvterm-$(VERSION)
 
 distdir: $(INCFILES)
 	mkdir __distdir
-	cp LICENSE __distdir
+	cp LICENSE CONTRIBUTING __distdir
 	mkdir __distdir/src
 	cp src/*.c src/*.h src/*.inc __distdir/src
 	mkdir __distdir/src/encoding
