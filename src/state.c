@@ -75,7 +75,8 @@ static VTermState *vterm_state_new(VTerm *vt)
 
   state->tabstops = vterm_allocator_malloc(state->vt, (state->cols + 7) / 8);
 
-  state->lineinfo = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
+  state->lineinfos[BUFIDX_PRIMARY] = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
+  state->lineinfo = state->lineinfos[BUFIDX_PRIMARY];
 
   state->encoding_utf8.enc = vterm_lookup_encoding(ENC_UTF8, 'u');
   if(*state->encoding_utf8.enc->init)
@@ -87,7 +88,9 @@ static VTermState *vterm_state_new(VTerm *vt)
 INTERNAL void vterm_state_free(VTermState *state)
 {
   vterm_allocator_free(state->vt, state->tabstops);
-  vterm_allocator_free(state->vt, state->lineinfo);
+  vterm_allocator_free(state->vt, state->lineinfos[BUFIDX_PRIMARY]);
+  if(state->lineinfos[BUFIDX_ALTSCREEN])
+    vterm_allocator_free(state->vt, state->lineinfos[BUFIDX_ALTSCREEN]);
   vterm_allocator_free(state->vt, state->combine_chars);
   vterm_allocator_free(state->vt, state);
 }
@@ -1634,21 +1637,29 @@ static int on_resize(int rows, int cols, void *user)
   }
 
   if(rows != state->rows) {
-    VTermLineInfo *newlineinfo = vterm_allocator_malloc(state->vt, rows * sizeof(VTermLineInfo));
+    for(int bufidx = BUFIDX_PRIMARY; bufidx <= BUFIDX_ALTSCREEN; bufidx++) {
+      VTermLineInfo *oldlineinfo = state->lineinfos[bufidx];
+      if(!oldlineinfo)
+        continue;
 
-    int row;
-    for(row = 0; row < state->rows && row < rows; row++) {
-      newlineinfo[row] = state->lineinfo[row];
+      VTermLineInfo *newlineinfo = vterm_allocator_malloc(state->vt, rows * sizeof(VTermLineInfo));
+
+      int row;
+      for(row = 0; row < state->rows && row < rows; row++) {
+        newlineinfo[row] = oldlineinfo[row];
+      }
+
+      for( ; row < rows; row++) {
+        newlineinfo[row] = (VTermLineInfo){
+          .doublewidth = 0,
+        };
+      }
+
+      vterm_allocator_free(state->vt, state->lineinfos[bufidx]);
+      state->lineinfos[bufidx] = newlineinfo;
     }
 
-    for( ; row < rows; row++) {
-      newlineinfo[row] = (VTermLineInfo){
-        .doublewidth = 0,
-      };
-    }
-
-    vterm_allocator_free(state->vt, state->lineinfo);
-    state->lineinfo = newlineinfo;
+    state->lineinfo = state->lineinfos[state->mode.alt_screen ? BUFIDX_ALTSCREEN : BUFIDX_PRIMARY];
   }
 
   state->rows = rows;
@@ -1839,6 +1850,9 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
     return 1;
   case VTERM_PROP_ALTSCREEN:
     state->mode.alt_screen = val->boolean;
+    if(state->mode.alt_screen && !state->lineinfos[BUFIDX_ALTSCREEN])
+      state->lineinfos[BUFIDX_ALTSCREEN] = vterm_allocator_malloc(state->vt, state->rows * sizeof(VTermLineInfo));
+    state->lineinfo = state->lineinfos[state->mode.alt_screen ? BUFIDX_ALTSCREEN : BUFIDX_PRIMARY];
     if(state->mode.alt_screen) {
       VTermRect rect = {
         .start_row = 0,

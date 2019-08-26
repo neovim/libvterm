@@ -55,8 +55,6 @@ struct VTermScreen
   int global_reverse;
 
   /* Primary and Altscreen. buffers[1] is lazily allocated as needed */
-#define BUFIDX_PRIMARY   0
-#define BUFIDX_ALTSCREEN 1
   ScreenCell *buffers[2];
 
   /* buffer will == buffers[0] or buffers[1], depending on altscreen */
