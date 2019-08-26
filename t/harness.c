@@ -791,6 +791,25 @@ int main(int argc, char **argv)
         else
           printf("?\n");
       }
+      else if(strstartswith(line, "?lineinfo ")) {
+        char *linep = line + 10;
+        int row;
+        const VTermLineInfo *info;
+        while(linep[0] == ' ')
+          linep++;
+        if(sscanf(linep, "%d", &row) < 1) {
+          printf("! lineinfo unrecognised input\n");
+          goto abort_line;
+        }
+        info = vterm_state_get_lineinfo(state, row);
+        if(info->doublewidth)
+          printf("dwl ");
+        if(info->doubleheight)
+          printf("dhl ");
+        if(info->continuation)
+          printf("cont ");
+        printf("\n");
+      }
       else if(strstartswith(line, "?screen_chars ")) {
         char *linep = line + 13;
         VTermRect rect;
