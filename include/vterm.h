@@ -277,6 +277,15 @@ typedef struct {
   unsigned int    doubleheight:2;    /* DECDHL line (1=top 2=bottom) */
 } VTermLineInfo;
 
+/* Copies of VTermState fields that the 'resize' callback might have reason to
+ * edit. 'resize' callback gets total control of these fields and may
+ * free-and-reallocate them if required. They will be copied back from the
+ * struct after the callback has returned.
+ */
+typedef struct {
+  VTermPos pos;                /* current cursor position */
+} VTermStateFields;
+
 typedef struct {
   /* libvterm relies on this memory to be zeroed out before it is returned
    * by the allocator. */
@@ -372,7 +381,7 @@ typedef struct {
   int (*setpenattr)(VTermAttr attr, VTermValue *val, void *user);
   int (*settermprop)(VTermProp prop, VTermValue *val, void *user);
   int (*bell)(void *user);
-  int (*resize)(int rows, int cols, VTermPos *delta, void *user);
+  int (*resize)(int rows, int cols, VTermStateFields *fields, void *user);
   int (*setlineinfo)(int row, const VTermLineInfo *newinfo, const VTermLineInfo *oldinfo, void *user);
 } VTermStateCallbacks;
 
