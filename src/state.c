@@ -116,14 +116,20 @@ static void scroll(VTermState *state, VTermRect rect, int downward, int rightwar
   if(rect.start_col == 0 && rect.end_col == state->cols && rightward == 0) {
     int height = rect.end_row - rect.start_row - abs(downward);
 
-    if(downward > 0)
+    if(downward > 0) {
       memmove(state->lineinfo + rect.start_row,
               state->lineinfo + rect.start_row + downward,
               height * sizeof(state->lineinfo[0]));
-    else
+      for(int row = rect.end_row - downward; row < rect.end_row; row++)
+        state->lineinfo[row] = (VTermLineInfo){ 0 };
+    }
+    else {
       memmove(state->lineinfo + rect.start_row - downward,
               state->lineinfo + rect.start_row,
               height * sizeof(state->lineinfo[0]));
+      for(int row = rect.start_row; row < rect.start_row - downward; row++)
+        state->lineinfo[row] = (VTermLineInfo){ 0 };
+    }
   }
 
   if(state->callbacks && state->callbacks->scrollrect)
