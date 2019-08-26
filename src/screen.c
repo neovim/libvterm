@@ -83,25 +83,15 @@ static inline ScreenCell *getcell(const VTermScreen *screen, int row, int col)
   return screen->buffer + (screen->cols * row) + col;
 }
 
-static ScreenCell *realloc_buffer(VTermScreen *screen, ScreenCell *buffer, int new_rows, int new_cols)
+static ScreenCell *alloc_buffer(VTermScreen *screen, int rows, int cols)
 {
-  ScreenCell *new_buffer = vterm_allocator_malloc(screen->vt, sizeof(ScreenCell) * new_rows * new_cols);
+  ScreenCell *new_buffer = vterm_allocator_malloc(screen->vt, sizeof(ScreenCell) * rows * cols);
 
-  for(int row = 0; row < new_rows; row++) {
-    for(int col = 0; col < new_cols; col++) {
-      ScreenCell *new_cell = new_buffer + row*new_cols + col;
-
-      if(buffer && row < screen->rows && col < screen->cols)
-        *new_cell = buffer[row * screen->cols + col];
-      else {
-        new_cell->chars[0] = 0;
-        new_cell->pen = screen->pen;
-      }
+  for(int row = 0; row < rows; row++) {
+    for(int col = 0; col < cols; col++) {
+      clearcell(screen, &new_buffer[row * cols + col]);
     }
   }
-
-  if(buffer)
-    vterm_allocator_free(screen->vt, buffer);
 
   return new_buffer;
 }
@@ -693,7 +683,7 @@ static VTermScreen *screen_new(VTerm *vt)
   screen->callbacks = NULL;
   screen->cbdata    = NULL;
 
-  screen->buffers[BUFIDX_PRIMARY] = realloc_buffer(screen, NULL, rows, cols);
+  screen->buffers[BUFIDX_PRIMARY] = alloc_buffer(screen, rows, cols);
 
   screen->buffer = screen->buffers[BUFIDX_PRIMARY];
 
@@ -849,7 +839,7 @@ void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen)
     int rows, cols;
     vterm_get_size(screen->vt, &rows, &cols);
 
-    screen->buffers[BUFIDX_ALTSCREEN] = realloc_buffer(screen, NULL, rows, cols);
+    screen->buffers[BUFIDX_ALTSCREEN] = alloc_buffer(screen, rows, cols);
   }
 }
 
