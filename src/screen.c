@@ -472,7 +472,7 @@ static int bell(void *user)
   return 0;
 }
 
-static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new_cols, bool active, VTermPos *delta)
+static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new_cols, bool active, VTermStateFields *statefields)
 {
   int old_rows = screen->rows;
   int old_cols = screen->cols;
@@ -512,8 +512,8 @@ found_oldrow:
     /* Push spare lines to scrollback buffer */
     for(int row = 0; row <= old_row; row++)
       sb_pushline_from_row(screen, row);
-    if(delta)
-      delta->row -= (old_row + 1);
+    if(active)
+      statefields->pos.row -= (old_row + 1);
   }
   if(new_row >= 0 && bufidx == BUFIDX_PRIMARY &&
       screen->callbacks && screen->callbacks->sb_popline) {
@@ -549,8 +549,8 @@ found_oldrow:
       }
       new_row--;
 
-      if(delta)
-        delta->row++;
+      if(active)
+        statefields->pos.row++;
     }
   }
   if(new_row >= 0) {
@@ -573,7 +573,7 @@ found_oldrow:
    */
 }
 
-static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
+static int resize(int new_rows, int new_cols, VTermStateFields *fields, void *user)
 {
   VTermScreen *screen = user;
 
@@ -589,9 +589,9 @@ static int resize(int new_rows, int new_cols, VTermPos *delta, void *user)
     screen->sb_buffer = vterm_allocator_malloc(screen->vt, sizeof(VTermScreenCell) * new_cols);
   }
 
-  resize_buffer(screen, 0, new_rows, new_cols, !altscreen_active, altscreen_active ? NULL : delta);
+  resize_buffer(screen, 0, new_rows, new_cols, !altscreen_active, fields);
   if(screen->buffers[BUFIDX_ALTSCREEN])
-    resize_buffer(screen, 1, new_rows, new_cols, altscreen_active, altscreen_active ? delta : NULL);
+    resize_buffer(screen, 1, new_rows, new_cols, altscreen_active, fields);
 
   screen->buffer = altscreen_active ? screen->buffers[BUFIDX_ALTSCREEN] : screen->buffers[BUFIDX_PRIMARY];
 

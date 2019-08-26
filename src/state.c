@@ -1670,18 +1670,19 @@ static int on_resize(int rows, int cols, void *user)
   if(state->scrollregion_right > -1)
     UBOUND(state->scrollregion_right, state->cols);
 
-  VTermPos delta = { 0, 0 };
+  VTermStateFields fields = {
+    .pos = state->pos,
+  };
 
   if(state->callbacks && state->callbacks->resize)
-    (*state->callbacks->resize)(rows, cols, &delta, state->cbdata);
+    (*state->callbacks->resize)(rows, cols, &fields, state->cbdata);
+
+  state->pos = fields.pos;
 
   if(state->at_phantom && state->pos.col < cols-1) {
     state->at_phantom = 0;
     state->pos.col++;
   }
-
-  state->pos.row += delta.row;
-  state->pos.col += delta.col;
 
   if(state->pos.row >= rows)
     state->pos.row = rows - 1;
