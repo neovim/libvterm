@@ -43,6 +43,14 @@ static void updatecursor(VTermState *state, VTermPos *oldpos, int cancel_phantom
 
 static void erase(VTermState *state, VTermRect rect, int selective)
 {
+  if(rect.end_col == state->cols) {
+    /* If we're erasing the final cells of any lines, cancel the continuation
+     * marker on the subsequent line
+     */
+    for(int row = rect.start_row + 1; row < rect.end_row + 1 && row < state->rows; row++)
+      state->lineinfo[row].continuation = 0;
+  }
+
   if(state->callbacks && state->callbacks->erase)
     if((*state->callbacks->erase)(rect, selective, state->cbdata))
       return;
@@ -368,6 +376,7 @@ static int on_text(const char bytes[], size_t len, void *user)
       linefeed(state);
       state->pos.col = 0;
       state->at_phantom = 0;
+      state->lineinfo[state->pos.row].continuation = 1;
     }
 
     if(state->mode.insert) {
