@@ -146,14 +146,20 @@ sub do_line
       do_onetest if defined $command;
 
       my ( $assertion ) = $1 =~ m/^(.*)\s+=/;
+      my $expectation = $line;
 
       $hin->print( "\?$assertion\n" );
       my $response = <$hout>; defined $response or wait, die "Test harness failed - $?\n";
       chomp $response; $response =~ s/^\s+|\s+$//g;
 
-      if( $response ne $line ) {
+      # Some convenience formatting
+      if( $assertion =~ m/^screen_chars/ and $expectation =~ m/^"/ ) {
+         $expectation = join ",", map sprintf("0x%02x", ord $_), split m//, eval($expectation);
+      }
+
+      if( $response ne $expectation ) {
          print "# line $linenum: Assert $assertion failed:\n" .
-               "# Expected: $line\n" .
+               "# Expected: $expectation\n" .
                "# Actual:   $response\n";
          $exitcode = 1;
       }
