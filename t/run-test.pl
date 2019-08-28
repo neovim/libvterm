@@ -11,7 +11,8 @@ my $VALGRIND = 0;
 my $EXECUTABLE = "t/.libs/harness";
 GetOptions(
    'valgrind|v+' => \$VALGRIND,
-   'executable|e=s' => \$EXECUTABLE
+   'executable|e=s' => \$EXECUTABLE,
+   'fail-early|F' => \(my $FAIL_EARLY),
 ) or exit 1;
 
 my ( $hin, $hout, $hpid );
@@ -65,6 +66,7 @@ sub do_onetest
    }
 
    $exitcode = 1 if $fail_printed;
+   exit $exitcode if $exitcode and $FAIL_EARLY;
 }
 
 sub do_line
@@ -139,6 +141,7 @@ sub do_line
                "# Expected: $want\n" .
                "# Actual:   $response\n";
          $exitcode = 1;
+         exit $exitcode if $exitcode and $FAIL_EARLY;
       }
    }
    # Assertions start with '?'
@@ -162,6 +165,7 @@ sub do_line
                "# Expected: $expectation\n" .
                "# Actual:   $response\n";
          $exitcode = 1;
+         exit $exitcode if $exitcode and $FAIL_EARLY;
       }
    }
    # Test controls start with '$'
