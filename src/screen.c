@@ -480,21 +480,7 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
   ScreenCell *old_buffer = screen->buffers[bufidx];
   ScreenCell *new_buffer = vterm_allocator_malloc(screen->vt, sizeof(ScreenCell) * new_rows * new_cols);
 
-  /* Find the final row of old buffer content */
-  int old_row;
-  for(old_row = old_rows - 1; old_row > 0; old_row--) {
-    if(active && (old_row == screen->state->pos.row))
-      /* The line with the active cursor is never "blank" */
-      goto found_oldrow;
-    for(int col = 0; col < old_cols; col++)
-      if(old_buffer[old_row * old_cols + col].chars[0])
-        /* This row is not blank */
-        goto found_oldrow;
-  }
-  old_row = 0;
-found_oldrow:
-  ;
-
+  int old_row = old_rows - 1;
   int new_row = new_rows - 1;
 
   while(new_row >= 0 && old_row >= 0) {
@@ -506,6 +492,15 @@ found_oldrow:
 
     old_row--;
     new_row--;
+
+    if(new_row < 0 && old_row >= 0 &&
+        new_buffer[(new_rows - 1) * new_cols].chars[0] == 0 &&
+        (!active || statefields->pos.row < (new_rows - 1))) {
+      int moverows = new_rows - 1;
+      memmove(&new_buffer[1 * new_cols], &new_buffer[0], moverows * new_cols * sizeof(ScreenCell));
+
+      new_row++;
+    }
   }
 
   if(old_row >= 0 && bufidx == BUFIDX_PRIMARY) {
