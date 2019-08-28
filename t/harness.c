@@ -527,7 +527,6 @@ int main(int argc, char **argv)
     else if(strstartswith(line, "WANTSCREEN") && (line[10] == '\0' || line[10] == ' ')) {
       if(!screen)
         screen = vterm_obtain_screen(vt);
-      vterm_screen_enable_altscreen(screen, 1);
       vterm_screen_set_callbacks(screen, &screen_cbs, NULL);
 
       int i = 10;
@@ -538,6 +537,9 @@ int main(int argc, char **argv)
         switch(line[i]) {
         case '-':
           sense = 0;
+          break;
+        case 'a':
+          vterm_screen_enable_altscreen(screen, 1);
           break;
         case 'd':
           want_screen_damage = sense;
