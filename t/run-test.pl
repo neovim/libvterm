@@ -28,6 +28,8 @@ my $exitcode = 0;
 my $command;
 my @expect;
 
+my $linenum = 0;
+
 sub do_onetest
 {
    $hin->print( "$command\n" );
@@ -41,7 +43,7 @@ sub do_onetest
       chomp $outline;
 
       if( !@expect ) {
-         print "# Test failed\n" unless $fail_printed++;
+         print "# line $linenum: Test failed\n" unless $fail_printed++;
          print "#    expected nothing more\n" .
                "#   Actual:   $outline\n";
          next;
@@ -51,13 +53,13 @@ sub do_onetest
 
       next if $expectation eq $outline;
 
-      print "# Test failed\n" unless $fail_printed++;
+      print "# line $linenum: Test failed\n" unless $fail_printed++;
       print "#   Expected: $expectation\n" .
             "#   Actual:   $outline\n";
    }
 
    if( @expect ) {
-      print "# Test failed\n" unless $fail_printed++;
+      print "# line $linenum: Test failed\n" unless $fail_printed++;
       print "#   Expected: $_\n" .
             "#    didn't happen\n" for @expect;
    }
@@ -133,7 +135,7 @@ sub do_line
 
       $response = pack "C*", map hex, split m/,/, $response;
       if( $response ne $want ) {
-         print "# Assert ?screen_row $row failed:\n" .
+         print "# line $linenum: Assert ?screen_row $row failed:\n" .
                "# Expected: $want\n" .
                "# Actual:   $response\n";
          $exitcode = 1;
@@ -150,7 +152,7 @@ sub do_line
       chomp $response; $response =~ s/^\s+|\s+$//g;
 
       if( $response ne $line ) {
-         print "# Assert $assertion failed:\n" .
+         print "# line $linenum: Assert $assertion failed:\n" .
                "# Expected: $line\n" .
                "# Actual:   $response\n";
          $exitcode = 1;
@@ -176,6 +178,7 @@ sub do_line
 open my $test, "<", $ARGV[0] or die "Cannot open test script $ARGV[0] - $!";
 
 while( my $line = <$test> ) {
+   $linenum++;
    $line =~ s/^\s+//;
    chomp $line;
 
