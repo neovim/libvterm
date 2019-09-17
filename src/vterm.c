@@ -75,6 +75,7 @@ void vterm_free(VTerm *vt)
 
   vterm_allocator_free(vt, vt->parser.strbuffer);
   vterm_allocator_free(vt, vt->outbuffer);
+  vterm_allocator_free(vt, vt->tmpbuffer);
 
   vterm_allocator_free(vt, vt);
 }
