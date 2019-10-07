@@ -271,7 +271,7 @@ static int state_putglyph(VTermGlyphInfo *info, VTermPos pos, void *user)
     return 1;
 
   printf("putglyph ");
-  for(int i = 0; info->chars[i]; i++)
+  for(int i = 0; i < VTERM_MAX_CHARS_PER_CELL && info->chars[i]; i++)
     printf(i ? ",%x" : "%x", info->chars[i]);
   printf(" %d %d,%d", info->width, pos.row, pos.col);
   if(info->protected_cell)
