@@ -740,7 +740,7 @@ int vterm_screen_get_cell(const VTermScreen *screen, VTermPos pos, VTermScreenCe
   if(!intcell)
     return 0;
 
-  for(int i = 0; ; i++) {
+  for(int i = 0; i < VTERM_MAX_CHARS_PER_CELL; i++) {
     cell->chars[i] = intcell->chars[i];
     if(!intcell->chars[i])
       break;
@@ -777,7 +777,7 @@ static int vterm_screen_set_cell(VTermScreen *screen, VTermPos pos, const VTermS
   if(!intcell)
     return 0;
 
-  for(int i = 0; ; i++) {
+  for(int i = 0; i < VTERM_MAX_CHARS_PER_CELL; i++) {
     intcell->chars[i] = cell->chars[i];
     if(!cell->chars[i])
       break;
