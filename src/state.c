@@ -1841,7 +1841,7 @@ void *vterm_state_get_cbdata(VTermState *state)
   return state->cbdata;
 }
 
-void vterm_state_set_unrecognised_fallbacks(VTermState *state, const VTermParserCallbacks *fallbacks, void *user)
+void vterm_state_set_unrecognised_fallbacks(VTermState *state, const VTermStateFallbacks *fallbacks, void *user)
 {
   if(fallbacks) {
     state->fallbacks = fallbacks;

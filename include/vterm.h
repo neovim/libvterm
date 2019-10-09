@@ -393,13 +393,19 @@ typedef struct {
   int (*setlineinfo)(int row, const VTermLineInfo *newinfo, const VTermLineInfo *oldinfo, void *user);
 } VTermStateCallbacks;
 
+typedef struct {
+  int (*control)(unsigned char control, void *user);
+  int (*csi)(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user);
+  int (*osc)(int command, VTermStringFragment frag, void *user);
+  int (*dcs)(const char *command, size_t commandlen, VTermStringFragment frag, void *user);
+} VTermStateFallbacks;
+
 VTermState *vterm_obtain_state(VTerm *vt);
 
 void  vterm_state_set_callbacks(VTermState *state, const VTermStateCallbacks *callbacks, void *user);
 void *vterm_state_get_cbdata(VTermState *state);
 
-// Only invokes control, csi, osc, dcs
-void  vterm_state_set_unrecognised_fallbacks(VTermState *state, const VTermParserCallbacks *fallbacks, void *user);
+void  vterm_state_set_unrecognised_fallbacks(VTermState *state, const VTermStateFallbacks *fallbacks, void *user);
 void *vterm_state_get_unrecognised_fbdata(VTermState *state);
 
 void vterm_state_reset(VTermState *state, int hard);
@@ -474,8 +480,7 @@ VTermScreen *vterm_obtain_screen(VTerm *vt);
 void  vterm_screen_set_callbacks(VTermScreen *screen, const VTermScreenCallbacks *callbacks, void *user);
 void *vterm_screen_get_cbdata(VTermScreen *screen);
 
-// Only invokes control, csi, osc, dcs
-void  vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermParserCallbacks *fallbacks, void *user);
+void  vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermStateFallbacks *fallbacks, void *user);
 void *vterm_screen_get_unrecognised_fbdata(VTermScreen *screen);
 
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen);
