@@ -846,7 +846,7 @@ void *vterm_screen_get_cbdata(VTermScreen *screen)
   return screen->cbdata;
 }
 
-void vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermParserCallbacks *fallbacks, void *user)
+void vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermStateFallbacks *fallbacks, void *user)
 {
   vterm_state_set_unrecognised_fallbacks(screen->state, fallbacks, user);
 }

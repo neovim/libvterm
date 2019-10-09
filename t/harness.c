@@ -218,6 +218,13 @@ static VTermParserCallbacks parser_cbs = {
   .dcs     = parser_dcs,
 };
 
+static VTermStateFallbacks fallbacks = {
+  .control = parser_control,
+  .csi     = parser_csi,
+  .osc     = parser_osc,
+  .dcs     = parser_dcs,
+};
+
 /* These callbacks are shared by State and Screen */
 
 static int want_movecursor = 0;
@@ -544,7 +551,7 @@ int main(int argc, char **argv)
           want_settermprop = sense;
           break;
         case 'f':
-          vterm_state_set_unrecognised_fallbacks(state, sense ? &parser_cbs : NULL, NULL);
+          vterm_state_set_unrecognised_fallbacks(state, sense ? &fallbacks : NULL, NULL);
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);
