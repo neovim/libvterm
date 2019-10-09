@@ -92,6 +92,12 @@ static void term_output(const char *s, size_t len, void *user)
     printf("%x%s", (unsigned char)s[i], i < len-1 ? "," : "\n");
 }
 
+static void printhex(const char *s, size_t len)
+{
+  while(len--)
+    printf("%02x", (s++)[0]);
+}
+
 static int parser_text(const char bytes[], size_t len, void *user)
 {
   printf("text ");
@@ -126,8 +132,7 @@ static int parser_escape(const char bytes[], size_t len, void *user)
   }
 
   printf("escape ");
-  for(int i = 0; i < len; i++)
-    printf("%02x", bytes[i]);
+  printhex(bytes, len);
   printf("\n");
 
   return len;
@@ -163,21 +168,42 @@ static int parser_csi(const char *leader, const long args[], int argcount, const
   return 1;
 }
 
-static int parser_osc(const char *command, size_t cmdlen, void *user)
+static int parser_osc(int command, VTermStringFragment frag, void *user)
 {
   printf("osc ");
-  for(int i = 0; i < cmdlen; i++)
-    printf("%02x", command[i]);
+
+  if(frag.initial) {
+    if(command == -1)
+      printf("[");
+    else
+      printf("[%d;", command);
+  }
+
+  printhex(frag.str, frag.len);
+
+  if(frag.final)
+    printf("]");
+
   printf("\n");
 
   return 1;
 }
 
-static int parser_dcs(const char *command, size_t cmdlen, void *user)
+static int parser_dcs(const char *command, size_t commandlen, VTermStringFragment frag, void *user)
 {
   printf("dcs ");
-  for(int i = 0; i < cmdlen; i++)
-    printf("%02x", command[i]);
+
+  if(frag.initial) {
+    printf("[");
+    for(int i = 0; i < commandlen; i++)
+      printf("%02x", command[i]);
+  }
+
+  printhex(frag.str, frag.len);
+
+  if(frag.final)
+    printf("]");
+
   printf("\n");
 
   return 1;
@@ -247,7 +273,8 @@ static int settermprop(VTermProp prop, VTermValue *val, void *user)
     printf("settermprop %d %d\n", prop, val->number);
     return 1;
   case VTERM_VALUETYPE_STRING:
-    printf("settermprop %d \"%s\"\n", prop, val->string);
+    printf("settermprop %d %s\"%.*s\"%s\n", prop,
+        val->string.initial ? "[" : "", val->string.len, val->string.str, val->string.final ? "]" : "");
     return 1;
   case VTERM_VALUETYPE_COLOR:
     printf("settermprop %d ", prop);

@@ -107,8 +107,15 @@ sub do_line
       elsif( $line =~ m/^csi (\S+) (.*)$/ ) {
          $line = sprintf "csi %02x %s", eval($1), $2; # TODO
       }
-      elsif( $line =~ m/^(escape|osc|dcs) (.*)$/ ) {
-         $line = "$1 " . join "", map sprintf("%02x", $_), unpack "C*", eval($2);
+      elsif( $line =~ m/^(osc) (\[\d+)? *(.*?)(\]?)$/ ) {
+         my ( $cmd, $initial, $data, $final ) = ( $1, $2, $3, $4 );
+         $initial //= "";
+         $initial .= ";" if $initial =~ m/\d+/;
+
+         $line = "$cmd $initial" . join( "", map sprintf("%02x", $_), unpack "C*", eval($data) ) . "$final";
+      }
+      elsif( $line =~ m/^(escape|dcs) (\[?)(.*?)(\]?)$/ ) {
+         $line = "$1 $2" . join( "", map sprintf("%02x", $_), unpack "C*", eval($3) ) . "$4";
       }
       elsif( $line =~ m/^putglyph (\S+) (.*)$/ ) {
          $line = "putglyph " . join( ",", map sprintf("%x", $_), eval($1) ) . " $2";

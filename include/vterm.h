@@ -211,10 +211,17 @@ typedef enum {
   VTERM_N_VALUETYPES
 } VTermValueType;
 
+typedef struct {
+  const char *str;
+  size_t      len : 30;
+  bool        initial : 1;
+  bool        final : 1;
+} VTermStringFragment;
+
 typedef union {
   int boolean;
   int number;
-  char *string;
+  VTermStringFragment string;
   VTermColor color;
 } VTermValue;
 
@@ -360,8 +367,8 @@ typedef struct {
   int (*control)(unsigned char control, void *user);
   int (*escape)(const char *bytes, size_t len, void *user);
   int (*csi)(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user);
-  int (*osc)(const char *command, size_t cmdlen, void *user);
-  int (*dcs)(const char *command, size_t cmdlen, void *user);
+  int (*osc)(int command, VTermStringFragment frag, void *user);
+  int (*dcs)(const char *command, size_t commandlen, VTermStringFragment frag, void *user);
   int (*resize)(int rows, int cols, void *user);
 } VTermParserCallbacks;
 
