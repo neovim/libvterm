@@ -96,6 +96,11 @@ static void dump_cell(const VTermScreenCell *cell, const VTermScreenCell *prevce
         if(prevcell->attrs.reverse && !cell->attrs.reverse)
           sgr[sgri++] = 27;
 
+        if(!prevcell->attrs.conceal && cell->attrs.conceal)
+          sgr[sgri++] = 8;
+        if(prevcell->attrs.conceal && !cell->attrs.conceal)
+          sgr[sgri++] = 28;
+
         if(!prevcell->attrs.strike && cell->attrs.strike)
           sgr[sgri++] = 9;
         if(prevcell->attrs.strike && !cell->attrs.strike)
@@ -143,7 +148,7 @@ static void dump_eol(const VTermScreenCell *prevcell)
     case FORMAT_SGR:
       if(prevcell->attrs.bold || prevcell->attrs.underline || prevcell->attrs.italic ||
          prevcell->attrs.blink || prevcell->attrs.reverse || prevcell->attrs.strike ||
-         prevcell->attrs.font)
+         prevcell->attrs.conceal || prevcell->attrs.font)
         printf("\x1b[m");
       break;
   }

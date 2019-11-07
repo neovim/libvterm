@@ -338,6 +338,7 @@ static struct {
   int italic;
   int blink;
   int reverse;
+  int conceal;
   int strike;
   int font;
   VTermColor foreground;
@@ -360,6 +361,9 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
     break;
   case VTERM_ATTR_REVERSE:
     state_pen.reverse = val->boolean;
+    break;
+  case VTERM_ATTR_CONCEAL:
+    state_pen.conceal = val->boolean;
     break;
   case VTERM_ATTR_STRIKE:
     state_pen.strike = val->boolean;
