@@ -232,6 +232,7 @@ typedef enum {
   VTERM_ATTR_ITALIC,     // bool:   3, 23
   VTERM_ATTR_BLINK,      // bool:   5, 25
   VTERM_ATTR_REVERSE,    // bool:   7, 27
+  VTERM_ATTR_CONCEAL,    // bool:   8, 28
   VTERM_ATTR_STRIKE,     // bool:   9, 29
   VTERM_ATTR_FONT,       // number: 10-19
   VTERM_ATTR_FOREGROUND, // color:  30-39 90-97
@@ -443,6 +444,7 @@ typedef struct {
     unsigned int italic    : 1;
     unsigned int blink     : 1;
     unsigned int reverse   : 1;
+    unsigned int conceal   : 1;
     unsigned int strike    : 1;
     unsigned int font      : 4; /* 0 to 9 */
     unsigned int dwl       : 1; /* On a DECDWL or DECDHL line */
@@ -513,8 +515,9 @@ typedef enum {
   VTERM_ATTR_FONT_MASK       = 1 << 6,
   VTERM_ATTR_FOREGROUND_MASK = 1 << 7,
   VTERM_ATTR_BACKGROUND_MASK = 1 << 8,
+  VTERM_ATTR_CONCEAL_MASK    = 1 << 9,
 
-  VTERM_ALL_ATTRS_MASK = (1 << 9) - 1
+  VTERM_ALL_ATTRS_MASK = (1 << 10) - 1
 } VTermAttrMask;
 
 int vterm_screen_get_attrs_extent(const VTermScreen *screen, VTermRect *extent, VTermPos pos, VTermAttrMask attrs);
