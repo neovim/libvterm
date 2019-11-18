@@ -547,6 +547,8 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
         if(src->width == 2 && pos.col < (new_cols-1))
           (dst + 1)->chars[0] = (uint32_t) -1;
       }
+      for( ; pos.col < new_cols; pos.col++)
+        clearcell(screen, &new_buffer[pos.row * new_cols + pos.col]);
       new_row--;
 
       if(active)
