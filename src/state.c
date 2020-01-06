@@ -1414,6 +1414,14 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
       state->scrollregion_right = -1;
     }
 
+    // Setting the scrolling region restores the cursor to the home position
+    state->pos.row = 0;
+    state->pos.col = 0;
+    if(state->mode.origin) {
+      state->pos.row += state->scrollregion_top;
+      state->pos.col += SCROLLREGION_LEFT(state);
+    }
+
     break;
 
   case INTERMED('\'', 0x7D): // DECIC
