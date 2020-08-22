@@ -1,8 +1,4 @@
-#if defined(__APPLE__) && defined(__arm64__)
-  #define _XOPEN_SOURCE 600  /* strdup */
-#else
-  #define _XOPEN_SOURCE 500  /* strdup */
-#endif
+#define _XOPEN_SOURCE 600  /* strdup */
 
 #include <stdbool.h>
 #include <stdio.h>
