@@ -1,6 +1,7 @@
 .libs
 *.lo
 *.la
+*.o
 
 bin/*
 !bin/*.c
