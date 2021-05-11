@@ -17,15 +17,15 @@ PUSH "\x1f"
 PUSH "\x83"
   control 0x83
 
-PUSH "\x9f"
-  control 0x9f
+PUSH "\x99"
+  control 0x99
 
 !C1 7bit
 PUSH "\e\x43"
   control 0x83
 
-PUSH "\e\x5f"
-  control 0x9f
+PUSH "\e\x59"
+  control 0x99
 
 !High bytes
 PUSH "\xa0\xcc\xfe"
