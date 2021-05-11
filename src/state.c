@@ -1654,6 +1654,42 @@ static int on_dcs(const char *command, size_t commandlen, VTermStringFragment fr
   return 0;
 }
 
+static int on_apc(VTermStringFragment frag, void *user)
+{
+  VTermState *state = user;
+
+  if(state->fallbacks && state->fallbacks->apc)
+    if((*state->fallbacks->apc)(frag, state->fbdata))
+      return 1;
+
+  /* No DEBUG_LOG because all APCs are unhandled */
+  return 0;
+}
+
+static int on_pm(VTermStringFragment frag, void *user)
+{
+  VTermState *state = user;
+
+  if(state->fallbacks && state->fallbacks->pm)
+    if((*state->fallbacks->pm)(frag, state->fbdata))
+      return 1;
+
+  /* No DEBUG_LOG because all PMs are unhandled */
+  return 0;
+}
+
+static int on_sos(VTermStringFragment frag, void *user)
+{
+  VTermState *state = user;
+
+  if(state->fallbacks && state->fallbacks->sos)
+    if((*state->fallbacks->sos)(frag, state->fbdata))
+      return 1;
+
+  /* No DEBUG_LOG because all SOSs are unhandled */
+  return 0;
+}
+
 static int on_resize(int rows, int cols, void *user)
 {
   VTermState *state = user;
@@ -1753,6 +1789,9 @@ static const VTermParserCallbacks parser_callbacks = {
   .csi     = on_csi,
   .osc     = on_osc,
   .dcs     = on_dcs,
+  .apc     = on_apc,
+  .pm      = on_pm,
+  .sos     = on_sos,
   .resize  = on_resize,
 };
 

@@ -402,6 +402,9 @@ typedef struct {
   int (*csi)(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user);
   int (*osc)(int command, VTermStringFragment frag, void *user);
   int (*dcs)(const char *command, size_t commandlen, VTermStringFragment frag, void *user);
+  int (*apc)(VTermStringFragment frag, void *user);
+  int (*pm)(VTermStringFragment frag, void *user);
+  int (*sos)(VTermStringFragment frag, void *user);
 } VTermStateFallbacks;
 
 VTermState *vterm_obtain_state(VTerm *vt);

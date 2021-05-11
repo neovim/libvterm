@@ -277,6 +277,9 @@ static VTermStateFallbacks fallbacks = {
   .csi     = parser_csi,
   .osc     = parser_osc,
   .dcs     = parser_dcs,
+  .apc     = parser_apc,
+  .pm      = parser_pm,
+  .sos     = parser_sos,
 };
 
 /* These callbacks are shared by State and Screen */
