@@ -148,7 +148,25 @@ struct VTermState
   /* Temporary state for DECRQSS parsing */
   union {
     char decrqss[4];
+    struct {
+      uint16_t mask;
+      enum {
+        SELECTION_INITIAL,
+        SELECTION_SELECTED,
+        SELECTION_QUERY,
+        SELECTION_SET_INITIAL,
+        SELECTION_SET,
+      } state : 8;
+      uint32_t partial;
+    } selection;
   } tmp;
+
+  struct {
+    const VTermSelectionCallbacks *callbacks;
+    void *user;
+    char *buffer;
+    size_t buflen;
+  } selection;
 };
 
 struct VTerm

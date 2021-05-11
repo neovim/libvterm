@@ -458,6 +458,23 @@ VTermStateCallbacks state_cbs = {
   .setlineinfo = state_setlineinfo,
 };
 
+static int selection_set(VTermSelectionMask mask, VTermStringFragment frag, void *user)
+{
+  printf("selection-set mask=%04X ", mask);
+  if(frag.initial)
+    printf("[");
+  printhex(frag.str, frag.len);
+  if(frag.final)
+    printf("]");
+  printf("\n");
+
+  return 1;
+}
+
+VTermSelectionCallbacks selection_cbs = {
+  .set = selection_set,
+};
+
 static int want_screen_damage = 0;
 static int want_screen_damage_cells = 0;
 static int screen_damage(VTermRect rect, void *user)
@@ -580,6 +597,7 @@ int main(int argc, char **argv)
       if(!state) {
         state = vterm_obtain_state(vt);
         vterm_state_set_callbacks(state, &state_cbs, NULL);
+        vterm_state_set_selection_callbacks(state, &selection_cbs, NULL, NULL, 1024);
         vterm_state_set_bold_highbright(state, 1);
         vterm_state_reset(state, 1);
       }

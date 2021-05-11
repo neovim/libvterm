@@ -74,6 +74,10 @@ static VTermState *vterm_state_new(VTerm *vt)
   state->callbacks = NULL;
   state->cbdata    = NULL;
 
+  state->selection.callbacks = NULL;
+  state->selection.user      = NULL;
+  state->selection.buffer    = NULL;
+
   vterm_state_newpen(state);
 
   state->bold_is_highbright = 0;
@@ -1528,6 +1532,147 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   return 1;
 }
 
+static uint8_t unbase64one(char c)
+{
+  if(c >= 'A' && c <= 'Z')
+    return c - 'A';
+  else if(c >= 'a' && c <= 'z')
+    return c - 'a' + 26;
+  else if(c >= '0' && c <= '9')
+    return c - '0' + 52;
+  else if(c == '+')
+    return 62;
+  else if(c == '/')
+    return 63;
+
+  return 0xFF;
+}
+
+static void osc_selection(VTermState *state, VTermStringFragment frag)
+{
+  if(frag.initial) {
+    state->tmp.selection.mask = 0;
+    state->tmp.selection.state = SELECTION_INITIAL;
+  }
+
+  while(!state->tmp.selection.state && frag.len) {
+    /* Parse selection parameter */
+    switch(frag.str[0]) {
+      case 'c':
+        state->tmp.selection.mask |= VTERM_SELECTION_CLIPBOARD;
+        break;
+      case 'p':
+        state->tmp.selection.mask |= VTERM_SELECTION_PRIMARY;
+        break;
+      case 'q':
+        state->tmp.selection.mask |= VTERM_SELECTION_SECONDARY;
+        break;
+      case 's':
+        state->tmp.selection.mask |= VTERM_SELECTION_SELECT;
+        break;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+        state->tmp.selection.mask |= (VTERM_SELECTION_CUT0 << (frag.str[0] - '0'));
+        break;
+
+      case ';':
+        state->tmp.selection.state = SELECTION_SELECTED;
+        if(!state->tmp.selection.mask)
+          state->tmp.selection.mask = VTERM_SELECTION_SELECT|VTERM_SELECTION_CUT0;
+        break;
+    }
+
+    frag.str++;
+    frag.len--;
+  }
+
+  if(!frag.len)
+    return;
+
+  if(state->tmp.selection.state == SELECTION_SELECTED) {
+    if(frag.str[0] == '?') {
+      state->tmp.selection.state = SELECTION_QUERY;
+    }
+    else {
+      state->tmp.selection.state = SELECTION_SET_INITIAL;
+      state->tmp.selection.partial = 0;
+    }
+  }
+
+  if(state->tmp.selection.state == SELECTION_QUERY)
+    return;
+
+  if(state->selection.callbacks->set) {
+    size_t bufcur = 0;
+    char *buffer = state->selection.buffer;
+
+    uint32_t x = 0; /* Current decoding value */
+    int n = 0;      /* Number of sextets consumed */
+
+    if(state->tmp.selection.partial) {
+      n = state->tmp.selection.partial >> 24;
+      x = state->tmp.selection.partial & 0xFFFF;
+    }
+
+    while((state->selection.buflen - bufcur) >= 3 && frag.len) {
+      if(frag.str[0] == '=') {
+        if(n == 2) {
+          buffer[0] = (x >> 4) & 0xFF;
+          buffer += 1, bufcur += 1;
+        }
+        if(n == 3) {
+          buffer[0] = (x >> 10) & 0xFF;
+          buffer[1] = (x >>  2) & 0xFF;
+          buffer += 2, bufcur += 2;
+        }
+
+        while(frag.len && frag.str[0] == '=')
+          frag.str++, frag.len--;
+
+        n = 0;
+      }
+      else {
+        x = (x << 6) | unbase64one(frag.str[0]);
+        frag.str++, frag.len--;
+        n++;
+
+        if(n == 4) {
+          buffer[0] = (x >> 16) & 0xFF;
+          buffer[1] = (x >>  8) & 0xFF;
+          buffer[2] = (x >>  0) & 0xFF;
+
+          buffer += 3, bufcur += 3;
+          x = 0;
+          n = 0;
+        }
+      }
+
+      if(!frag.len || (state->selection.buflen - bufcur) < 3) {
+        if(bufcur)
+          (*state->selection.callbacks->set)(state->tmp.selection.mask, (VTermStringFragment){
+              .str     = state->selection.buffer,
+              .len     = bufcur,
+              .initial = state->tmp.selection.state == SELECTION_SET_INITIAL,
+              .final   = frag.final,
+            }, state->selection.user);
+
+        state->tmp.selection.state = SELECTION_SET;
+        buffer = state->selection.buffer;
+        bufcur = 0;
+      }
+    }
+
+    if(n)
+      state->tmp.selection.partial = (n << 24) | x;
+  }
+}
+
 static int on_osc(int command, VTermStringFragment frag, void *user)
 {
   VTermState *state = user;
@@ -1544,6 +1689,12 @@ static int on_osc(int command, VTermStringFragment frag, void *user)
 
     case 2:
       settermprop_string(state, VTERM_PROP_TITLE, frag);
+      return 1;
+
+    case 52:
+      if(state->selection.callbacks)
+        osc_selection(state, frag);
+
       return 1;
 
     default:
@@ -1985,4 +2136,16 @@ void vterm_state_focus_out(VTermState *state)
 const VTermLineInfo *vterm_state_get_lineinfo(const VTermState *state, int row)
 {
   return state->lineinfo + row;
+}
+
+void vterm_state_set_selection_callbacks(VTermState *state, const VTermSelectionCallbacks *callbacks, void *user,
+    char *buffer, size_t buflen)
+{
+  if(buflen && !buffer)
+    buffer = vterm_allocator_malloc(state->vt, buflen);
+
+  state->selection.callbacks = callbacks;
+  state->selection.user      = user;
+  state->selection.buffer    = buffer;
+  state->selection.buflen    = buflen;
 }

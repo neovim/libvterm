@@ -143,6 +143,7 @@ x = xterm
    x   OSC 0;           = Set icon name and title
    x   OSC 1;           = Set icon name
    x   OSC 2;           = Set title
+   x   OSC 52;          = Selection management
 
     Standard modes
 

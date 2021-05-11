@@ -123,6 +123,9 @@ sub do_line
       elsif( $line =~ m/^(?:movecursor|scrollrect|moverect|erase|damage|sb_pushline|sb_popline|settermprop|setmousefunc) / ) {
          # no conversion
       }
+      elsif( $line =~ m/^(selection-set) (.*?) (\[?)(.*?)(\]?)$/ ) {
+         $line = "$1 $2 $3" . join( "", map sprintf("%02x", $_), unpack "C*", eval($4) ) . "$5";
+      }
       else {
          warn "Unrecognised test expectation '$line'\n";
       }
