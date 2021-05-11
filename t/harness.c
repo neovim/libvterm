@@ -95,7 +95,7 @@ static void term_output(const char *s, size_t len, void *user)
 static void printhex(const char *s, size_t len)
 {
   while(len--)
-    printf("%02x", (s++)[0]);
+    printf("%02x", (uint8_t)(s++)[0]);
 }
 
 static int parser_text(const char bytes[], size_t len, void *user)

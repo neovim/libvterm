@@ -164,6 +164,9 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
       // fallthrough
     }
     else if(c < 0x20) { // other C0
+      if(vt->parser.state == SOS)
+        continue; // All other C0s permitted in SOS
+
       if(IS_STRING_STATE())
         string_fragment(vt, string_start, bytes + pos - string_start, false);
       do_control(vt, c);

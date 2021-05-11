@@ -234,6 +234,12 @@ PUSH "\eXHello\e\\"
 PUSH "\x{98}Hello\x9c"
   sos ["Hello"]
 
+!SOS can contain any C0 or C1 code
+PUSH "\eXABC\x01DEF\e\\"
+  sos ["ABC\x01DEF"]
+PUSH "\eXABC\x99DEF\e\\"
+  sos ["ABC\x{99}DEF"]
+
 !NUL ignored
 PUSH "\x{00}"
 
