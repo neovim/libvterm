@@ -1617,7 +1617,9 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
 
     if(state->tmp.selection.partial) {
       n = state->tmp.selection.partial >> 24;
-      x = state->tmp.selection.partial & 0xFFFF;
+      x = state->tmp.selection.partial & 0x03FFFF; /* could be up to 18 bits of state in here */
+
+      state->tmp.selection.partial = 0;
     }
 
     while((state->selection.buflen - bufcur) >= 3 && frag.len) {
@@ -1638,9 +1640,15 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
         n = 0;
       }
       else {
-        x = (x << 6) | unbase64one(frag.str[0]);
+        uint8_t b = unbase64one(frag.str[0]);
+        if(b == 0xFF) {
+          DEBUG_LOG("base64decode bad input %02X\n", (uint8_t)frag.str[0]);
+        }
+        else {
+          x = (x << 6) | b;
+          n++;
+        }
         frag.str++, frag.len--;
-        n++;
 
         if(n == 4) {
           buffer[0] = (x >> 16) & 0xFF;
@@ -1654,15 +1662,16 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
       }
 
       if(!frag.len || (state->selection.buflen - bufcur) < 3) {
-        if(bufcur)
+        if(bufcur) {
           (*state->selection.callbacks->set)(state->tmp.selection.mask, (VTermStringFragment){
               .str     = state->selection.buffer,
               .len     = bufcur,
               .initial = state->tmp.selection.state == SELECTION_SET_INITIAL,
               .final   = frag.final,
             }, state->selection.user);
+          state->tmp.selection.state = SELECTION_SET;
+        }
 
-        state->tmp.selection.state = SELECTION_SET;
         buffer = state->selection.buffer;
         bufcur = 0;
       }
