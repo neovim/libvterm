@@ -32,9 +32,12 @@ between states.
  23   0x8e             = SS2
  23   0x8f             = SS3
      (0x90             = DCS)
+     (0x98             = SOS)
      (0x9B             = CSI)
      (0x9C             = ST)
      (0x9D             = OSC)
+     (0x9E             = PM)
+     (0x9F             = APC)
 
    Escape sequences
     - excluding sequences that are C1 aliases
@@ -54,9 +57,12 @@ between states.
  23   ESC Sp F         = S7C1T
  23   ESC Sp G         = S8C1T
      (ESC P            = DCS)
+     (ESC X            = SOS)
      (ESC [            = CSI)
      (ESC \            = ST)
      (ESC ]            = OSC)
+     (ESC ^            = PM)
+     (ESC _            = APC)
 123   ESC c            = RIS, reset initial state
   3   ESC n            = LS2
   3   ESC o            = LS3

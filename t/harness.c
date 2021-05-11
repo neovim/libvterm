@@ -209,6 +209,57 @@ static int parser_dcs(const char *command, size_t commandlen, VTermStringFragmen
   return 1;
 }
 
+static int parser_apc(VTermStringFragment frag, void *user)
+{
+  printf("apc ");
+
+  if(frag.initial)
+    printf("[");
+
+  printhex(frag.str, frag.len);
+
+  if(frag.final)
+    printf("]");
+
+  printf("\n");
+
+  return 1;
+}
+
+static int parser_pm(VTermStringFragment frag, void *user)
+{
+  printf("pm ");
+
+  if(frag.initial)
+    printf("[");
+
+  printhex(frag.str, frag.len);
+
+  if(frag.final)
+    printf("]");
+
+  printf("\n");
+
+  return 1;
+}
+
+static int parser_sos(VTermStringFragment frag, void *user)
+{
+  printf("sos ");
+
+  if(frag.initial)
+    printf("[");
+
+  printhex(frag.str, frag.len);
+
+  if(frag.final)
+    printf("]");
+
+  printf("\n");
+
+  return 1;
+}
+
 static VTermParserCallbacks parser_cbs = {
   .text    = parser_text,
   .control = parser_control,
@@ -216,6 +267,9 @@ static VTermParserCallbacks parser_cbs = {
   .csi     = parser_csi,
   .osc     = parser_osc,
   .dcs     = parser_dcs,
+  .apc     = parser_apc,
+  .pm      = parser_pm,
+  .sos     = parser_sos,
 };
 
 static VTermStateFallbacks fallbacks = {

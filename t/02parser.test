@@ -198,6 +198,42 @@ PUSH "\ePBy\ne\x07"
   control 10
   dcs "e"]
 
+!APC BEL
+PUSH "\e_Hello\x07"
+  apc ["Hello"]
+
+!APC ST (7bit)
+PUSH "\e_Hello\e\\"
+  apc ["Hello"]
+
+!APC ST (8bit)
+PUSH "\x{9f}Hello\x9c"
+  apc ["Hello"]
+
+!PM BEL
+PUSH "\e^Hello\x07"
+  pm ["Hello"]
+
+!PM ST (7bit)
+PUSH "\e^Hello\e\\"
+  pm ["Hello"]
+
+!PM ST (8bit)
+PUSH "\x{9e}Hello\x9c"
+  pm ["Hello"]
+
+!SOS BEL
+PUSH "\eXHello\x07"
+  sos ["Hello"]
+
+!SOS ST (7bit)
+PUSH "\eXHello\e\\"
+  sos ["Hello"]
+
+!SOS ST (8bit)
+PUSH "\x{98}Hello\x9c"
+  sos ["Hello"]
+
 !NUL ignored
 PUSH "\x{00}"
 

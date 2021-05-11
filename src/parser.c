@@ -81,6 +81,21 @@ static void string_fragment(VTerm *vt, const char *str, size_t len, bool final)
         (*vt->parser.callbacks->dcs)(vt->parser.v.dcs.command, vt->parser.v.dcs.commandlen, frag, vt->parser.cbdata);
       break;
 
+    case APC:
+      if(len && vt->parser.callbacks && vt->parser.callbacks->apc)
+        (*vt->parser.callbacks->apc)(frag, vt->parser.cbdata);
+      break;
+
+    case PM:
+      if(len && vt->parser.callbacks && vt->parser.callbacks->pm)
+        (*vt->parser.callbacks->pm)(frag, vt->parser.cbdata);
+      break;
+
+    case SOS:
+      if(len && vt->parser.callbacks && vt->parser.callbacks->sos)
+        (*vt->parser.callbacks->sos)(frag, vt->parser.cbdata);
+      break;
+
     case NORMAL:
     case CSI_LEADER:
     case CSI_ARGS:
@@ -109,6 +124,9 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
     break;
   case OSC:
   case DCS:
+  case APC:
+  case PM:
+  case SOS:
     string_start = bytes;
     break;
   }
@@ -267,6 +285,9 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
 string_state:
     case OSC:
     case DCS:
+    case APC:
+    case PM:
+    case SOS:
       if(c == 0x07 || (c1_allowed && c == 0x9c)) {
         string_fragment(vt, string_start, string_len, true);
         ENTER_NORMAL_STATE();
@@ -296,6 +317,12 @@ string_state:
           vt->parser.v.dcs.commandlen = 0;
           ENTER_STATE(DCS_COMMAND);
           break;
+        case 0x98: // SOS
+          vt->parser.string_initial = true;
+          ENTER_STATE(SOS);
+          string_start = bytes + pos + 1;
+          string_len = 0;
+          break;
         case 0x9b: // CSI
           vt->parser.v.csi.leaderlen = 0;
           ENTER_STATE(CSI_LEADER);
@@ -305,6 +332,18 @@ string_state:
           vt->parser.string_initial = true;
           string_start = bytes + pos + 1;
           ENTER_STATE(OSC_COMMAND);
+          break;
+        case 0x9e: // PM
+          vt->parser.string_initial = true;
+          ENTER_STATE(PM);
+          string_start = bytes + pos + 1;
+          string_len = 0;
+          break;
+        case 0x9f: // APC
+          vt->parser.string_initial = true;
+          ENTER_STATE(APC);
+          string_start = bytes + pos + 1;
+          string_len = 0;
           break;
         default:
           do_control(vt, c);

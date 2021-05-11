@@ -175,6 +175,9 @@ struct VTerm
       OSC_COMMAND,
       OSC,
       DCS,
+      APC,
+      PM,
+      SOS,
     } state;
 
     bool in_esc : 1;
