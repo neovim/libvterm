@@ -77,22 +77,22 @@ static void string_fragment(VTerm *vt, const char *str, size_t len, bool final)
       break;
 
     case DCS:
-      if(len && vt->parser.callbacks && vt->parser.callbacks->dcs)
+      if(vt->parser.callbacks && vt->parser.callbacks->dcs)
         (*vt->parser.callbacks->dcs)(vt->parser.v.dcs.command, vt->parser.v.dcs.commandlen, frag, vt->parser.cbdata);
       break;
 
     case APC:
-      if(len && vt->parser.callbacks && vt->parser.callbacks->apc)
+      if(vt->parser.callbacks && vt->parser.callbacks->apc)
         (*vt->parser.callbacks->apc)(frag, vt->parser.cbdata);
       break;
 
     case PM:
-      if(len && vt->parser.callbacks && vt->parser.callbacks->pm)
+      if(vt->parser.callbacks && vt->parser.callbacks->pm)
         (*vt->parser.callbacks->pm)(frag, vt->parser.cbdata);
       break;
 
     case SOS:
-      if(len && vt->parser.callbacks && vt->parser.callbacks->sos)
+      if(vt->parser.callbacks && vt->parser.callbacks->sos)
         (*vt->parser.callbacks->sos)(frag, vt->parser.cbdata);
       break;
 
@@ -186,7 +186,8 @@ size_t vterm_input_write(VTerm *vt, const char *bytes, size_t len)
           ((!IS_STRING_STATE() || c == 0x5c))) {
         c += 0x40;
         c1_allowed = true;
-        string_len -= 1;
+        if(string_len)
+          string_len -= 1;
         vt->parser.in_esc = false;
       }
       else {
@@ -370,8 +371,12 @@ string_state:
     }
   }
 
-  if(string_start)
-    string_fragment(vt, string_start, bytes + pos - string_start, false);
+  if(string_start) {
+    size_t string_len = bytes + pos - string_start;
+    if(vt->parser.in_esc)
+      string_len -= 1;
+    string_fragment(vt, string_start, string_len, false);
+  }
 
   return len;
 }

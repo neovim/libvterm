@@ -115,7 +115,7 @@ sub do_line
          $line = "$cmd $initial" . join( "", map sprintf("%02x", $_), unpack "C*", length $data ? eval($data) : "" ) . "$final";
       }
       elsif( $line =~ m/^(escape|dcs|apc|pm|sos) (\[?)(.*?)(\]?)$/ ) {
-         $line = "$1 $2" . join( "", map sprintf("%02x", $_), unpack "C*", eval($3) ) . "$4";
+         $line = "$1 $2" . join( "", map sprintf("%02x", $_), unpack "C*", length $3 ? eval($3) : "" ) . "$4";
       }
       elsif( $line =~ m/^putglyph (\S+) (.*)$/ ) {
          $line = "putglyph " . join( ",", map sprintf("%x", $_), eval($1) ) . " $2";

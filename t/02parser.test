@@ -184,6 +184,12 @@ PUSH "\ePHello\e\\"
 PUSH "\x{90}Hello\x9c"
   dcs ["Hello"]
 
+!Split write of 7bit ST
+PUSH "\ePABC\e"
+  dcs ["ABC"
+PUSH "\\"
+  dcs ]
+
 !Escape cancels DCS, starts Escape
 PUSH "\ePSomething\e9"
   escape "9"
