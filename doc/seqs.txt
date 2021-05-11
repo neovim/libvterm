@@ -29,8 +29,8 @@ between states.
 123   0x85             = NEL
 123   0x88             = HTS
 123   0x8D             = RI
- 23   0x8e             = SS2
- 23   0x8f             = SS3
+ 23   0x8E             = SS2
+ 23   0x8F             = SS3
      (0x90             = DCS)
      (0x98             = SOS)
      (0x9B             = CSI)
@@ -42,8 +42,10 @@ between states.
    Escape sequences
     - excluding sequences that are C1 aliases
 
-123   ESC ()           = SCS, select character set (G0, G1)
- 23   ESC *+           = SCS, select character set (G2, G3)
+123   ESC (            = SCS, select character set G0
+123   ESC )            = SCS, select character set G1
+ 23   ESC *            = SCS, select character set G2
+ 23   ESC +            = SCS, select character set G3
 123   ESC 7            = DECSC - save cursor
 123   ESC 8            = DECRC - restore cursor
 123   ESC # 3          = DECDHL, double-height line (top half)
@@ -66,9 +68,9 @@ between states.
 123   ESC c            = RIS, reset initial state
   3   ESC n            = LS2
   3   ESC o            = LS3
-  3   ESC ~            = LS1R
-  3   ESC }            = LS2R
   3   ESC |            = LS3R
+  3   ESC }            = LS2R
+  3   ESC ~            = LS1R
 
    DCSes
 
