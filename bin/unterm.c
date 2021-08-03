@@ -10,6 +10,18 @@
 
 #include "../src/utf8.h" // fill_utf8
 
+/*
+ * unterm [OPTIONS] SCRIPTFILE
+ *
+ * Interprets terminal sequences in SCRIPTFILE and outputs the final state of
+ * the terminal buffer at the end.
+ *
+ * OPTIONS:
+ *   -f FORMAT  -- set the output format: ["plain" | "sgr"]
+ *   -l LINES,
+ *   -c COLS    -- set the size of the emulated terminal
+ */
+
 #define streq(a,b) (!strcmp(a,b))
 
 static VTerm *vt;
