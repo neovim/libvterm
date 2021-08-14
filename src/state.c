@@ -1986,6 +1986,8 @@ void vterm_state_reset(VTermState *state, int hard)
   state->mode.bracketpaste    = 0;
   state->mode.report_focus    = 0;
 
+  state->mouse_flags = 0;
+
   state->vt->mode.ctrl8bit   = 0;
 
   for(int col = 0; col < state->cols; col++)
