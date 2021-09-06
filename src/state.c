@@ -1616,7 +1616,7 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
     }
     else {
       state->tmp.selection.state = SELECTION_SET_INITIAL;
-      state->tmp.selection.partial = 0;
+      state->tmp.selection.recvpartial = 0;
     }
   }
 
@@ -1633,11 +1633,11 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
     uint32_t x = 0; /* Current decoding value */
     int n = 0;      /* Number of sextets consumed */
 
-    if(state->tmp.selection.partial) {
-      n = state->tmp.selection.partial >> 24;
-      x = state->tmp.selection.partial & 0x03FFFF; /* could be up to 18 bits of state in here */
+    if(state->tmp.selection.recvpartial) {
+      n = state->tmp.selection.recvpartial >> 24;
+      x = state->tmp.selection.recvpartial & 0x03FFFF; /* could be up to 18 bits of state in here */
 
-      state->tmp.selection.partial = 0;
+      state->tmp.selection.recvpartial = 0;
     }
 
     while((state->selection.buflen - bufcur) >= 3 && frag.len) {
@@ -1696,7 +1696,7 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
     }
 
     if(n)
-      state->tmp.selection.partial = (n << 24) | x;
+      state->tmp.selection.recvpartial = (n << 24) | x;
   }
 }
 
@@ -2197,7 +2197,7 @@ void vterm_state_send_selection(VTermState *state, VTermSelectionMask mask, VTer
 
     vterm_push_output_sprintf_str(vt, C1_OSC, false, "52;%c;", selection_chars[idx]);
 
-    state->tmp.selection.partial = 0;
+    state->tmp.selection.sendpartial = 0;
   }
 
   if(frag.len) {
@@ -2207,11 +2207,11 @@ void vterm_state_send_selection(VTermState *state, VTermSelectionMask mask, VTer
     uint32_t x = 0;
     int n = 0;
 
-    if(state->tmp.selection.partial) {
-      n = state->tmp.selection.partial >> 24;
-      x = state->tmp.selection.partial & 0xFFFFFF;
+    if(state->tmp.selection.sendpartial) {
+      n = state->tmp.selection.sendpartial >> 24;
+      x = state->tmp.selection.sendpartial & 0xFFFFFF;
 
-      state->tmp.selection.partial = 0;
+      state->tmp.selection.sendpartial = 0;
     }
 
     while((state->selection.buflen - bufcur) >= 4 && frag.len) {
@@ -2240,13 +2240,13 @@ void vterm_state_send_selection(VTermState *state, VTermSelectionMask mask, VTer
     }
 
     if(n)
-      state->tmp.selection.partial = (n << 24) | x;
+      state->tmp.selection.sendpartial = (n << 24) | x;
   }
 
   if(frag.final) {
-    if(state->tmp.selection.partial) {
-      int n      = state->tmp.selection.partial >> 24;
-      uint32_t x = state->tmp.selection.partial & 0xFFFFFF;
+    if(state->tmp.selection.sendpartial) {
+      int n      = state->tmp.selection.sendpartial >> 24;
+      uint32_t x = state->tmp.selection.sendpartial & 0xFFFFFF;
       char *buffer = state->selection.buffer;
 
       /* n is either 1 or 2 now */

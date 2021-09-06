@@ -157,7 +157,8 @@ struct VTermState
         SELECTION_SET_INITIAL,
         SELECTION_SET,
       } state : 8;
-      uint32_t partial;
+      uint32_t recvpartial;
+      uint32_t sendpartial;
     } selection;
   } tmp;
 
