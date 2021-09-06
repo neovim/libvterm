@@ -456,6 +456,8 @@ void vterm_state_convert_color_to_rgb(const VTermState *state, VTermColor *col);
 void vterm_state_set_selection_callbacks(VTermState *state, const VTermSelectionCallbacks *callbacks, void *user,
     char *buffer, size_t buflen);
 
+void vterm_state_send_selection(VTermState *state, VTermSelectionMask mask, VTermStringFragment frag);
+
 // ------------
 // Screen layer
 // ------------

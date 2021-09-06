@@ -7,7 +7,7 @@ PUSH "\e]52;c;SGVsbG8s\e\\"
   selection-set mask=0001 ["Hello,"]
 
 !Set clipboard; final chunk len 3
-PUSH "\e]52;c;SGVsbG8sIHd=\e\\"
+PUSH "\e]52;c;SGVsbG8sIHc=\e\\"
   selection-set mask=0001 ["Hello, w"]
 
 !Set clipboard; final chunk len 2
@@ -29,3 +29,37 @@ PUSH "8s\e\\"
 !Query clipboard
 PUSH "\e]52;c;?\e\\"
   selection-query mask=0001
+
+!Send clipboard; final chunk len 4
+SELECTION 1 ["Hello,"]
+  output "\e]52;c;"
+  output "SGVsbG8s"
+  output "\e\\"
+
+!Send clipboard; final chunk len 3
+SELECTION 1 ["Hello, w"]
+  output "\e]52;c;"
+  output "SGVsbG8s"
+  output "IHc=\e\\"
+
+!Send clipboard; final chunk len 2
+SELECTION 1 ["Hello, world\n"]
+  output "\e]52;c;"
+  output "SGVsbG8sIHdvcmxk"
+  output "Cg==\e\\"
+
+!Send clipboard; split between chunks
+SELECTION 1 ["Hel"
+  output "\e]52;c;"
+  output "SGVs"
+SELECTION 1  "lo,"]
+  output "bG8s"
+  output "\e\\"
+
+!Send clipboard; split within chunk
+SELECTION 1 ["Hello"
+  output "\e]52;c;"
+  output "SGVs"
+SELECTION 1 ","]
+  output "bG8s"
+  output "\e\\"

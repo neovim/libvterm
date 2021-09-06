@@ -1532,6 +1532,21 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
   return 1;
 }
 
+static char base64_one(uint8_t b)
+{
+  if(b < 26)
+    return 'A' + b;
+  else if(b < 52)
+    return 'a' + b - 26;
+  else if(b < 62)
+    return '0' + b - 52;
+  else if(b == 62)
+    return '+';
+  else if(b == 63)
+    return '/';
+  return 0;
+}
+
 static uint8_t unbase64one(char c)
 {
   if(c >= 'A' && c <= 'Z')
@@ -2166,4 +2181,85 @@ void vterm_state_set_selection_callbacks(VTermState *state, const VTermSelection
   state->selection.user      = user;
   state->selection.buffer    = buffer;
   state->selection.buflen    = buflen;
+}
+
+void vterm_state_send_selection(VTermState *state, VTermSelectionMask mask, VTermStringFragment frag)
+{
+  VTerm *vt = state->vt;
+
+  if(frag.initial) {
+    /* TODO: support sending more than one mask bit */
+    const static char selection_chars[] = "cpqs";
+    int idx;
+    for(idx = 0; idx < 4; idx++)
+      if(mask & (1 << idx))
+        break;
+
+    vterm_push_output_sprintf_str(vt, C1_OSC, false, "52;%c;", selection_chars[idx]);
+
+    state->tmp.selection.partial = 0;
+  }
+
+  if(frag.len) {
+    size_t bufcur = 0;
+    char *buffer = state->selection.buffer;
+
+    uint32_t x = 0;
+    int n = 0;
+
+    if(state->tmp.selection.partial) {
+      n = state->tmp.selection.partial >> 24;
+      x = state->tmp.selection.partial & 0xFFFFFF;
+
+      state->tmp.selection.partial = 0;
+    }
+
+    while((state->selection.buflen - bufcur) >= 4 && frag.len) {
+      x = (x << 8) | frag.str[0];
+      n++;
+      frag.str++, frag.len--;
+
+      if(n == 3) {
+        buffer[0] = base64_one((x >> 18) & 0x3F);
+        buffer[1] = base64_one((x >> 12) & 0x3F);
+        buffer[2] = base64_one((x >>  6) & 0x3F);
+        buffer[3] = base64_one((x >>  0) & 0x3F);
+
+        buffer += 4, bufcur += 4;
+        x = 0;
+        n = 0;
+      }
+
+      if(!frag.len || (state->selection.buflen - bufcur) < 4) {
+        if(bufcur)
+          vterm_push_output_bytes(vt, state->selection.buffer, bufcur);
+
+        buffer = state->selection.buffer;
+        bufcur = 0;
+      }
+    }
+
+    if(n)
+      state->tmp.selection.partial = (n << 24) | x;
+  }
+
+  if(frag.final) {
+    if(state->tmp.selection.partial) {
+      int n      = state->tmp.selection.partial >> 24;
+      uint32_t x = state->tmp.selection.partial & 0xFFFFFF;
+      char *buffer = state->selection.buffer;
+
+      /* n is either 1 or 2 now */
+      x <<= (n == 1) ? 16 : 8;
+
+      buffer[0] = base64_one((x >> 18) & 0x3F);
+      buffer[1] = base64_one((x >> 12) & 0x3F);
+      buffer[2] = (n == 1) ? '=' : base64_one((x >>  6) & 0x3F);
+      buffer[3] = '=';
+
+      vterm_push_output_sprintf_str(vt, 0, true, "%.*s", 4, buffer);
+    }
+    else
+      vterm_push_output_sprintf_str(vt, 0, true, "");
+  }
 }

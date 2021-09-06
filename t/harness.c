@@ -13,7 +13,8 @@ static size_t inplace_hex2bytes(char *s)
 
   while(*inpos) {
     unsigned int ch;
-    sscanf(inpos, "%2x", &ch);
+    if(sscanf(inpos, "%2x", &ch) < 1)
+      break;
     *outpos = ch;
     outpos += 1; inpos += 2;
   }
@@ -814,6 +815,32 @@ int main(int argc, char **argv)
         linep++;
       VTermModifier mod = strpe_modifiers(&linep);
       vterm_mouse_button(vt, button, (press == 'd' || press == 'D'), mod);
+    }
+
+    else if(strstartswith(line, "SELECTION ")) {
+      char *linep = line + 10;
+      unsigned int mask;
+      int len;
+      VTermStringFragment frag = { 0 };
+      sscanf(linep, "%x%n", &mask, &len);
+      linep += len;
+      while(linep[0] == ' ')
+        linep++;
+      if(linep[0] == '[') {
+        frag.initial = true;
+        linep++;
+        while(linep[0] == ' ')
+          linep++;
+      }
+      frag.len = inplace_hex2bytes(linep);
+      frag.str = linep;
+      linep += frag.len * 2;
+      while(linep[0] == ' ')
+        linep++;
+      if(linep[0] == ']') {
+        frag.final = true;
+      }
+      vterm_state_send_selection(state, mask, frag);
     }
 
     else if(strstartswith(line, "DAMAGEMERGE ")) {

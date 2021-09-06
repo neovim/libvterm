@@ -86,6 +86,11 @@ sub do_line
          my $string = eval($2);
          $line = "$1 " . unpack "H*", $string;
       }
+      elsif( $line =~ m/^(SELECTION \d+) +(\[?)(.*?)(\]?)$/ ) {
+         # we're evil
+         my $string = eval($3);
+         $line = "$1 $2 " . unpack( "H*", $string ) . " $4";
+      }
 
       do_onetest if defined $command;
 
