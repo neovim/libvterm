@@ -25,3 +25,7 @@ PUSH "\e]52;c;SGVsbG"
   selection-set mask=0001 ["Hel"
 PUSH "8s\e\\"
   selection-set mask=0001 "lo,"]
+
+!Query clipboard
+PUSH "\e]52;c;?\e\\"
+  selection-query mask=0001

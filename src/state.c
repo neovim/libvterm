@@ -1605,8 +1605,11 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
     }
   }
 
-  if(state->tmp.selection.state == SELECTION_QUERY)
+  if(state->tmp.selection.state == SELECTION_QUERY) {
+    if(state->selection.callbacks->query)
+      (*state->selection.callbacks->query)(state->tmp.selection.mask, state->selection.user);
     return;
+  }
 
   if(state->selection.callbacks->set) {
     size_t bufcur = 0;

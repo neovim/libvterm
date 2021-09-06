@@ -471,8 +471,16 @@ static int selection_set(VTermSelectionMask mask, VTermStringFragment frag, void
   return 1;
 }
 
+static int selection_query(VTermSelectionMask mask, void *user)
+{
+  printf("selection-query mask=%04X\n", mask);
+
+  return 1;
+}
+
 VTermSelectionCallbacks selection_cbs = {
-  .set = selection_set,
+  .set   = selection_set,
+  .query = selection_query,
 };
 
 static int want_screen_damage = 0;

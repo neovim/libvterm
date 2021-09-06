@@ -417,6 +417,7 @@ typedef struct {
 
 typedef struct {
   int (*set)(VTermSelectionMask mask, VTermStringFragment frag, void *user);
+  int (*query)(VTermSelectionMask mask, void *user);
 } VTermSelectionCallbacks;
 
 VTermState *vterm_obtain_state(VTerm *vt);
