@@ -174,15 +174,21 @@ INTERNAL void vterm_push_output_sprintf_ctrl(VTerm *vt, unsigned char ctrl, cons
   vterm_push_output_bytes(vt, vt->tmpbuffer, cur);
 }
 
-INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
+INTERNAL void vterm_push_output_sprintf_str(VTerm *vt, unsigned char ctrl, bool term, const char *fmt, ...)
 {
   size_t cur = 0;
 
-  cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
-      vt->mode.ctrl8bit ? "\x90" : ESC_S "P"); // DCS
+  if(ctrl) {
+    if(ctrl >= 0x80 && !vt->mode.ctrl8bit)
+      cur = snprintf(vt->tmpbuffer, vt->tmpbuffer_len,
+          ESC_S "%c", ctrl - 0x40);
+    else
+      cur = snprintf(vt->tmpbuffer, vt->tmpbuffer_len,
+          "%c", ctrl);
 
-  if(cur >= vt->tmpbuffer_len)
-    return;
+    if(cur >= vt->tmpbuffer_len)
+      return;
+  }
 
   va_list args;
   va_start(args, fmt);
@@ -193,11 +199,13 @@ INTERNAL void vterm_push_output_sprintf_dcs(VTerm *vt, const char *fmt, ...)
   if(cur >= vt->tmpbuffer_len)
     return;
 
-  cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
-      vt->mode.ctrl8bit ? "\x9C" : ESC_S "\\"); // ST
+  if(term) {
+    cur += snprintf(vt->tmpbuffer + cur, vt->tmpbuffer_len - cur,
+        vt->mode.ctrl8bit ? "\x9C" : ESC_S "\\"); // ST
 
-  if(cur >= vt->tmpbuffer_len)
-    return;
+    if(cur >= vt->tmpbuffer_len)
+      return;
+  }
 
   vterm_push_output_bytes(vt, vt->tmpbuffer, cur);
 }
