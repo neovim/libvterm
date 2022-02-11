@@ -275,8 +275,9 @@ static int on_text(const char bytes[], size_t len, void *user)
 
   VTermPos oldpos = state->pos;
 
-  // We'll have at most len codepoints
-  uint32_t codepoints[len];
+  uint32_t *codepoints = (uint32_t *)(state->vt->tmpbuffer);
+  size_t maxpoints = (state->vt->tmpbuffer_len) / sizeof(uint32_t);
+
   int npoints = 0;
   size_t eaten = 0;
 
@@ -287,7 +288,7 @@ static int on_text(const char bytes[], size_t len, void *user)
                              &state->encoding[state->gr_set];
 
   (*encoding->enc->decode)(encoding->enc, encoding->data,
-      codepoints, &npoints, state->gsingle_set ? 1 : len,
+      codepoints, &npoints, state->gsingle_set ? 1 : maxpoints,
       bytes, &eaten, len);
 
   /* There's a chance an encoding (e.g. UTF-8) hasn't found enough bytes yet
