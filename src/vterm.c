@@ -69,11 +69,11 @@ VTerm *vterm_build(const struct VTermBuilder *builder)
   vt->outfunc = NULL;
   vt->outdata = NULL;
 
-  vt->outbuffer_len = DEFAULT(builder->outbuffer_len, 64);
+  vt->outbuffer_len = DEFAULT(builder->outbuffer_len, 4096);
   vt->outbuffer_cur = 0;
   vt->outbuffer = vterm_allocator_malloc(vt, vt->outbuffer_len);
 
-  vt->tmpbuffer_len = DEFAULT(builder->tmpbuffer_len, 64);
+  vt->tmpbuffer_len = DEFAULT(builder->tmpbuffer_len, 4096);
   vt->tmpbuffer = vterm_allocator_malloc(vt, vt->tmpbuffer_len);
 
   return vt;
