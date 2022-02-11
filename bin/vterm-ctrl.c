@@ -125,7 +125,7 @@ static char *read_dcs()
   bool in_esc = false;
   int i = 0;
   for(; i < sizeof(dcs)-1; ) {
-    char c = getchar();
+    unsigned char c = getchar();
     if(c == 0x9c) // ST
       break;
     if(in_esc && c == 0x5c)
