@@ -312,8 +312,22 @@ typedef struct {
 
 void vterm_check_version(int major, int minor);
 
+struct VTermBuilder {
+  int ver; /* currently unused but reserved for some sort of ABI version flag */
+
+  int rows, cols;
+
+  const VTermAllocatorFunctions *allocator;
+  void *allocdata;
+};
+
+VTerm *vterm_build(const struct VTermBuilder *builder);
+
+/* A convenient shortcut for default cases */
 VTerm *vterm_new(int rows, int cols);
+/* This shortcuts are generally discouraged in favour of just using vterm_build() */
 VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *funcs, void *allocdata);
+
 void   vterm_free(VTerm* vt);
 
 void vterm_get_size(const VTerm *vt, int *rowsp, int *colsp);

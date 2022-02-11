@@ -29,19 +29,36 @@ static VTermAllocatorFunctions default_allocator = {
 
 VTerm *vterm_new(int rows, int cols)
 {
-  return vterm_new_with_allocator(rows, cols, &default_allocator, NULL);
+  return vterm_build(&(const struct VTermBuilder){
+      .rows = rows,
+      .cols = cols,
+    });
 }
 
 VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *funcs, void *allocdata)
 {
+  return vterm_build(&(const struct VTermBuilder){
+      .rows = rows,
+      .cols = cols,
+      .allocator = funcs,
+      .allocdata = allocdata,
+    });
+}
+
+VTerm *vterm_build(const struct VTermBuilder *builder)
+{
+  const VTermAllocatorFunctions *allocator = builder->allocator;
+  if(!allocator)
+    allocator = &default_allocator;
+
   /* Need to bootstrap using the allocator function directly */
-  VTerm *vt = (*funcs->malloc)(sizeof(VTerm), allocdata);
+  VTerm *vt = (*allocator->malloc)(sizeof(VTerm), builder->allocdata);
 
-  vt->allocator = funcs;
-  vt->allocdata = allocdata;
+  vt->allocator = allocator;
+  vt->allocdata = builder->allocdata;
 
-  vt->rows = rows;
-  vt->cols = cols;
+  vt->rows = builder->rows;
+  vt->cols = builder->cols;
 
   vt->parser.state = NORMAL;
 
