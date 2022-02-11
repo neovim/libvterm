@@ -306,6 +306,7 @@ typedef struct {
  */
 typedef struct {
   VTermPos pos;                /* current cursor position */
+  VTermLineInfo *lineinfos[2]; /* [1] may be NULL */
 } VTermStateFields;
 
 typedef struct {

@@ -1905,32 +1905,6 @@ static int on_resize(int rows, int cols, void *user)
     state->tabstops = newtabstops;
   }
 
-  if(rows != state->rows) {
-    for(int bufidx = BUFIDX_PRIMARY; bufidx <= BUFIDX_ALTSCREEN; bufidx++) {
-      VTermLineInfo *oldlineinfo = state->lineinfos[bufidx];
-      if(!oldlineinfo)
-        continue;
-
-      VTermLineInfo *newlineinfo = vterm_allocator_malloc(state->vt, rows * sizeof(VTermLineInfo));
-
-      int row;
-      for(row = 0; row < state->rows && row < rows; row++) {
-        newlineinfo[row] = oldlineinfo[row];
-      }
-
-      for( ; row < rows; row++) {
-        newlineinfo[row] = (VTermLineInfo){
-          .doublewidth = 0,
-        };
-      }
-
-      vterm_allocator_free(state->vt, state->lineinfos[bufidx]);
-      state->lineinfos[bufidx] = newlineinfo;
-    }
-
-    state->lineinfo = state->lineinfos[state->mode.alt_screen ? BUFIDX_ALTSCREEN : BUFIDX_PRIMARY];
-  }
-
   state->rows = rows;
   state->cols = cols;
 
@@ -1940,13 +1914,44 @@ static int on_resize(int rows, int cols, void *user)
     UBOUND(state->scrollregion_right, state->cols);
 
   VTermStateFields fields = {
-    .pos = state->pos,
+    .pos       = state->pos,
+    .lineinfos = { [0] = state->lineinfos[0], [1] = state->lineinfos[1] },
   };
 
-  if(state->callbacks && state->callbacks->resize)
+  if(state->callbacks && state->callbacks->resize) {
     (*state->callbacks->resize)(rows, cols, &fields, state->cbdata);
+    state->pos = fields.pos;
 
-  state->pos = fields.pos;
+    state->lineinfos[0] = fields.lineinfos[0];
+    state->lineinfos[1] = fields.lineinfos[1];
+  }
+  else {
+    if(rows != state->rows) {
+      for(int bufidx = BUFIDX_PRIMARY; bufidx <= BUFIDX_ALTSCREEN; bufidx++) {
+        VTermLineInfo *oldlineinfo = state->lineinfos[bufidx];
+        if(!oldlineinfo)
+          continue;
+
+        VTermLineInfo *newlineinfo = vterm_allocator_malloc(state->vt, rows * sizeof(VTermLineInfo));
+
+        int row;
+        for(row = 0; row < state->rows && row < rows; row++) {
+          newlineinfo[row] = oldlineinfo[row];
+        }
+
+        for( ; row < rows; row++) {
+          newlineinfo[row] = (VTermLineInfo){
+            .doublewidth = 0,
+          };
+        }
+
+        vterm_allocator_free(state->vt, state->lineinfos[bufidx]);
+        state->lineinfos[bufidx] = newlineinfo;
+      }
+    }
+  }
+
+  state->lineinfo = state->lineinfos[state->mode.alt_screen ? BUFIDX_ALTSCREEN : BUFIDX_PRIMARY];
 
   if(state->at_phantom && state->pos.col < cols-1) {
     state->at_phantom = 0;
