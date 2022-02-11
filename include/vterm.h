@@ -17,6 +17,11 @@ extern "C" {
 #define VTERM_CHECK_VERSION \
         vterm_check_version(VTERM_VERSION_MAJOR, VTERM_VERSION_MINOR)
 
+/* Any cell can contain at most one basic printing character and 5 combining
+ * characters. This number could be changed but will be ABI-incompatible if
+ * you do */
+#define VTERM_MAX_CHARS_PER_CELL 6
+
 typedef struct VTerm VTerm;
 typedef struct VTermState VTermState;
 typedef struct VTermScreen VTermScreen;
@@ -501,7 +506,6 @@ enum {
 };
 
 typedef struct {
-#define VTERM_MAX_CHARS_PER_CELL 6
   uint32_t chars[VTERM_MAX_CHARS_PER_CELL];
   char     width;
   VTermScreenCellAttrs attrs;

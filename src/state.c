@@ -348,13 +348,15 @@ static int on_text(const char bytes[], size_t len, void *user)
     // Try to find combining characters following this
     int glyph_starts = i;
     int glyph_ends;
-    for(glyph_ends = i + 1; glyph_ends < npoints; glyph_ends++)
+    for(glyph_ends = i + 1;
+        (glyph_ends < npoints) && (glyph_ends < glyph_starts + VTERM_MAX_CHARS_PER_CELL);
+        glyph_ends++)
       if(!vterm_unicode_is_combining(codepoints[glyph_ends]))
         break;
 
     int width = 0;
 
-    uint32_t chars[glyph_ends - glyph_starts + 1];
+    uint32_t chars[VTERM_MAX_CHARS_PER_CELL + 1];
 
     for( ; i < glyph_ends; i++) {
       chars[i - glyph_starts] = codepoints[i];
