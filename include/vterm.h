@@ -319,6 +319,10 @@ struct VTermBuilder {
 
   const VTermAllocatorFunctions *allocator;
   void *allocdata;
+
+  /* Override default sizes for various structures */
+  size_t outbuffer_len;  /* default: 64 */
+  size_t tmpbuffer_len;  /* default: 64 */
 };
 
 VTerm *vterm_build(const struct VTermBuilder *builder);

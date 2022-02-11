@@ -45,11 +45,12 @@ VTerm *vterm_new_with_allocator(int rows, int cols, VTermAllocatorFunctions *fun
     });
 }
 
+/* A handy macro for defaulting values out of builder fields */
+#define DEFAULT(v, def)  ((v) ? (v) : (def))
+
 VTerm *vterm_build(const struct VTermBuilder *builder)
 {
-  const VTermAllocatorFunctions *allocator = builder->allocator;
-  if(!allocator)
-    allocator = &default_allocator;
+  const VTermAllocatorFunctions *allocator = DEFAULT(builder->allocator, &default_allocator);
 
   /* Need to bootstrap using the allocator function directly */
   VTerm *vt = (*allocator->malloc)(sizeof(VTerm), builder->allocdata);
@@ -68,11 +69,11 @@ VTerm *vterm_build(const struct VTermBuilder *builder)
   vt->outfunc = NULL;
   vt->outdata = NULL;
 
-  vt->outbuffer_len = 64;
+  vt->outbuffer_len = DEFAULT(builder->outbuffer_len, 64);
   vt->outbuffer_cur = 0;
   vt->outbuffer = vterm_allocator_malloc(vt, vt->outbuffer_len);
 
-  vt->tmpbuffer_len = 64;
+  vt->tmpbuffer_len = DEFAULT(builder->tmpbuffer_len, 64);
   vt->tmpbuffer = vterm_allocator_malloc(vt, vt->tmpbuffer_len);
 
   return vt;
