@@ -141,7 +141,15 @@ sub do_line
    elsif( $line =~ s/^\?screen_row\s+(\d+)\s*=\s*// ) {
       my $row = $1;
       my $row1 = $row + 1;
-      my $want = eval($line);
+      my $want;
+
+      if( $line =~ m/^"/ ) {
+         $want = eval($line);
+      }
+      else {
+         # Turn 0xDD,0xDD,... directly into bytes
+         $want = pack "C*", map { hex } split m/,/, $line;
+      }
 
       do_onetest if defined $command;
 
@@ -150,7 +158,7 @@ sub do_line
       my $response = <$hout>;
       chomp $response;
 
-      $response = pack "C*", map hex, split m/,/, $response;
+      $response = pack "C*", map { hex } split m/,/, $response;
       if( $response ne $want ) {
          print "# line $linenum: Assert ?screen_row $row failed:\n" .
                "# Expected: $want\n" .
