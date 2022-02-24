@@ -1,0 +1,44 @@
+INIT
+# Run these tests on a much smaller default screen, so debug output is
+# nowhere near as noisy
+RESIZE 5,10
+WANTSTATE
+WANTSCREEN r
+RESET
+
+!Resize wider reflows wide lines
+RESET
+PUSH "A"x12
+  ?screen_row 0 = "AAAAAAAAAA"
+  ?screen_row 1 = "AA"
+  ?lineinfo 1 = cont
+  ?cursor = 1,2
+RESIZE 5,15
+  ?screen_row 0 = "AAAAAAAAAAAA"
+  ?screen_row 1 = 
+  ?lineinfo 1 =
+  ?cursor = 0,12
+RESIZE 5,20
+  ?screen_row 0 = "AAAAAAAAAAAA"
+  ?screen_row 1 = 
+  ?lineinfo 1 =
+  ?cursor = 0,12
+
+!Resize narrower can create continuation lines
+RESET
+RESIZE 5,10
+PUSH "ABCDEFGHI"
+  ?screen_row 0 = "ABCDEFGHI"
+  ?screen_row 1 = ""
+  ?lineinfo 1 =
+  ?cursor = 0,9
+RESIZE 5,8
+  ?screen_row 0 = "ABCDEFGH"
+  ?screen_row 1 = "I"
+  ?lineinfo 1 = cont
+  ?cursor = 1,1
+RESIZE 5,6
+  ?screen_row 0 = "ABCDEF"
+  ?screen_row 1 = "GHI"
+  ?lineinfo 1 = cont
+  ?cursor = 1,3
