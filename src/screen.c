@@ -554,8 +554,8 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
     int spare_rows = new_rows - final_blank_row;
 
     if(new_row_start < 0 && /* we'd fall off the top */
-        final_blank_row < new_rows && /* we actually have spare rows */
-        (!active || new_cursor.row == -1 || new_cursor.row < (new_rows - spare_rows)))
+        spare_rows >= 0 && /* we actually have spare rows */
+        (!active || new_cursor.row == -1 || (new_cursor.row - new_row_start) < new_rows))
     {
       /* Attempt to scroll content down into the blank rows at the bottom to
        * make it fit
@@ -574,7 +574,7 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
       new_row_start += downwards;
       new_row_end += downwards;
 
-      if(new_cursor.row > new_row_end)
+      if(new_cursor.row >= 0)
         new_cursor.row += downwards;
 
       final_blank_row += downwards;
