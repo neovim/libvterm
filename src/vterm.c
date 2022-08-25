@@ -113,6 +113,9 @@ void vterm_get_size(const VTerm *vt, int *rowsp, int *colsp)
 
 void vterm_set_size(VTerm *vt, int rows, int cols)
 {
+  if(rows < 1 || cols < 1)
+    return;
+
   vt->rows = rows;
   vt->cols = cols;
 
