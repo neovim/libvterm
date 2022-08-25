@@ -6,6 +6,11 @@ RESET
 PUSH "\e[c"
   output "\e[?1;2c"
 
+!XTVERSION
+RESET
+PUSH "\e[>q"
+  output "\eP>|libvterm(0.2)\e\\"
+
 !DSR
 RESET
 PUSH "\e[5n"

@@ -913,6 +913,12 @@ static void request_dec_mode(VTermState *state, int num)
   vterm_push_output_sprintf_ctrl(state->vt, C1_CSI, "?%d;%d$y", num, reply ? 1 : 2);
 }
 
+static void request_version_string(VTermState *state)
+{
+  vterm_push_output_sprintf_str(state->vt, C1_DCS, true, ">|libvterm(%d.%d)",
+      VTERM_VERSION_MAJOR, VTERM_VERSION_MINOR);
+}
+
 static int on_csi(const char *leader, const long args[], int argcount, const char *intermed, char command, void *user)
 {
   VTermState *state = user;
@@ -1354,6 +1360,10 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
   case LEADER('?', INTERMED('$', 0x70)):
     request_dec_mode(state, CSI_ARG(args[0]));
+    break;
+
+  case LEADER('>', 0x71): // XTVERSION - xterm query version string
+    request_version_string(state);
     break;
 
   case INTERMED(' ', 0x71): // DECSCUSR - DEC set cursor shape
