@@ -717,6 +717,8 @@ int main(int argc, char **argv)
     else if(strstartswith(line, "PUSH ")) {
       char *bytes = line + 5;
       size_t len = inplace_hex2bytes(bytes);
+      assert(len);
+
       size_t written = vterm_input_write(vt, bytes, len);
       if(written < len)
         fprintf(stderr, "! short write\n");
@@ -734,6 +736,7 @@ int main(int argc, char **argv)
     else if(strstartswith(line, "ENCIN ")) {
       char *bytes = line + 6;
       size_t len = inplace_hex2bytes(bytes);
+      assert(len);
 
       uint32_t cp[len];
       int cpi = 0;
@@ -840,6 +843,8 @@ int main(int argc, char **argv)
       }
       frag.len = inplace_hex2bytes(linep);
       frag.str = linep;
+      assert(frag.len);
+
       linep += frag.len * 2;
       while(linep[0] == ' ')
         linep++;
