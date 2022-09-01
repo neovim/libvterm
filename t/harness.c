@@ -449,6 +449,15 @@ static int state_setlineinfo(int row, const VTermLineInfo *newinfo, const VTermL
   return 1;
 }
 
+static int want_state_scrollback = 0;
+static int state_sb_clear(void *user) {
+  if(!want_state_scrollback)
+    return 1;
+
+  printf("sb_clear\n");
+  return 0;
+}
+
 VTermStateCallbacks state_cbs = {
   .putglyph    = state_putglyph,
   .movecursor  = movecursor,
@@ -458,6 +467,7 @@ VTermStateCallbacks state_cbs = {
   .setpenattr  = state_setpenattr,
   .settermprop = settermprop,
   .setlineinfo = state_setlineinfo,
+  .sb_clear    = state_sb_clear,
 };
 
 static int selection_set(VTermSelectionMask mask, VTermStringFragment frag, void *user)
@@ -567,6 +577,15 @@ static int screen_sb_popline(int cols, VTermScreenCell *cells, void *user)
   return 1;
 }
 
+static int screen_sb_clear(void *user)
+{
+  if(!want_screen_scrollback)
+    return 1;
+
+  printf("sb_clear\n");
+  return 0;
+}
+
 VTermScreenCallbacks screen_cbs = {
   .damage      = screen_damage,
   .moverect    = moverect,
@@ -574,6 +593,7 @@ VTermScreenCallbacks screen_cbs = {
   .settermprop = settermprop,
   .sb_pushline = screen_sb_pushline,
   .sb_popline  = screen_sb_popline,
+  .sb_clear    = screen_sb_clear,
 };
 
 int main(int argc, char **argv)
@@ -643,6 +663,9 @@ int main(int argc, char **argv)
           break;
         case 'f':
           vterm_state_set_unrecognised_fallbacks(state, sense ? &fallbacks : NULL, NULL);
+          break;
+        case 'b':
+          want_state_scrollback = sense;
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSTATE flag '%c'\n", line[i]);

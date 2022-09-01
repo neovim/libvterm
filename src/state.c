@@ -1091,6 +1091,12 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
         set_lineinfo(state, row, FORCE, DWL_OFF, DHL_OFF);
       erase(state, rect, selective);
       break;
+
+    case 3:
+      if(state->callbacks && state->callbacks->sb_clear)
+        if((*state->callbacks->sb_clear)(state->cbdata))
+          return 1;
+      break;
     }
     break;
 

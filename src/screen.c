@@ -670,6 +670,16 @@ static int setlineinfo(int row, const VTermLineInfo *newinfo, const VTermLineInf
   return 1;
 }
 
+static int sb_clear(void *user) {
+  VTermScreen *screen = user;
+
+  if(screen->callbacks && screen->callbacks->sb_clear)
+    if((*screen->callbacks->sb_clear)(screen->cbdata))
+      return 1;
+
+  return 0;
+}
+
 static VTermStateCallbacks state_cbs = {
   .putglyph    = &putglyph,
   .movecursor  = &movecursor,
@@ -680,6 +690,7 @@ static VTermStateCallbacks state_cbs = {
   .bell        = &bell,
   .resize      = &resize,
   .setlineinfo = &setlineinfo,
+  .sb_clear    = &sb_clear,
 };
 
 static VTermScreen *screen_new(VTerm *vt)
