@@ -177,7 +177,8 @@ INTERNAL void vterm_state_resetpen(VTermState *state)
   state->pen.conceal = 0;   setpenattr_bool(state, VTERM_ATTR_CONCEAL, 0);
   state->pen.strike = 0;    setpenattr_bool(state, VTERM_ATTR_STRIKE, 0);
   state->pen.font = 0;      setpenattr_int (state, VTERM_ATTR_FONT, 0);
-  state->pen.sizepos = 0;   setpenattr_int (state, VTERM_ATTR_SIZEPOS, 0);
+  state->pen.small = 0;     setpenattr_bool(state, VTERM_ATTR_SMALL, 0);
+  state->pen.baseline = 0;  setpenattr_int (state, VTERM_ATTR_BASELINE, 0);
 
   state->pen.fg = state->default_fg;  setpenattr_col(state, VTERM_ATTR_FOREGROUND, state->default_fg);
   state->pen.bg = state->default_bg;  setpenattr_col(state, VTERM_ATTR_BACKGROUND, state->default_bg);
@@ -199,7 +200,8 @@ INTERNAL void vterm_state_savepen(VTermState *state, int save)
     setpenattr_bool(state, VTERM_ATTR_CONCEAL,   state->pen.conceal);
     setpenattr_bool(state, VTERM_ATTR_STRIKE,    state->pen.strike);
     setpenattr_int (state, VTERM_ATTR_FONT,      state->pen.font);
-    setpenattr_int (state, VTERM_ATTR_SIZEPOS,   state->pen.sizepos);
+    setpenattr_bool(state, VTERM_ATTR_SMALL,     state->pen.small);
+    setpenattr_int (state, VTERM_ATTR_BASELINE,  state->pen.baseline);
 
     setpenattr_col( state, VTERM_ATTR_FOREGROUND, state->pen.fg);
     setpenattr_col( state, VTERM_ATTR_BACKGROUND, state->pen.bg);
@@ -431,11 +433,13 @@ INTERNAL void vterm_state_setpen(VTermState *state, const long args[], int argco
     case 73: // Superscript
     case 74: // Subscript
     case 75: // Superscript/subscript off
-      state->pen.sizepos =
-        (arg == 73) ? VTERM_SIZEPOS_SUPERSCRIPT :
-        (arg == 74) ? VTERM_SIZEPOS_SUBSCRIPT   :
-                      VTERM_SIZEPOS_NORMAL;
-      setpenattr_int(state, VTERM_ATTR_SIZEPOS, state->pen.sizepos);
+      state->pen.small = (arg != 75);
+      state->pen.baseline =
+        (arg == 73) ? VTERM_BASELINE_RAISE :
+        (arg == 74) ? VTERM_BASELINE_LOWER :
+                      VTERM_BASELINE_NORMAL;
+      setpenattr_bool(state, VTERM_ATTR_SMALL,    state->pen.small);
+      setpenattr_int (state, VTERM_ATTR_BASELINE, state->pen.baseline);
       break;
 
     case 90: case 91: case 92: case 93:
@@ -532,10 +536,12 @@ INTERNAL int vterm_state_getpen(VTermState *state, long args[], int argcount)
 
   argi = vterm_state_getpen_color(&state->pen.bg, argi, args, false);
 
-  if(state->pen.sizepos == VTERM_SIZEPOS_SUPERSCRIPT)
-    args[argi++] = 73;
-  else if(state->pen.sizepos == VTERM_SIZEPOS_SUBSCRIPT)
-    args[argi++] = 74;
+  if(state->pen.small) {
+    if(state->pen.baseline == VTERM_BASELINE_RAISE)
+      args[argi++] = 73;
+    else if(state->pen.baseline == VTERM_BASELINE_LOWER)
+      args[argi++] = 74;
+  }
 
   return argi;
 }
@@ -583,8 +589,12 @@ int vterm_state_get_penattr(const VTermState *state, VTermAttr attr, VTermValue 
     val->color = state->pen.bg;
     return 1;
 
-  case VTERM_ATTR_SIZEPOS:
-    val->number = state->pen.sizepos;
+  case VTERM_ATTR_SMALL:
+    val->boolean = state->pen.small;
+    return 1;
+
+  case VTERM_ATTR_BASELINE:
+    val->number = state->pen.baseline;
     return 1;
 
   case VTERM_N_ATTRS:

@@ -400,7 +400,8 @@ static struct {
   int conceal;
   int strike;
   int font;
-  int sizepos;
+  int small;
+  int baseline;
   VTermColor foreground;
   VTermColor background;
 } state_pen;
@@ -431,8 +432,11 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
   case VTERM_ATTR_FONT:
     state_pen.font = val->number;
     break;
-  case VTERM_ATTR_SIZEPOS:
-    state_pen.sizepos = val->number;
+  case VTERM_ATTR_SMALL:
+    state_pen.small = val->boolean;
+    break;
+  case VTERM_ATTR_BASELINE:
+    state_pen.baseline = val->number;
     break;
   case VTERM_ATTR_FOREGROUND:
     state_pen.foreground = val->color;
@@ -972,14 +976,22 @@ int main(int argc, char **argv)
           else
             printf("%d\n", state_pen.font);
         }
-        else if(streq(linep, "sizepos")) {
-          vterm_state_get_penattr(state, VTERM_ATTR_SIZEPOS, &val);
-          if(val.number != state_pen.sizepos)
-            printf("! pen sizepos mismatch: state=%d, event=%d\n",
-                val.number, state_pen.sizepos);
+        else if(streq(linep, "small")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_SMALL, &val);
+          if(val.boolean != state_pen.small)
+            printf("! pen small mismatch; state=%s, event=%s\n",
+                BOOLSTR(val.boolean), BOOLSTR(state_pen.small));
           else
-            printf("%s\n", state_pen.sizepos == VTERM_SIZEPOS_SUPERSCRIPT ? "super"
-                         : state_pen.sizepos == VTERM_SIZEPOS_SUBSCRIPT   ? "sub"
+            printf("%s\n", BOOLSTR(state_pen.small));
+        }
+        else if(streq(linep, "baseline")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_BASELINE, &val);
+          if(val.number != state_pen.baseline)
+            printf("! pen baseline mismatch: state=%d, event=%d\n",
+                val.number, state_pen.baseline);
+          else
+            printf("%s\n", state_pen.baseline == VTERM_BASELINE_RAISE ? "raise"
+                         : state_pen.baseline == VTERM_BASELINE_LOWER ? "lower"
                          : "normal");
         }
         else if(streq(linep, "foreground")) {
@@ -1106,9 +1118,10 @@ int main(int argc, char **argv)
         if(cell.attrs.blink)     printf("K");
         if(cell.attrs.reverse)   printf("R");
         if(cell.attrs.font)      printf("F%d", cell.attrs.font);
-        if(cell.attrs.sizepos)  printf("S%s",
-            cell.attrs.sizepos == VTERM_SIZEPOS_SUPERSCRIPT ? "^" :
-            cell.attrs.sizepos == VTERM_SIZEPOS_SUBSCRIPT   ? "_" : "");
+        if(cell.attrs.small)     printf("S");
+        if(cell.attrs.baseline)  printf(
+            cell.attrs.baseline == VTERM_BASELINE_RAISE ? "^" :
+                                                          "_");
         printf("} ");
         if(cell.attrs.dwl)       printf("dwl ");
         if(cell.attrs.dhl)       printf("dhl-%s ", cell.attrs.dhl == 2 ? "bottom" : "top");
