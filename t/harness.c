@@ -400,6 +400,7 @@ static struct {
   int conceal;
   int strike;
   int font;
+  int sizepos;
   VTermColor foreground;
   VTermColor background;
 } state_pen;
@@ -429,6 +430,9 @@ static int state_setpenattr(VTermAttr attr, VTermValue *val, void *user)
     break;
   case VTERM_ATTR_FONT:
     state_pen.font = val->number;
+    break;
+  case VTERM_ATTR_SIZEPOS:
+    state_pen.sizepos = val->number;
     break;
   case VTERM_ATTR_FOREGROUND:
     state_pen.foreground = val->color;
@@ -968,6 +972,16 @@ int main(int argc, char **argv)
           else
             printf("%d\n", state_pen.font);
         }
+        else if(streq(linep, "sizepos")) {
+          vterm_state_get_penattr(state, VTERM_ATTR_SIZEPOS, &val);
+          if(val.number != state_pen.sizepos)
+            printf("! pen sizepos mismatch: state=%d, event=%d\n",
+                val.number, state_pen.sizepos);
+          else
+            printf("%s\n", state_pen.sizepos == VTERM_SIZEPOS_SUPERSCRIPT ? "super"
+                         : state_pen.sizepos == VTERM_SIZEPOS_SUBSCRIPT   ? "sub"
+                         : "normal");
+        }
         else if(streq(linep, "foreground")) {
           print_color(&state_pen.foreground);
           printf("\n");
@@ -1092,6 +1106,9 @@ int main(int argc, char **argv)
         if(cell.attrs.blink)     printf("K");
         if(cell.attrs.reverse)   printf("R");
         if(cell.attrs.font)      printf("F%d", cell.attrs.font);
+        if(cell.attrs.sizepos)  printf("S%s",
+            cell.attrs.sizepos == VTERM_SIZEPOS_SUPERSCRIPT ? "^" :
+            cell.attrs.sizepos == VTERM_SIZEPOS_SUBSCRIPT   ? "_" : "");
         printf("} ");
         if(cell.attrs.dwl)       printf("dwl ");
         if(cell.attrs.dhl)       printf("dhl-%s ", cell.attrs.dhl == 2 ? "bottom" : "top");

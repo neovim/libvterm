@@ -242,6 +242,7 @@ typedef enum {
   VTERM_ATTR_FONT,       // number: 10-19
   VTERM_ATTR_FOREGROUND, // color:  30-39 90-97
   VTERM_ATTR_BACKGROUND, // color:  40-49 100-107
+  VTERM_ATTR_SIZEPOS,    // number: 73, 74, 75
 
   VTERM_N_ATTRS
 } VTermAttr;
@@ -498,6 +499,7 @@ typedef struct {
     unsigned int font      : 4; /* 0 to 9 */
     unsigned int dwl       : 1; /* On a DECDWL or DECDHL line */
     unsigned int dhl       : 2; /* On a DECDHL line (1=top 2=bottom) */
+    unsigned int sizepos   : 2;
 } VTermScreenCellAttrs;
 
 enum {
@@ -505,6 +507,13 @@ enum {
   VTERM_UNDERLINE_SINGLE,
   VTERM_UNDERLINE_DOUBLE,
   VTERM_UNDERLINE_CURLY,
+};
+
+enum {
+  VTERM_SIZEPOS_NORMAL,
+  VTERM_SIZEPOS_SMALL, // not actually used yet, but the value is reserved
+  VTERM_SIZEPOS_SUPERSCRIPT,
+  VTERM_SIZEPOS_SUBSCRIPT,
 };
 
 typedef struct {
@@ -565,8 +574,9 @@ typedef enum {
   VTERM_ATTR_FOREGROUND_MASK = 1 << 7,
   VTERM_ATTR_BACKGROUND_MASK = 1 << 8,
   VTERM_ATTR_CONCEAL_MASK    = 1 << 9,
+  VTERM_ATTR_SIZEPOS_MASK    = 1 << 10,
 
-  VTERM_ALL_ATTRS_MASK = (1 << 10) - 1
+  VTERM_ALL_ATTRS_MASK = (1 << 11) - 1
 } VTermAttrMask;
 
 int vterm_screen_get_attrs_extent(const VTermScreen *screen, VTermRect *extent, VTermPos pos, VTermAttrMask attrs);

@@ -198,6 +198,9 @@ x = xterm
    x   SGR 40-47        = Background ANSI
    x   SGR 48           = Background alternative palette
    x   SGR 49           = Background default
+       SGR 73           = Superscript on
+       SGR 74           = Subscript on
+       SGR 75           = Superscript/subscript off
    x   SGR 90-97        = Foreground ANSI high-intensity
    x   SGR 100-107      = Background ANSI high-intensity
 
