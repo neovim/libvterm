@@ -9,6 +9,8 @@
 #define UNICODE_SPACE 0x20
 #define UNICODE_LINEFEED 0x0a
 
+#undef DEBUG_REFLOW
+
 /* State of the pen at some moment in time, also used in a cell */
 typedef struct
 {
@@ -515,8 +517,10 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
   VTermPos old_cursor = statefields->pos;
   VTermPos new_cursor = { -1, -1 };
 
+#ifdef DEBUG_REFLOW
   fprintf(stderr, "Resizing from %dx%d to %dx%d; cursor was at (%d,%d)\n",
       old_cols, old_rows, new_cols, new_rows, old_cursor.col, old_cursor.row);
+#endif
 
   /* Keep track of the final row that is knonw to be blank, so we know what
    * spare space we have for scrolling into
@@ -565,7 +569,9 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
         downwards = spare_rows;
       int rowcount = new_rows - downwards;
 
+#ifdef DEBUG_REFLOW
       fprintf(stderr, "  scroll %d rows +%d downwards\n", rowcount, downwards);
+#endif
 
       memmove(&new_buffer[downwards * new_cols], &new_buffer[0],   rowcount * new_cols * sizeof(ScreenCell));
       memmove(&new_lineinfo[downwards],          &new_lineinfo[0], rowcount            * sizeof(new_lineinfo[0]));
@@ -580,8 +586,10 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
       final_blank_row += downwards;
     }
 
+#ifdef DEBUG_REFLOW
     fprintf(stderr, "  rows [%d..%d] <- [%d..%d] width=%d\n",
         new_row_start, new_row_end, old_row_start, old_row_end, width);
+#endif
 
     if(new_row_start < 0)
       break;
