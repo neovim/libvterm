@@ -641,7 +641,7 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
   }
 
   /* We really expect the cursor position to be set by now */
-  if(new_cursor.row == -1 || new_cursor.col == -1) {
+  if(active && (new_cursor.row == -1 || new_cursor.col == -1)) {
     fprintf(stderr, "screen_resize failed to update cursor position\n");
     abort();
   }
@@ -717,7 +717,8 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
   vterm_allocator_free(screen->vt, old_lineinfo);
   statefields->lineinfos[bufidx] = new_lineinfo;
 
-  statefields->pos = new_cursor;
+  if(active)
+    statefields->pos = new_cursor;
 
   return;
 }
