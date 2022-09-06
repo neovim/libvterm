@@ -588,15 +588,13 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
 
     for(new_row = new_row_start, old_row = old_row_start; new_row <= new_row_end; new_row++) {
       int count = width >= new_cols ? new_cols : width;
+      width -= count;
 
       int new_col = 0;
 
       while(count) {
         /* TODO: This could surely be done a lot faster by memcpy()'ing the entire range */
         new_buffer[new_row * new_cols + new_col] = old_buffer[old_row * old_cols + old_col];
-
-//        fprintf(stderr, "  cell (%d,%d) <- (%d,%d)\n",
-//            new_col, new_row, old_col, old_row);
 
         if(old_cursor.row == old_row && old_cursor.col == old_col)
           new_cursor.row = new_row, new_cursor.col = new_col;
