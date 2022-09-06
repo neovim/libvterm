@@ -544,6 +544,8 @@ void *vterm_screen_get_cbdata(VTermScreen *screen);
 void  vterm_screen_set_unrecognised_fallbacks(VTermScreen *screen, const VTermStateFallbacks *fallbacks, void *user);
 void *vterm_screen_get_unrecognised_fbdata(VTermScreen *screen);
 
+void vterm_screen_set_reflow(VTermScreen *screen, bool reflow);
+
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen);
 
 typedef enum {
