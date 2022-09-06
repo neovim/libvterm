@@ -370,6 +370,9 @@ static int on_text(const char bytes[], size_t len, void *user)
       width += this_width;
     }
 
+    while(i < npoints && vterm_unicode_is_combining(codepoints[i]))
+      i++;
+
     chars[glyph_ends - glyph_starts] = 0;
     i--;
 
