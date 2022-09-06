@@ -55,7 +55,8 @@ struct VTermScreen
 
   int rows;
   int cols;
-  int global_reverse;
+
+  unsigned int global_reverse : 1;
 
   /* Primary and Altscreen. buffers[1] is lazily allocated as needed */
   ScreenCell *buffers[2];
@@ -724,6 +725,7 @@ static VTermScreen *screen_new(VTerm *vt)
   screen->rows = rows;
   screen->cols = cols;
 
+  screen->global_reverse = false;
   screen->callbacks = NULL;
   screen->cbdata    = NULL;
 
