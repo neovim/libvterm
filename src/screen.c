@@ -1017,9 +1017,15 @@ VTermScreen *vterm_obtain_screen(VTerm *vt)
   return screen;
 }
 
-void vterm_screen_set_reflow(VTermScreen *screen, bool reflow)
+void vterm_screen_enable_reflow(VTermScreen *screen, bool reflow)
 {
   screen->reflow = reflow;
+}
+
+#undef vterm_screen_set_reflow
+void vterm_screen_set_reflow(VTermScreen *screen, bool reflow)
+{
+  vterm_screen_enable_reflow(screen, reflow);
 }
 
 void vterm_screen_enable_altscreen(VTermScreen *screen, int altscreen)

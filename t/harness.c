@@ -718,7 +718,7 @@ int main(int argc, char **argv)
           want_screen_scrollback = sense;
           break;
         case 'r':
-          vterm_screen_set_reflow(screen, sense);
+          vterm_screen_enable_reflow(screen, sense);
           break;
         default:
           fprintf(stderr, "Unrecognised WANTSCREEN flag '%c'\n", line[i]);
