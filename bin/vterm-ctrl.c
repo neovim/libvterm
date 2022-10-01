@@ -97,7 +97,7 @@ static void await_c1(unsigned char c1)
   }
 }
 
-static char *read_csi()
+static char *read_csi(void)
 {
   await_c1(0x9B); // CSI
 
@@ -117,7 +117,7 @@ static char *read_csi()
   return strdup(csi);
 }
 
-static char *read_dcs()
+static char *read_dcs(void)
 {
   await_c1(0x90);
 
