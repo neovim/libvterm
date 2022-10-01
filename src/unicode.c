@@ -212,19 +212,7 @@ static int mk_wcwidth(uint32_t ucs)
 }
 
 
-static int mk_wcswidth(const uint32_t *pwcs, size_t n)
-{
-  int w, width = 0;
-
-  for (;*pwcs && n-- > 0; pwcs++)
-    if ((w = mk_wcwidth(*pwcs)) < 0)
-      return -1;
-    else
-      width += w;
-
-  return width;
-}
-
+#ifdef USE_MK_WCWIDTH_CJK
 
 /*
  * The following functions are the same as mk_wcwidth() and
@@ -302,19 +290,7 @@ static int mk_wcwidth_cjk(uint32_t ucs)
   return mk_wcwidth(ucs);
 }
 
-
-static int mk_wcswidth_cjk(const uint32_t *pwcs, size_t n)
-{
-  int w, width = 0;
-
-  for (;*pwcs && n-- > 0; pwcs++)
-    if ((w = mk_wcwidth_cjk(*pwcs)) < 0)
-      return -1;
-    else
-      width += w;
-
-  return width;
-}
+#endif
 
 // ################################
 // ### The rest added by Paul Evans
