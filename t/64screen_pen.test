@@ -59,3 +59,15 @@ PUSH "\e[?5l"
   ?screen_cell 1,0  = {} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
 PUSH "\e[?5\$p"
   output "\e[?5;2\$y"
+
+!Set default colours
+RESET
+PUSH "ABC\e[31mDEF\e[m"
+  ?screen_cell 0,0  = {0x41} width=1 attrs={} fg=rgb(240,240,240) bg=rgb(0,0,0)
+  ?screen_cell 0,3  = {0x44} width=1 attrs={} fg=rgb(224,0,0) bg=rgb(0,0,0)
+SETDEFAULTCOL rgb(252,253,254)
+  ?screen_cell 0,0  = {0x41} width=1 attrs={} fg=rgb(252,253,254) bg=rgb(0,0,0)
+  ?screen_cell 0,3  = {0x44} width=1 attrs={} fg=rgb(224,0,0) bg=rgb(0,0,0)
+SETDEFAULTCOL rgb(250,250,250) rgb(10,20,30)
+  ?screen_cell 0,0  = {0x41} width=1 attrs={} fg=rgb(250,250,250) bg=rgb(10,20,30)
+  ?screen_cell 0,3  = {0x44} width=1 attrs={} fg=rgb(224,0,0) bg=rgb(10,20,30)

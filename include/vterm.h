@@ -598,6 +598,12 @@ int vterm_screen_is_eol(const VTermScreen *screen, VTermPos pos);
  */
 void vterm_screen_convert_color_to_rgb(const VTermScreen *screen, VTermColor *col);
 
+/**
+ * Similar to vterm_state_set_default_colors(), but also resets colours in the
+ * screen buffer(s)
+ */
+void vterm_screen_set_default_colors(VTermScreen *screen, const VTermColor *default_fg, const VTermColor *default_bg);
+
 // ---------
 // Utilities
 // ---------

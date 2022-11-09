@@ -1144,3 +1144,36 @@ void vterm_screen_convert_color_to_rgb(const VTermScreen *screen, VTermColor *co
 {
   vterm_state_convert_color_to_rgb(screen->state, col);
 }
+
+static void reset_default_colours(VTermScreen *screen, ScreenCell *buffer)
+{
+  for(int row = 0; row <= screen->rows - 1; row++)
+    for(int col = 0; col <= screen->cols - 1; col++) {
+      ScreenCell *cell = &buffer[row * screen->cols + col];
+      if(VTERM_COLOR_IS_DEFAULT_FG(&cell->pen.fg))
+        cell->pen.fg = screen->pen.fg;
+      if(VTERM_COLOR_IS_DEFAULT_BG(&cell->pen.bg))
+        cell->pen.bg = screen->pen.bg;
+    }
+}
+
+void vterm_screen_set_default_colors(VTermScreen *screen, const VTermColor *default_fg, const VTermColor *default_bg)
+{
+  vterm_state_set_default_colors(screen->state, default_fg, default_bg);
+
+  if(default_fg && VTERM_COLOR_IS_DEFAULT_FG(&screen->pen.fg)) {
+    screen->pen.fg = *default_fg;
+    screen->pen.fg.type = (screen->pen.fg.type & ~VTERM_COLOR_DEFAULT_MASK)
+                        | VTERM_COLOR_DEFAULT_FG;
+  }
+
+  if(default_bg && VTERM_COLOR_IS_DEFAULT_BG(&screen->pen.bg)) {
+    screen->pen.bg = *default_bg;
+    screen->pen.bg.type = (screen->pen.bg.type & ~VTERM_COLOR_DEFAULT_MASK)
+                        | VTERM_COLOR_DEFAULT_BG;
+  }
+
+  reset_default_colours(screen, screen->buffers[0]);
+  if(screen->buffers[1])
+    reset_default_colours(screen, screen->buffers[1]);
+}
