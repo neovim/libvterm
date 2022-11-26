@@ -281,7 +281,11 @@ static int erase_internal(VTermRect rect, int selective, void *user)
         continue;
 
       cell->chars[0] = 0;
-      cell->pen = screen->pen;
+      cell->pen = (ScreenPen){
+        /* Only copy .fg and .bg; leave things like rv in reset state */
+        .fg = screen->pen.fg,
+        .bg = screen->pen.bg,
+      };
       cell->pen.dwl = info->doublewidth;
       cell->pen.dhl = info->doubleheight;
     }
