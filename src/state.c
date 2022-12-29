@@ -1862,7 +1862,7 @@ static void request_status_string(VTermState *state, VTermStringFragment frag)
       return;
   }
 
-  vterm_push_output_sprintf_str(state->vt, C1_DCS, true, "0$r%s", tmp);
+  vterm_push_output_sprintf_str(state->vt, C1_DCS, true, "0$r");
 }
 
 static int on_dcs(const char *command, size_t commandlen, VTermStringFragment frag, void *user)
