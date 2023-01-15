@@ -413,6 +413,11 @@ typedef struct {
 void  vterm_parser_set_callbacks(VTerm *vt, const VTermParserCallbacks *callbacks, void *user);
 void *vterm_parser_get_cbdata(VTerm *vt);
 
+/* Normally NUL, CAN, SUB and DEL are ignored. Setting this true causes them
+ * to be emitted by the 'control' callback
+ */
+void vterm_parser_set_emit_nul(VTerm *vt, bool emit);
+
 // -----------
 // State layer
 // -----------

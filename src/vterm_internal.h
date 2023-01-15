@@ -227,6 +227,8 @@ struct VTerm
     void *cbdata;
 
     bool string_initial;
+
+    bool emit_nul;
   } parser;
 
   /* len == malloc()ed size; cur == number of valid bytes */

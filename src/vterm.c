@@ -66,6 +66,8 @@ VTerm *vterm_build(const struct VTermBuilder *builder)
   vt->parser.callbacks = NULL;
   vt->parser.cbdata    = NULL;
 
+  vt->parser.emit_nul  = false;
+
   vt->outfunc = NULL;
   vt->outdata = NULL;
 
