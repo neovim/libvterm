@@ -65,6 +65,8 @@ static int parser_control(unsigned char control, void *user)
 {
   if(control < 0x20)
     printf("%s%s%s", special_begin, name_c0[control], special_end);
+  else if(control == 0x7f)
+    printf("%s%s%s", special_begin, "DEL", special_end);
   else if(control >= 0x80 && control < 0xa0 && name_c1[control - 0x80])
     printf("%s%s%s", special_begin, name_c1[control - 0x80], special_end);
   else
@@ -226,6 +228,7 @@ int main(int argc, char *argv[])
   VTerm *vt = vterm_new(25, 80);
   vterm_set_utf8(vt, 1);
   vterm_parser_set_callbacks(vt, &parser_cbs, NULL);
+  vterm_parser_set_emit_nul(vt, true);
 
   int len;
   char buffer[1024];
