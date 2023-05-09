@@ -660,8 +660,9 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
 
   if(old_row >= 0 && bufidx == BUFIDX_PRIMARY) {
     /* Push spare lines to scrollback buffer */
-    for(int row = 0; row <= old_row; row++)
-      sb_pushline_from_row(screen, row);
+    if(screen->callbacks && screen->callbacks->sb_pushline)
+      for(int row = 0; row <= old_row; row++)
+        sb_pushline_from_row(screen, row);
     if(active)
       statefields->pos.row -= (old_row + 1);
   }
