@@ -595,8 +595,15 @@ static void resize_buffer(VTermScreen *screen, int bufidx, int new_rows, int new
         new_row_start, new_row_end, old_row_start, old_row_end, width);
 #endif
 
-    if(new_row_start < 0)
+    if(new_row_start < 0) {
+      if(old_row_start <= old_cursor.row && old_cursor.row < old_row_end) {
+        new_cursor.row = 0;
+        new_cursor.col = old_cursor.col;
+        if(new_cursor.col >= new_cols)
+          new_cursor.col = new_cols-1;
+      }
       break;
+    }
 
     for(new_row = new_row_start, old_row = old_row_start; new_row <= new_row_end; new_row++) {
       int count = width >= new_cols ? new_cols : width;
