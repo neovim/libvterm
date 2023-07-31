@@ -55,6 +55,10 @@ MOUSEBTN d 4 0
   output "\e[M\x60\x36\x2b"
 MOUSEBTN d 5 0
   output "\e[M\x61\x36\x2b"
+MOUSEBTN d 6 0
+  output "\e[M\x62\x36\x2b"
+MOUSEBTN d 7 0
+  output "\e[M\x63\x36\x2b"
 
 !DECRQM on mouse button mode
 PUSH "\e[?1000\$p"
