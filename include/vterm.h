@@ -13,6 +13,7 @@ extern "C" {
 
 #define VTERM_VERSION_MAJOR 0
 #define VTERM_VERSION_MINOR 3
+#define VTERM_VERSION_PATCH 2
 
 #define VTERM_CHECK_VERSION \
         vterm_check_version(VTERM_VERSION_MAJOR, VTERM_VERSION_MINOR)
