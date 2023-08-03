@@ -801,6 +801,7 @@ static void set_dec_mode(VTermState *state, int num, int val)
     break;
 
   case 1004:
+    settermprop_bool(state, VTERM_PROP_FOCUSREPORT, val);
     state->mode.report_focus = val;
     break;
 
@@ -2223,6 +2224,9 @@ int vterm_state_set_termprop(VTermState *state, VTermProp prop, VTermValue *val)
       state->mouse_flags |= MOUSE_WANT_DRAG;
     if(val->number == VTERM_PROP_MOUSE_MOVE)
       state->mouse_flags |= MOUSE_WANT_MOVE;
+    return 1;
+  case VTERM_PROP_FOCUSREPORT:
+    state->mode.report_focus = val->boolean;
     return 1;
 
   case VTERM_N_PROPS:

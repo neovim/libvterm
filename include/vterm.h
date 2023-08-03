@@ -259,6 +259,7 @@ typedef enum {
   VTERM_PROP_REVERSE,           // bool
   VTERM_PROP_CURSORSHAPE,       // number
   VTERM_PROP_MOUSE,             // number
+  VTERM_PROP_FOCUSREPORT,       // bool
 
   VTERM_N_PROPS
 } VTermProp;
