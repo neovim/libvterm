@@ -1653,12 +1653,12 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
   }
 
   if(!frag.len) {
-    /* Clear selection */
-    if(state->selection.callbacks->set) {
+    /* Clear selection if we're already finished but didn't do anything */
+    if(frag.final && state->selection.callbacks->set) {
       (*state->selection.callbacks->set)(state->tmp.selection.mask, (VTermStringFragment){
               .str     = 0,
               .len     = 0,
-              .initial = true,
+              .initial = state->tmp.selection.state != SELECTION_SET,
               .final   = true,
             }, state->selection.user);
     }
