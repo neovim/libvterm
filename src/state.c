@@ -949,6 +949,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
 
     switch(intermed[0]) {
     case ' ':
+    case '!':
     case '"':
     case '$':
     case '\'':
@@ -1386,7 +1387,7 @@ static int on_csi(const char *leader, const long args[], int argcount, const cha
     break;
 
 
-  case LEADER('!', 0x70): // DECSTR - DEC soft terminal reset
+  case INTERMED('!', 0x70): // DECSTR - DEC soft terminal reset
     vterm_state_reset(state, 0);
     break;
 
