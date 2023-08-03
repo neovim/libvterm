@@ -183,3 +183,9 @@ RESET
 MOUSEMOVE 0,0 0
 MOUSEBTN d 1 0
 MOUSEBTN u 1 0
+
+!DECSM can set multiple modes at once
+PUSH "\e[?1002;1006h"
+  settermprop 8 2
+MOUSEBTN d 1 0
+  output "\e[<0;1;1M"
