@@ -46,6 +46,10 @@ PUSH "\e]52;c;" . "LS0t"x10 . "\e\\"
 PUSH "\e]52;c;\e\\"
   selection-set mask=0001 []
 
+!Set invalid data clears and ignores
+PUSH "\e]52;c;SGVs*SGVsbG8s\e\\"
+  selection-set mask=0001 []
+
 !Query clipboard
 PUSH "\e]52;c;?\e\\"
   selection-query mask=0001

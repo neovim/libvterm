@@ -1661,7 +1661,7 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
     /* Clear selection if we're already finished but didn't do anything */
     if(frag.final && state->selection.callbacks->set) {
       (*state->selection.callbacks->set)(state->tmp.selection.mask, (VTermStringFragment){
-              .str     = 0,
+              .str     = NULL,
               .len     = 0,
               .initial = state->tmp.selection.state != SELECTION_SET,
               .final   = true,
@@ -1685,6 +1685,9 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
       (*state->selection.callbacks->query)(state->tmp.selection.mask, state->selection.user);
     return;
   }
+
+  if(state->tmp.selection.state == SELECTION_INVALID)
+    return;
 
   if(state->selection.callbacks->set) {
     size_t bufcur = 0;
@@ -1721,11 +1724,21 @@ static void osc_selection(VTermState *state, VTermStringFragment frag)
         uint8_t b = unbase64one(frag.str[0]);
         if(b == 0xFF) {
           DEBUG_LOG("base64decode bad input %02X\n", (uint8_t)frag.str[0]);
+
+          state->tmp.selection.state = SELECTION_INVALID;
+          if(state->selection.callbacks->set) {
+            (*state->selection.callbacks->set)(state->tmp.selection.mask, (VTermStringFragment){
+                .str     = NULL,
+                .len     = 0,
+                .initial = true,
+                .final   = true,
+                }, state->selection.user);
+          }
+          break;
         }
-        else {
-          x = (x << 6) | b;
-          n++;
-        }
+
+        x = (x << 6) | b;
+        n++;
         frag.str++, frag.len--;
 
         if(n == 4) {
