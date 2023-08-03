@@ -37,6 +37,11 @@ PUSH "\e]52;c;SGVsbG8s"
 PUSH "\e\\"
   selection-set mask=0001 ]
 
+!Set clipboard; longer than buffer
+PUSH "\e]52;c;" . "LS0t"x10 . "\e\\"
+  selection-set mask=0001 ["-"x15
+  selection-set mask=0001 "-"x15]
+
 !Clear clipboard
 PUSH "\e]52;c;\e\\"
   selection-set mask=0001 []

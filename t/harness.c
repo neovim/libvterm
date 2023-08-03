@@ -657,7 +657,10 @@ int main(int argc, char **argv)
       if(!state) {
         state = vterm_obtain_state(vt);
         vterm_state_set_callbacks(state, &state_cbs, NULL);
-        vterm_state_set_selection_callbacks(state, &selection_cbs, NULL, NULL, 1024);
+        /* In some tests we want to check the behaviour of overflowing the
+         * buffer, so make it nicely small
+         */
+        vterm_state_set_selection_callbacks(state, &selection_cbs, NULL, NULL, 16);
         vterm_state_set_bold_highbright(state, 1);
         vterm_state_reset(state, 1);
       }
